@@ -74,9 +74,9 @@ def parse_vegawin_file(file_path: str) -> list:
             barkod_idx = i
         elif any(k in h for k in ['stokkod', 'urunkod', 'itemcode', 'stockcode']) or h == 'kod':
             stok_idx = i
-        elif any(k in h for k in ['malincinsi', 'urunadi', 'stokadi', 'aciklama', 'tanim', 'title', 'product']):
+        elif any(k in h for k in ['malincinsi', 'urunadi', 'stokadi', 'aciklama', 'tanim', 'title', 'product', 'malinadi', 'maladi', 'urun', 'mal']):
             title_idx = i
-        elif any(k in h for k in ['satisfiyat', 'fiyat', 'price', 'tutar', 'satfiy']):
+        elif any(k in h for k in ['satisfiyat', 'fiyat', 'price', 'tutar', 'satfiy', 'sfiyat']):
             price_idx = i
 
     items = []
@@ -107,6 +107,100 @@ def parse_vegawin_file(file_path: str) -> list:
         })
 
     return items
+
+def preview_vegawin_comparison(items: list) -> dict:
+    """Yüklenen dosyadaki ürünleri ana sistem veritabanı ile karşılaştırır ve detaylı fark listesi üretir."""
+    init_db()
+    existing_map = {}
+    with db_session() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT barcode, title, price, brand, stock_code, label_price FROM urunler;")
+        for r in cursor.fetchall():
+            existing_map[r["barcode"]] = dict(r)
+
+    comparison_list = []
+    price_change_count = 0
+    new_product_count = 0
+    identical_count = 0
+    title_change_count = 0
+
+    for item in items:
+        b = item["barcode"]
+        inc_p = float(item["price"])
+        inc_t = item["title"]
+        sc = item.get("stock_code", "")
+        brand = item.get("brand", "")
+
+        if b in existing_map:
+            main_p = existing_map[b]
+            main_price = float(main_p.get("price") or 0)
+            main_title = str(main_p.get("title") or "").strip()
+
+            has_price_diff = abs(main_price - inc_p) > 0.001
+            has_title_diff = main_title != inc_t
+
+            if has_price_diff:
+                diff_amt = round(inc_p - main_price, 2)
+                diff_pct = round((diff_amt / main_price * 100) if main_price > 0 else 0, 1)
+                status = "price_change"
+                price_change_count += 1
+            elif has_title_diff:
+                diff_amt = 0.0
+                diff_pct = 0.0
+                status = "title_change"
+                title_change_count += 1
+            else:
+                diff_amt = 0.0
+                diff_pct = 0.0
+                status = "identical"
+                identical_count += 1
+
+            comparison_list.append({
+                "barcode": b,
+                "stock_code": sc or main_p.get("stock_code", ""),
+                "main_title": main_title,
+                "incoming_title": inc_t,
+                "main_price": main_price,
+                "incoming_price": inc_p,
+                "diff_amount": diff_amt,
+                "diff_percent": diff_pct,
+                "status": status,
+                "brand": brand or main_p.get("brand", ""),
+                "unit": item.get("unit", "ADET")
+            })
+        else:
+            status = "new_product"
+            new_product_count += 1
+            comparison_list.append({
+                "barcode": b,
+                "stock_code": sc,
+                "main_title": "— (Ana Sistemde Yok)",
+                "incoming_title": inc_t,
+                "main_price": None,
+                "incoming_price": inc_p,
+                "diff_amount": 0.0,
+                "diff_percent": 0.0,
+                "status": status,
+                "brand": brand,
+                "unit": item.get("unit", "ADET")
+            })
+
+    priority = {"price_change": 0, "new_product": 1, "title_change": 2, "identical": 3}
+    comparison_list.sort(key=lambda x: (priority.get(x["status"], 99), x["incoming_title"]))
+
+    return {
+        "total_incoming": len(items),
+        "total_items": len(items),
+        "price_changes": price_change_count,
+        "price_change_count": price_change_count,
+        "new_products": new_product_count,
+        "new_product_count": new_product_count,
+        "title_changes": title_change_count,
+        "title_change_count": title_change_count,
+        "identical": identical_count,
+        "identical_count": identical_count,
+        "items": comparison_list
+    }
 
 def sync_vegawin_items(items: list, source_name: str = "VegaWin Aktarımı", device_name: str = "VegaWin PC") -> dict:
     init_db()

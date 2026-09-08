@@ -33,7 +33,8 @@ from backend.models.schemas import (
     PrinterSettingsRequest,
     PrintSingleRequest,
     PrintBatchRequest,
-    MobileScanRequest
+    MobileScanRequest,
+    VegaWinConfirmRequest
 )
 from backend.services.db_service import (
     get_all_products, search_products, get_product_by_barcode, get_products_count,
@@ -44,7 +45,8 @@ from backend.services.printer_service import (
     get_installed_printers, print_single_label, load_settings, save_settings, purge_printer_queue
 )
 from backend.services.vegawin_service import (
-    parse_vegawin_file, sync_vegawin_items, get_price_changes_list, mark_changes_as_printed
+    parse_vegawin_file, sync_vegawin_items, get_price_changes_list, mark_changes_as_printed,
+    preview_vegawin_comparison
 )
 from backend.services.template_service import (
     load_all_templates, get_default_template, save_or_update_template,
@@ -237,6 +239,46 @@ async def mobile_scan_print(req: MobileScanRequest):
     )
 
 # 5. VEGAWIN SENKRONİZASYONU (FİYAT DEĞİŞİMİ & YENİ ÜRÜN TAKİBİ)
+@router.post("/vegawin/preview")
+async def preview_vegawin_file(file: UploadFile = File(...), device_name: Optional[str] = Form(None)):
+    ext = os.path.splitext(file.filename)[1].lower()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+        tmp_path = tmp.name
+        content = await file.read()
+        tmp.write(content)
+
+    try:
+        items = parse_vegawin_file(tmp_path)
+    finally:
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except Exception:
+                pass
+
+    if not items:
+        return error_response(message="Dosyadan geçerli ürün verisi okunamadı.", status_code=400)
+
+    comparison_data = preview_vegawin_comparison(items)
+    comparison_data["source_filename"] = file.filename
+    comparison_data["device_name"] = device_name.strip() if device_name and device_name.strip() else "VegaWin PC"
+    comparison_data["parsed_items"] = items
+
+    return success_response(
+        data=comparison_data,
+        message=f"{comparison_data['total_incoming']} ürün başarıyla karşılaştırıldı."
+    )
+
+@router.post("/vegawin/confirm-sync")
+async def confirm_vegawin_sync(req: VegaWinConfirmRequest):
+    if not req.items:
+        return error_response(message="Aktarılacak ürün listesi boş olamaz.", status_code=400)
+
+    source_label = req.source_name or "VegaWin Dosyası"
+    dev_name = req.device_name or "VegaWin PC"
+    result = sync_vegawin_items(req.items, source_name=source_label, device_name=dev_name)
+    return success_response(data=result, message="VegaWin verileri sisteme başarıyla aktarıldı.")
+
 @router.post("/vegawin/upload")
 async def upload_vegawin_file(file: UploadFile = File(...), device_name: Optional[str] = Form(None)):
     ext = os.path.splitext(file.filename)[1].lower()

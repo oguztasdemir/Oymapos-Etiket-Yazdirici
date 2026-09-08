@@ -63,3 +63,8 @@ class PriceChangeItem(BaseModel):
     source_device: Optional[str] = "OYMAPOS Barkod Sistemi"
     changed_at: str
     is_printed: int
+
+class VegaWinConfirmRequest(BaseModel):
+    items: List[Dict[str, Any]] = Field(..., description="Senkronize edilecek ürün listesi")
+    source_name: Optional[str] = Field("VegaWin Dosyası", description="Kaynak dosya adı")
+    device_name: Optional[str] = Field("VegaWin PC", description="Kaynak cihaz adı")

@@ -87,6 +87,32 @@ const API = {
   },
 
   // 5. VegaWin Senkronizasyon (Stok, Fiyat Değişimi & Yeni Ürünler)
+  async previewVegawin(file, deviceName = '') {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (deviceName && deviceName.trim()) {
+      formData.append('device_name', deviceName.trim());
+    }
+    const res = await fetch('/api/vegawin/preview', {
+      method: 'POST',
+      body: formData
+    });
+    return await res.json();
+  },
+
+  async confirmVegawinSync(items, sourceName = '', deviceName = '') {
+    const res = await fetch('/api/vegawin/confirm-sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: items,
+        source_name: sourceName,
+        device_name: deviceName
+      })
+    });
+    return await res.json();
+  },
+
   async uploadVegawin(file, deviceName = '') {
     const formData = new FormData();
     formData.append('file', file);
