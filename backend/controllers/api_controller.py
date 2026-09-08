@@ -34,12 +34,15 @@ from backend.models.schemas import (
     PrintSingleRequest,
     PrintBatchRequest,
     MobileScanRequest,
-    VegaWinConfirmRequest
+    VegaWinConfirmRequest,
+    ProductUpdateRequest
 )
 from backend.services.db_service import (
     get_all_products, search_products, get_product_by_barcode, get_products_count,
     get_new_products_list, mark_new_products_as_printed, update_product_printed_time,
-    sync_all_label_prices_to_pos_price, get_product_price_history, init_db
+    sync_all_label_prices_to_pos_price, get_product_price_history, get_full_product_history,
+    revert_product_history, update_product_details, get_sync_history_list, rollback_sync_batch,
+    init_db
 )
 from backend.services.printer_service import (
     get_installed_printers, print_single_label, load_settings, save_settings, purge_printer_queue
@@ -142,13 +145,40 @@ async def get_product(barcode: str):
         return error_response(message="Ürün bulunamadı.", status_code=404)
     return success_response(data={"product": prod}, message="Ürün bulundu")
 
+@router.put("/products/{barcode}")
+async def update_product(barcode: str, req: ProductUpdateRequest):
+    res = update_product_details(
+        barcode=barcode,
+        title=req.title,
+        price=req.price,
+        brand=req.brand,
+        unit=req.unit,
+        device_name=req.device_name or "Ana PC"
+    )
+    if not res.get("success"):
+        return error_response(message=res.get("message", "Ürün güncellenemedi."), status_code=400)
+    return success_response(data=res, message=res["message"])
+
 @router.get("/products/{barcode}/history")
 async def get_product_history(barcode: str):
-    history = get_product_price_history(barcode)
+    history = get_full_product_history(barcode)
+    prod = get_product_by_barcode(barcode)
     return success_response(
-        data={"barcode": barcode, "history": history, "count": len(history)},
-        message="Fiyat geçmişi listelendi"
+        data={
+            "barcode": barcode,
+            "product": prod,
+            "history": history,
+            "count": len(history)
+        },
+        message="Ürün hareket ve değişiklik geçmişi listelendi"
     )
+
+@router.post("/products/history/{history_id}/revert")
+async def revert_history(history_id: int):
+    res = revert_product_history(history_id)
+    if not res.get("success"):
+        return error_response(message=res.get("message", "Geri alma başarısız oldu."), status_code=400)
+    return success_response(data=res, message=res["message"])
 
 @router.post("/products/sync-label-prices")
 async def sync_label_prices():
@@ -303,6 +333,21 @@ async def upload_vegawin_file(file: UploadFile = File(...), device_name: Optiona
     dev_name = device_name.strip() if device_name and device_name.strip() else "VegaWin PC"
     result = sync_vegawin_items(items, source_name=source_label, device_name=dev_name)
     return success_response(data=result, message="VegaWin stok ve fiyat senkronizasyonu tamamlandı")
+
+@router.get("/vegawin/sync-history")
+async def get_vegawin_sync_history(limit: int = 50):
+    history = get_sync_history_list(limit=limit)
+    return success_response(
+        data={"sync_history": history, "count": len(history)},
+        message="Senkronizasyon geçmişi listelendi"
+    )
+
+@router.post("/vegawin/sync/{sync_id}/rollback")
+async def rollback_vegawin_sync(sync_id: int):
+    res = rollback_sync_batch(sync_id)
+    if not res.get("success"):
+        return error_response(message=res.get("message", "Geri alma başarısız oldu."), status_code=400)
+    return success_response(data=res, message=res["message"])
 
 @router.get("/vegawin/changes")
 async def get_vegawin_changes(unprinted: bool = False):

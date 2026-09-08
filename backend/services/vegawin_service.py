@@ -6,7 +6,7 @@ import os
 import csv
 import datetime
 import openpyxl
-from backend.services.db_service import db_session, init_db, clean_barcode_text
+from backend.services.db_service import db_session, init_db, clean_barcode_text, record_product_history
 
 def normalize_text(text: str) -> str:
     return str(text).strip() if text is not None else ""
@@ -250,9 +250,9 @@ def sync_vegawin_items(items: list, source_name: str = "VegaWin Aktarımı", dev
                         "changed_at": now_str
                     })
                     cursor.execute("""
-                    INSERT INTO vegawin_price_changes (sync_id, barcode, title, old_price, new_price, diff_amount, diff_percent, changed_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?);
-                    """, (sync_id, b, t, old_p, p, diff_amt, diff_pct, now_str))
+                    INSERT INTO vegawin_price_changes (sync_id, barcode, title, old_price, new_price, diff_amount, diff_percent, changed_at, source_device)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    """, (sync_id, b, t, old_p, p, diff_amt, diff_pct, now_str, device_name))
 
                     cursor.execute("""
                     UPDATE urunler 
@@ -261,13 +261,45 @@ def sync_vegawin_items(items: list, source_name: str = "VegaWin Aktarımı", dev
                         label_price = COALESCE(label_price, ?)
                     WHERE barcode = ?;
                     """, (t, p, sc, brand, now_str, now_str, old_p, b))
+
+                    record_product_history(
+                        conn,
+                        barcode=b,
+                        event_type="price_change",
+                        old_title=old.get("title"),
+                        new_title=t,
+                        old_price=old_p,
+                        new_price=p,
+                        diff_amount=diff_amt,
+                        diff_percent=diff_pct,
+                        source="VegaWin Senkronizasyon",
+                        device_name=device_name,
+                        details=f"Dosya: {source_name}",
+                        sync_id=sync_id,
+                        timestamp=now_str
+                    )
                 else:
+                    has_title_change = (old.get("title") != t)
                     cursor.execute("""
                     UPDATE urunler 
                     SET title = ?, stock_code = COALESCE(NULLIF(?, ''), stock_code), 
                         brand = COALESCE(NULLIF(?, ''), brand), updated_at = ?
                     WHERE barcode = ?;
                     """, (t, sc, brand, now_str, b))
+
+                    if has_title_change:
+                        record_product_history(
+                            conn,
+                            barcode=b,
+                            event_type="title_change",
+                            old_title=old.get("title"),
+                            new_title=t,
+                            source="VegaWin Senkronizasyon",
+                            device_name=device_name,
+                            details=f"Dosya: {source_name}",
+                            sync_id=sync_id,
+                            timestamp=now_str
+                        )
                 updated_count += 1
             else:
                 cursor.execute("""
@@ -276,10 +308,22 @@ def sync_vegawin_items(items: list, source_name: str = "VegaWin Aktarımı", dev
                 """, (b, sc, t, p, brand, now_str, now_str, now_str))
                 
                 cursor.execute("""
-                INSERT INTO vegawin_new_products (sync_id, barcode, title, price, created_at)
-                VALUES (?, ?, ?, ?, ?);
-                """, (sync_id, b, t, p, now_str))
+                INSERT INTO vegawin_new_products (sync_id, barcode, title, price, created_at, source_device)
+                VALUES (?, ?, ?, ?, ?, ?);
+                """, (sync_id, b, t, p, now_str, device_name))
 
+                record_product_history(
+                    conn,
+                    barcode=b,
+                    event_type="created",
+                    new_title=t,
+                    new_price=p,
+                    source="VegaWin Senkronizasyon",
+                    device_name=device_name,
+                    details=f"Yeni Ürün Eklendi (Dosya: {source_name})",
+                    sync_id=sync_id,
+                    timestamp=now_str
+                )
                 new_products_list.append({
                     "barcode": b,
                     "title": t,

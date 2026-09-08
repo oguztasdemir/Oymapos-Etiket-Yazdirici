@@ -793,6 +793,43 @@
             </div>
           </div>
         </div>
+
+        <!-- Senkronizasyon Geçmişi & Toplu Geri Alma (Rollback) -->
+        <div class="card" style="margin-top:20px;">
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="card-title">
+              <span>📜 VegaWin Aktarım Geçmişi & Toplu Geri Alma (Rollback / Undo)</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="loadSyncHistory()" style="padding:4px 10px; font-size:11.5px;">
+              🔄 Yenile
+            </button>
+          </div>
+          <div style="padding:16px;">
+            <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:12px;">
+              Yanlış veya hatalı bir Excel aktarımı yapıldıysa, ilgili aktarımın yanındaki <strong>"↩️ Aktarımı Geri Al"</strong> butonuna basarak tüm fiyatları o aktarımdan önceki orijinal hallerine döndürebilirsiniz.
+            </p>
+            <div class="table-container" style="max-height:260px; overflow-y:auto;">
+              <table class="table-excel">
+                <thead>
+                  <tr>
+                    <th style="width:70px;">İşlem ID</th>
+                    <th>Tarih & Saat</th>
+                    <th>Kaynak Dosya</th>
+                    <th>Cihaz / PC</th>
+                    <th style="text-align:center;">Toplam Ürün</th>
+                    <th style="text-align:center;">Fiyat Değişen</th>
+                    <th style="text-align:center;">Yeni Ürün</th>
+                    <th style="text-align:center;">Durum</th>
+                    <th style="text-align:center; width:140px;">İşlem</th>
+                  </tr>
+                </thead>
+                <tbody id="syncHistoryTableBody">
+                  <tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:20px;">Aktarım geçmişi yükleniyor...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- =========================================================================
@@ -1149,6 +1186,103 @@
         <button class="btn btn-secondary" onclick="closeA4SheetModal()">Vazgeç</button>
         <button class="btn btn-primary" onclick="generateAndPrintA4Sheet()" style="font-weight:800; padding:8px 20px; background:linear-gradient(135deg, #0284c7, #2563eb); box-shadow:0 4px 12px rgba(2,132,199,0.35);">
           🖨️ A4 Önizle ve Yazdır
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================
+       ÜRÜN DEĞİŞİKLİK GEÇMİŞİ & GERİ ALMA MODALI (TIMELINE & AUDIT)
+       ========================================================= -->
+  <div id="modal-product-history" class="modal-backdrop" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(6px); z-index:99999; align-items:center; justify-content:center; padding:20px;">
+    <div class="modal-card" style="background:#0b1329; border:1px solid rgba(99,102,241,0.35); border-radius:14px; max-width:680px; width:100%; box-shadow:0 25px 70px rgba(0,0,0,0.95); overflow:hidden; display:flex; flex-direction:column; max-height:90vh;">
+      
+      <!-- Header -->
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; background:#070d1e; border-bottom:1px solid rgba(255,255,255,0.08);">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-size:24px;">🕒</span>
+          <div>
+            <h3 style="font-size:15px; font-weight:800; color:#fff; margin:0;" id="histModalTitle">Ürün Değişiklik Zaman Çizelgesi</h3>
+            <span style="font-size:11.5px; color:#818cf8; font-family:'JetBrains Mono', monospace;" id="histModalBarcode"></span>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="closeProductHistoryModal()" style="padding:4px 10px; font-size:13px; border-radius:6px;">✕</button>
+      </div>
+
+      <!-- Current Info Bar -->
+      <div style="padding:12px 20px; background:rgba(15,23,42,0.9); border-bottom:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div style="font-size:12px; color:#94a3b8;">
+          Mevcut Durum: <strong style="color:#fff;" id="histCurrentTitle">-</strong>
+        </div>
+        <div style="font-size:13px; font-weight:800; color:#fbbf24; font-family:'JetBrains Mono', monospace;" id="histCurrentPrice">
+          - TL
+        </div>
+      </div>
+
+      <!-- Timeline List Area -->
+      <div style="padding:20px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:12px;" id="histTimelineList">
+        <div style="text-align:center; padding:30px; color:#94a3b8;">
+          ⏳ Geçmiş hareketler yükleniyor...
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 20px; background:#070d1e; border-top:1px solid rgba(255,255,255,0.08);">
+        <span style="font-size:11.5px; color:#94a3b8;">💡 Herhangi bir geçmiş durumuna "Geri Dön" butonu ile tek tıkla dönebilirsiniz.</span>
+        <button class="btn btn-secondary btn-sm" onclick="closeProductHistoryModal()">Kapat</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================
+       HIZLI ÜRÜN DÜZENLEME MODALI (INLINE EDIT)
+       ========================================================= -->
+  <div id="modal-product-edit" class="modal-backdrop" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(6px); z-index:99999; align-items:center; justify-content:center; padding:20px;">
+    <div class="modal-card" style="background:#0b1329; border:1px solid rgba(56,189,248,0.35); border-radius:14px; max-width:520px; width:100%; box-shadow:0 25px 70px rgba(0,0,0,0.95); overflow:hidden; display:flex; flex-direction:column;">
+      
+      <!-- Header -->
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; background:#070d1e; border-bottom:1px solid rgba(255,255,255,0.08);">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:22px;">✏️</span>
+          <div>
+            <h3 style="font-size:15px; font-weight:800; color:#fff; margin:0;">Ürün Bilgilerini Düzenle</h3>
+            <span style="font-size:11px; color:#94a3b8;">Değişiklikler otomatik geçmişe kaydedilir</span>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="closeProductEditModal()" style="padding:4px 10px; font-size:13px; border-radius:6px;">✕</button>
+      </div>
+
+      <!-- Form Body -->
+      <div style="padding:22px 20px; display:flex; flex-direction:column; gap:14px;">
+        <div>
+          <label style="font-size:11.5px; font-weight:700; color:#94a3b8; display:block; margin-bottom:4px;">Barkod:</label>
+          <input type="text" id="editModalBarcode" class="form-input" disabled style="background:rgba(255,255,255,0.04); color:#94a3b8; font-family:'JetBrains Mono', monospace; font-weight:700;">
+        </div>
+
+        <div>
+          <label style="font-size:11.5px; font-weight:700; color:#38bdf8; display:block; margin-bottom:4px;">Ürün Adı / Tanımı:</label>
+          <input type="text" id="editModalTitle" class="form-input" placeholder="Ürün adını girin..." style="font-weight:700; color:#fff;">
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            <label style="font-size:11.5px; font-weight:700; color:#fbbf24; display:block; margin-bottom:4px;">Satış Fiyatı (TL):</label>
+            <input type="number" step="0.01" id="editModalPrice" class="form-input" placeholder="0.00" style="font-weight:800; color:#fbbf24; font-family:'JetBrains Mono', monospace;">
+          </div>
+          <div>
+            <label style="font-size:11.5px; font-weight:700; color:#94a3b8; display:block; margin-bottom:4px;">Marka / Üretici:</label>
+            <input type="text" id="editModalBrand" class="form-input" placeholder="Örn: YARENLER">
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div style="display:flex; justify-content:flex-end; gap:10px; padding:14px 20px; background:#070d1e; border-top:1px solid rgba(255,255,255,0.08);">
+        <button class="btn btn-secondary" onclick="closeProductEditModal()">İptal</button>
+        <button id="editModalSaveBtn" class="btn btn-primary" onclick="saveProductEdit()" style="font-weight:800; padding:8px 20px; background:linear-gradient(135deg, #10b981, #059669);">
+          💾 Kaydet & Geçmişe İşle
         </button>
       </div>
 

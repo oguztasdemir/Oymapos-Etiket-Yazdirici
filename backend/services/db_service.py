@@ -96,7 +96,7 @@ def format_product_dict(row: dict) -> dict:
     if not row:
         return {}
     d = dict(row)
-    price_val = d.get('price_num') if d.get('price_num') is not None else d.get('price')
+    price_val = d.get('price') if d.get('price') is not None else d.get('price_num')
     d['price'] = parse_price(price_val)
     d['barcode'] = clean_barcode_text(d.get('barcode', ''))
     raw_title = str(d.get('title') or d.get('title1') or '').strip()
@@ -279,7 +279,29 @@ def init_db():
                 pass
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_new_products_printed ON vegawin_new_products(is_printed);")
 
-        # 7. Otomatik Keşif / İlk Kurulumda Veri İçe Aktarma
+        # 7. Kapsamlı Ürün Değişiklik & Audit Geçmişi (Zaman Çizelgesi & Geri Alma)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS product_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sync_id INTEGER,
+            barcode TEXT NOT NULL,
+            event_type TEXT NOT NULL,
+            old_title TEXT,
+            new_title TEXT,
+            old_price REAL,
+            new_price REAL,
+            diff_amount REAL DEFAULT 0,
+            diff_percent REAL DEFAULT 0,
+            source TEXT DEFAULT 'Sistem',
+            device_name TEXT DEFAULT 'Ana PC',
+            details TEXT,
+            created_at TEXT NOT NULL
+        );
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_prod_history_barcode ON product_history(barcode);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_prod_history_sync_id ON product_history(sync_id);")
+
+        # 8. Otomatik Keşif / İlk Kurulumda Veri İçe Aktarma
         cursor.execute("SELECT COUNT(*) as total FROM urunler;")
         if cursor.fetchone()["total"] == 0:
             auto_discover_and_import(conn)
@@ -507,4 +529,249 @@ def sync_all_label_prices_to_pos_price() -> int:
         cursor = conn.cursor()
         cursor.execute("UPDATE urunler SET label_price = price;")
         return cursor.rowcount
+
+def record_product_history(
+    conn,
+    barcode: str,
+    event_type: str,
+    old_title: str = None,
+    new_title: str = None,
+    old_price: float = None,
+    new_price: float = None,
+    diff_amount: float = 0.0,
+    diff_percent: float = 0.0,
+    source: str = "Sistem",
+    device_name: str = "Ana PC",
+    details: str = "",
+    sync_id: int = None,
+    timestamp: str = None
+) -> int:
+    """Ürünle ilgili tüm isim, fiyat, baskı ve düzenleme olaylarını tarihçeye işler."""
+    if not barcode:
+        return 0
+    now_str = timestamp or datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO product_history (
+            sync_id, barcode, event_type, old_title, new_title,
+            old_price, new_price, diff_amount, diff_percent,
+            source, device_name, details, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    """, (
+        sync_id, clean_barcode_text(barcode), event_type, old_title, new_title,
+        old_price, new_price, diff_amount, diff_percent,
+        source, device_name, details, now_str
+    ))
+    return cursor.lastrowid
+
+def get_full_product_history(barcode: str, limit: int = 100) -> list:
+    """Belirtilen barkodun tüm geçmiş hareketlerini ve zaman çizelgesini döner."""
+    if not barcode:
+        return []
+    b = clean_barcode_text(barcode)
+    with db_session() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, sync_id, barcode, event_type, old_title, new_title,
+                   old_price, new_price, diff_amount, diff_percent,
+                   source, device_name, details, created_at
+            FROM product_history
+            WHERE barcode = ?
+            ORDER BY id DESC
+            LIMIT ?;
+        """, (b, limit))
+        rows = cursor.fetchall()
+        
+        # Eğer product_history boşsa vegawin_price_changes'dan da geriye dönük tamamla
+        history = [dict(r) for r in rows]
+        if not history:
+            cursor.execute("""
+                SELECT id, sync_id, barcode, 'price_change' as event_type,
+                       title as old_title, title as new_title,
+                       old_price, new_price, diff_amount, diff_percent,
+                       source_device as source, source_device as device_name,
+                       'Fiyat Değişimi' as details, changed_at as created_at
+                FROM vegawin_price_changes
+                WHERE barcode = ?
+                ORDER BY id DESC
+                LIMIT ?;
+            """, (b, limit))
+            history = [dict(r) for r in cursor.fetchall()]
+
+        return history
+
+def revert_product_history(history_id: int) -> dict:
+    """Belirli bir geçmiş kaydındaki önceki duruma (eski isim / eski fiyat) geri döner."""
+    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with db_session() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM product_history WHERE id = ?;", (history_id,))
+        hist = cursor.fetchone()
+        if not hist:
+            return {"success": False, "message": "Geçmiş kaydı bulunamadı."}
+
+        hist_dict = dict(hist)
+        barcode = hist_dict["barcode"]
+        cursor.execute("SELECT * FROM urunler WHERE barcode = ?;", (barcode,))
+        current = cursor.fetchone()
+        if not current:
+            return {"success": False, "message": "Ürün veritabanında bulunamadı."}
+
+        curr_dict = dict(current)
+        curr_price = parse_price(curr_dict.get("price"))
+        target_title = hist_dict["old_title"] if hist_dict.get("old_title") else curr_dict["title"]
+        target_price = parse_price(hist_dict["old_price"]) if hist_dict.get("old_price") is not None else curr_price
+
+        # Ürünü güncelle
+        cursor.execute("""
+            UPDATE urunler 
+            SET title = ?, price = ?, updated_at = ?, price_updated_at = ?
+            WHERE barcode = ?;
+        """, (target_title, target_price, now_str, now_str, barcode))
+
+        # Geri alma olayını geçmişe kaydet
+        record_product_history(
+            conn,
+            barcode=barcode,
+            event_type="restored",
+            old_title=curr_dict["title"],
+            new_title=target_title,
+            old_price=curr_price,
+            new_price=target_price,
+            diff_amount=round(target_price - curr_price, 2),
+            source="Geri Alma (Undo)",
+            device_name="Ana PC",
+            details=f"Geçmiş #{history_id} kaydındaki duruma geri dönüldü.",
+            timestamp=now_str
+        )
+
+        cursor.execute("SELECT * FROM urunler WHERE barcode = ?;", (barcode,))
+        updated_prod = format_product_dict(cursor.fetchone())
+        return {
+            "success": True,
+            "product": updated_prod,
+            "message": f"{barcode} barkodlu ürün başarıyla önceki durumuna ({target_title} - {target_price:.2f} TL) döndürüldü."
+        }
+
+def update_product_details(barcode: str, title: str = None, price: float = None, brand: str = None, unit: str = None, device_name: str = "Ana PC") -> dict:
+    """Ürün adı veya fiyatını el ile günceller ve her değişikliği audit geçmişine kaydeder."""
+    b = clean_barcode_text(barcode)
+    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    with db_session() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM urunler WHERE barcode = ?;", (b,))
+        current = cursor.fetchone()
+        if not current:
+            return {"success": False, "message": "Ürün bulunamadı."}
+
+        curr_dict = dict(current)
+        old_title = curr_dict["title"]
+        old_price = float(curr_dict["price"] or 0)
+
+        new_t = title.strip() if title and title.strip() else old_title
+        new_p = float(price) if price is not None else old_price
+        new_b = brand.strip() if brand is not None else curr_dict.get("brand", "")
+        new_u = unit.strip() if unit is not None else curr_dict.get("unit", "ADET")
+
+        has_title_change = (new_t != old_title)
+        has_price_change = (abs(new_p - old_price) > 0.001)
+
+        cursor.execute("""
+            UPDATE urunler
+            SET title = ?, price = ?, brand = ?, unit = ?, updated_at = ?,
+                price_updated_at = CASE WHEN ? THEN ? ELSE price_updated_at END
+            WHERE barcode = ?;
+        """, (new_t, new_p, new_b, new_u, now_str, has_price_change, now_str, b))
+
+        if has_title_change or has_price_change:
+            event_type = "price_change" if has_price_change and not has_title_change else ("title_change" if has_title_change and not has_price_change else "manual_edit")
+            diff_amt = round(new_p - old_price, 2)
+            diff_pct = round((diff_amt / old_price * 100) if old_price > 0 else 0, 1)
+
+            record_product_history(
+                conn,
+                barcode=b,
+                event_type=event_type,
+                old_title=old_title if has_title_change else None,
+                new_title=new_t if has_title_change else None,
+                old_price=old_price if has_price_change else None,
+                new_price=new_p if has_price_change else None,
+                diff_amount=diff_amt,
+                diff_percent=diff_pct,
+                source="Kullanıcı Düzenleme",
+                device_name=device_name,
+                details="Kullanıcı tarafından el ile güncellendi.",
+                timestamp=now_str
+            )
+
+        cursor.execute("SELECT * FROM urunler WHERE barcode = ?;", (b,))
+        return {
+            "success": True,
+            "product": format_product_dict(cursor.fetchone()),
+            "message": "Ürün bilgileri başarıyla güncellendi."
+        }
+
+def get_sync_history_list(limit: int = 50) -> list:
+    """Geçmiş VegaWin aktarımlarını listeler."""
+    with db_session() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, timestamp, source_file, device_name, total_products,
+                   updated_products, new_products, price_changes_count, status
+            FROM vegawin_sync_history
+            ORDER BY id DESC
+            LIMIT ?;
+        """, (limit,))
+        return [dict(r) for r in cursor.fetchall()]
+
+def rollback_sync_batch(sync_id: int) -> dict:
+    """Bir VegaWin senkronizasyonundaki tüm değişiklikleri tek hamlede geri alır."""
+    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with db_session() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM vegawin_sync_history WHERE id = ?;", (sync_id,))
+        sync_rec = cursor.fetchone()
+        if not sync_rec:
+            return {"success": False, "message": "Senkronizasyon kaydı bulunamadı."}
+
+        sync_dict = dict(sync_rec)
+        if sync_dict.get("status") == "rolled_back":
+            return {"success": False, "message": "Bu senkronizasyon zaten daha önce geri alınmış."}
+
+        # 1. Bu sync'te fiyatı değişenleri eski fiyatına döndür
+        cursor.execute("SELECT * FROM vegawin_price_changes WHERE sync_id = ?;", (sync_id,))
+        changes = [dict(r) for r in cursor.fetchall()]
+        reverted_count = 0
+
+        for ch in changes:
+            b = ch["barcode"]
+            old_p = parse_price(ch.get("old_price"))
+            new_p = parse_price(ch.get("new_price"))
+            cursor.execute("UPDATE urunler SET price = ?, updated_at = ?, price_updated_at = ? WHERE barcode = ?;", (old_p, now_str, now_str, b))
+            reverted_count += 1
+
+            record_product_history(
+                conn,
+                barcode=b,
+                event_type="restored",
+                old_price=new_p,
+                new_price=old_p,
+                diff_amount=round(old_p - new_p, 2),
+                source="Toplu Geri Alma (Rollback)",
+                device_name="Ana PC",
+                details=f"#{sync_id} numaralı senkronizasyon geri alındı.",
+                sync_id=sync_id,
+                timestamp=now_str
+            )
+
+        # 2. Sync durumunu 'rolled_back' olarak işaretle
+        cursor.execute("UPDATE vegawin_sync_history SET status = 'rolled_back' WHERE id = ?;", (sync_id,))
+
+        return {
+            "success": True,
+            "sync_id": sync_id,
+            "reverted_count": reverted_count,
+            "message": f"#{sync_id} numaralı aktarım başarıyla geri alındı ({reverted_count} ürün eski fiyatına döndürüldü)."
+        }
 

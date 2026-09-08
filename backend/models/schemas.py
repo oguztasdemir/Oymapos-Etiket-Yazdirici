@@ -68,3 +68,10 @@ class VegaWinConfirmRequest(BaseModel):
     items: List[Dict[str, Any]] = Field(..., description="Senkronize edilecek ürün listesi")
     source_name: Optional[str] = Field("VegaWin Dosyası", description="Kaynak dosya adı")
     device_name: Optional[str] = Field("VegaWin PC", description="Kaynak cihaz adı")
+
+class ProductUpdateRequest(BaseModel):
+    title: Optional[str] = Field(None, description="Yeni ürün adı")
+    price: Optional[float] = Field(None, description="Yeni satış fiyatı")
+    brand: Optional[str] = Field(None, description="Marka")
+    unit: Optional[str] = Field(None, description="Birim")
+    device_name: Optional[str] = Field("Ana PC", description="Güncelleyen cihaz")

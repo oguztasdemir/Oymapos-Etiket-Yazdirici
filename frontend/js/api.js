@@ -48,8 +48,24 @@ const API = {
     return await res.json();
   },
 
+  async updateProduct(barcode, data) {
+    const res = await fetch(`/api/products/${encodeURIComponent(barcode)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  },
+
   async getProductHistory(barcode) {
     const res = await fetch(`/api/products/${encodeURIComponent(barcode)}/history`);
+    return await res.json();
+  },
+
+  async revertProductHistory(historyId) {
+    const res = await fetch(`/api/products/history/${encodeURIComponent(historyId)}/revert`, {
+      method: 'POST'
+    });
     return await res.json();
   },
 
@@ -143,6 +159,18 @@ const API = {
 
   async printNewProducts() {
     const res = await fetch('/api/vegawin/print_new_products', { method: 'POST' });
+    return await res.json();
+  },
+
+  async getSyncHistory(limit = 50) {
+    const res = await fetch(`/api/vegawin/sync-history?limit=${limit}`);
+    return await res.json();
+  },
+
+  async rollbackSync(syncId) {
+    const res = await fetch(`/api/vegawin/sync/${encodeURIComponent(syncId)}/rollback`, {
+      method: 'POST'
+    });
     return await res.json();
   },
 
