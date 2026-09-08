@@ -1,0 +1,9 @@
+{
+  "name": "Etiket ve Fiş Terminali",
+  "short_name": "EtiketBas",
+  "start_url": "/mobile",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
+  "orientation": "portrait-primary"
+}

@@ -1,0 +1,937 @@
+/* ==========================================================================
+   BİLEŞEN STİLLERİ - components.css (taslak copy/04_ARAYUZ_TASARIM)
+   Panel, Kart, Buton, Rozet, Excel Tablo Grid, Toast, Modal
+   ========================================================================== */
+
+/* 1. KART VE PANEL BİLEŞENLERİ */
+.card-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-panel:hover {
+  border-color: var(--border-strong);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* 2. BUTONLAR VE MİKRO ETKİLEŞİMLER */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  text-decoration: none;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.45);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.25);
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #e11d48, #be123c);
+}
+
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-strong);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--radius-md);
+}
+
+.btn-excel-print {
+  width: 100%;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-excel-print:hover {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+}
+
+.btn-excel-print:active {
+  transform: scale(0.96);
+}
+
+/* 3. MİKRO ROZETLER (BADGES) */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+}
+
+.badge-success {
+  background: var(--accent-success-subtle);
+  color: var(--accent-success);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.badge-warning {
+  background: var(--accent-warning-subtle);
+  color: var(--accent-warning);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.badge-danger {
+  background: var(--accent-danger-subtle);
+  color: var(--accent-danger);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+}
+
+.badge-subtle {
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+/* 4. MODAL BİLEŞENİ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-dialog {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  width: 90%;
+  max-width: 520px;
+  padding: 28px;
+  box-shadow: var(--shadow-popover);
+  transform: scale(0.94) translateY(12px);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-overlay.active .modal-dialog {
+  transform: scale(1) translateY(0);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* 5. EXCEL GRID TABLO BİLEŞENİ (SCROLLABLE & STICKY HEADER) */
+.table-container {
+  width: 100%;
+  max-height: calc(100vh - 320px);
+  min-height: 380px;
+  overflow-x: auto;
+  overflow-y: auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-surface);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+/* Özel Akıcı Scrollbar */
+.table-container::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.45);
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.75);
+}
+
+.table-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.table-excel {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
+}
+
+.table-excel th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #111726;
+  color: #cbd5e1;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  white-space: nowrap;
+  user-select: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.table-excel td {
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  vertical-align: middle;
+  font-size: 12px;
+}
+
+.table-excel tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.table-excel tbody tr:hover {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.table-excel .col-idx {
+  width: 36px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 6px 2px;
+}
+
+.table-excel .col-barcode {
+  width: 118px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: #93c5fd;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.table-excel .col-title {
+  font-weight: 600;
+  color: #f8fafc;
+  word-break: break-word;
+}
+
+.table-excel .col-pos-price {
+  width: 90px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #34d399;
+  white-space: nowrap;
+}
+
+.table-excel .col-label-price {
+  width: 90px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: #93c5fd;
+  white-space: nowrap;
+}
+
+.table-excel .col-price-date {
+  width: 92px;
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+.table-excel .col-print-date {
+  width: 105px;
+  white-space: nowrap;
+  font-size: 10.5px;
+}
+
+.table-excel .col-status {
+  width: 95px;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 10px;
+}
+
+.table-excel .col-action {
+  width: 125px;
+  text-align: center;
+  white-space: nowrap;
+  padding: 4px 6px;
+}
+
+.table-excel tr.row-price-mismatch {
+  background: rgba(245, 158, 11, 0.04);
+}
+
+.table-excel tr.row-price-mismatch:hover {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+/* 6. FORM ELEMANLARI (OYMAPOS STANDART) */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.form-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-input,
+.form-select,
+.custom-select {
+  width: 100%;
+  padding: 9px 12px;
+  background: #070d1e;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.form-input:focus,
+.form-select:focus,
+.custom-select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* 7. OYMAPOS MARKET ETİKETİ ÖNİZLEME SAHNESİ (OTANTİK OYMAPOS STANDARDI) */
+.printable-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 20px;
+  background: radial-gradient(circle, #1e293b 10%, #020617 90%);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  min-height: 380px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+.market-label {
+  background: #fffef0;
+  color: #000000;
+  border: 1.5px solid #000000;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  user-select: none;
+  transform-origin: center center;
+  transition: transform 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.size-76x40 { width: 76mm; min-width: 76mm; height: 40mm; min-height: 40mm; padding: 2.2mm 2.8mm; }
+.size-60x40 { width: 60mm; min-width: 60mm; height: 40mm; min-height: 40mm; padding: 2mm 2.2mm; }
+.size-40x20 { width: 40mm; min-width: 40mm; height: 20mm; min-height: 20mm; padding: 1.2mm 1.5mm; }
+.size-80x40 { width: 80mm; min-width: 80mm; height: 40mm; min-height: 40mm; padding: 2.2mm 2.8mm; }
+.size-100x50 { width: 100mm; min-width: 100mm; height: 50mm; min-height: 50mm; padding: 3mm 3.5mm; }
+.size-85x45 { width: 85mm; min-width: 85mm; height: 45mm; min-height: 45mm; padding: 2.8mm 3.2mm; }
+
+.ml-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2.5mm;
+  width: 100%;
+  border-bottom: 1.4px solid #000;
+  padding-bottom: 1.2mm;
+  box-sizing: border-box;
+}
+
+.ml-title-area {
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
+  overflow: visible;
+  text-align: left;
+}
+
+.ml-title-line1 {
+  width: 100%;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.18;
+  letter-spacing: -0.15px;
+  text-transform: uppercase;
+  word-break: break-word;
+  white-space: normal;
+  display: block;
+  color: #000;
+}
+
+.ml-title-line1.single-line-big {
+  font-size: 15.5px;
+  font-weight: 900;
+  line-height: 1.25;
+  letter-spacing: -0.3px;
+  padding: 2px 0;
+}
+
+.ml-title-line2 {
+  width: 100%;
+  font-size: 10.5px;
+  font-weight: 900;
+  line-height: 1.18;
+  letter-spacing: -0.15px;
+  text-transform: uppercase;
+  word-break: break-word;
+  white-space: normal;
+  display: block;
+  color: #111;
+  margin-top: 1px;
+}
+
+.ml-top-right-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tr-badge {
+  border: 1.5px solid #000;
+  padding: 2px 5px;
+  font-size: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.2px;
+  background: #fff;
+  line-height: 1.2;
+}
+
+.tr-badge-dark {
+  background: #000;
+  color: #fff;
+  border: 1.5px solid #000;
+  padding: 2px 5px;
+  font-size: 8.5px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+
+.tr-unit-box {
+  border: 1.5px solid #000;
+  padding: 1px 4px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.tr-unit-box .u-label {
+  font-size: 6.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.tr-unit-box .u-val {
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.ml-mid-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1.4px solid #000;
+  padding: 1mm 0;
+  box-sizing: border-box;
+}
+
+.ml-brand-col {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: -0.2px;
+  text-transform: uppercase;
+  width: 32%;
+  color: #000;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ml-legal-col {
+  width: 68%;
+  font-size: 7.2px;
+  line-height: 1.22;
+  font-weight: 600;
+  color: #000;
+  text-align: right;
+}
+
+.ml-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1mm;
+  box-sizing: border-box;
+}
+
+.ml-barcode-col {
+  width: 38%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.ml-barcode-col svg {
+  width: 100%;
+  height: 25px;
+  max-width: 110px;
+}
+
+.ml-divider-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-left: 1.4px solid #000;
+  border-right: 1.4px solid #000;
+  padding: 0 4px;
+  font-size: 7.2px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  height: 26px;
+  color: #000;
+  text-transform: uppercase;
+}
+
+.ml-price-col {
+  flex: 1;
+  text-align: right;
+  padding-right: 1px;
+}
+
+.price-val {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  font-family: 'Inter', 'Oswald', sans-serif;
+  color: #000;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Stüdyo & Arama Açılır Kutusu */
+.search-box {
+  position: relative;
+}
+
+.stock-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #0d1424;
+  border: 1px solid var(--border-color, #1e293b);
+  border-radius: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 999;
+  display: none;
+  margin-top: 4px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.7);
+}
+
+.stock-item {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stock-item:hover {
+  background: #1e293b;
+}
+
+.stock-item-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.stock-item-sub {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.stock-item-price {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #34d399;
+}
+
+/* Sürükle-Bırak ve Seçim Stilleri (OYMAPOS Canvas Customizer) */
+.draggable-item {
+  position: relative;
+  cursor: grab;
+  transition: box-shadow 0.15s ease, outline 0.15s ease;
+  user-select: none;
+}
+
+.draggable-item:hover {
+  outline: 1px dashed rgba(2, 132, 199, 0.6);
+  outline-offset: 1px;
+}
+
+.draggable-item:active,
+.draggable-item.dragging {
+  cursor: grabbing !important;
+}
+
+.custom-canvas-element {
+  position: absolute;
+  cursor: grab;
+  user-select: none;
+  box-sizing: border-box;
+  z-index: 10;
+  transition: outline 0.15s ease;
+}
+
+.custom-canvas-element:hover {
+  outline: 1.5px dashed rgba(2, 132, 199, 0.8);
+  outline-offset: 1px;
+}
+
+.custom-canvas-element:active,
+.custom-canvas-element.dragging {
+  cursor: grabbing !important;
+}
+
+.selected-element {
+  outline: 2px dashed #0284c7 !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.3) !important;
+  z-index: 20 !important;
+}
+
+.editable-text:focus {
+  outline: 1.5px solid #0284c7 !important;
+  background: rgba(56, 189, 248, 0.08);
+}
+
+/* 8. ŞABLON LİSTESİ VE KARTLARI (OYMAPOS Şablon Galerisi) */
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.template-card {
+  background: #090d16;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.template-card:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+}
+
+.template-card.is-default {
+  border-color: rgba(52, 211, 153, 0.5);
+  background: linear-gradient(180deg, rgba(5, 150, 105, 0.08) 0%, #090d16 100%);
+}
+
+.template-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.template-card-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.template-card-specs {
+  font-size: 11px;
+  color: #94a3b8;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.template-card-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.template-card-add {
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 12px;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #94a3b8;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.template-card-add:hover {
+  border-color: #38bdf8;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.05);
+  transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   DASHBOARD & ANA SAYFA BİLEŞENLERİ
+   ========================================================================== */
+.home-hero-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 22px 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.home-dashboard-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  align-items: start;
+}
+
+.home-action-card {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.home-action-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+
+.home-action-card:hover {
+  transform: translateY(-4px);
+  border-color: #38bdf8;
+  box-shadow: 0 12px 28px -6px rgba(56, 189, 248, 0.25);
+  background: rgba(30, 41, 59, 0.85);
+}
+
+.home-action-card:hover::before {
+  background: linear-gradient(90deg, #38bdf8, #818cf8);
+}
+
+.home-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 1100px) {
+  .home-dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+

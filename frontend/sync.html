@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VegaWin -> Ana PC Veri Aktarım İstasyonu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/frontend/css/style.css?v={{ cache_bust }}">
+  <link rel="stylesheet" href="/frontend/css/components.css?v={{ cache_bust }}">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+      background-color: var(--bg-main);
+    }
+    .sync-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      max-width: 620px;
+      width: 100%;
+      padding: 40px;
+      box-shadow: var(--shadow-card);
+      text-align: center;
+    }
+    .drop-zone {
+      border: 2px dashed rgba(99, 102, 241, 0.35);
+      border-radius: var(--radius-lg);
+      padding: 44px 24px;
+      background: rgba(99, 102, 241, 0.03);
+      cursor: pointer;
+      margin: 20px 0;
+      transition: all 0.15s ease;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent-primary);
+      background: rgba(99, 102, 241, 0.08);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <div class="sync-card">
+    <div class="status-pill" style="margin-bottom: 24px;">
+      <span class="dot"></span>
+      <span>Ana PC Bağlantısı Aktif ({{ local_ip }})</span>
+    </div>
+
+    <h1 style="font-size:24px; font-weight:800; margin-bottom:8px; color:#ffffff;">⚡ VegaWin Veri Aktarımı</h1>
+    <p style="font-size:13px; color:var(--text-secondary); margin-bottom:20px; line-height:1.6;">
+      VegaWin programından dışa aktardığınız Excel (.xlsx) veya CSV stok dosyasını seçip tek tıkla sisteme aktarın.
+    </p>
+
+    <!-- Cihaz Adı Girişi -->
+    <div style="text-align:left; margin-bottom:16px;">
+      <label class="form-label" style="font-size:12px; font-weight:700; color:var(--text-secondary); margin-bottom:6px; display:block;">
+        🖥️ Gönderen Bilgisayar / Cihaz Adı:
+      </label>
+      <input type="text" id="deviceNameInput" class="form-input" value="VegaWin Kasa Bilgisayarı" placeholder="Örn: Kasa 1, Arka Ofis" style="width:100%;">
+    </div>
+
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <div style="font-size:48px; margin-bottom:12px;">📊</div>
+      <div style="font-weight:700; font-size:16px; margin-bottom:6px; color:#ffffff;">VegaWin Dosyasını Buraya Bırakın</div>
+      <div style="font-size:12px; color:var(--text-muted);">veya dosya seçmek için tıklayın (.xlsx, .xls, .csv)</div>
+      <input type="file" id="fileInput" style="display:none;" accept=".xlsx,.xls,.csv" onchange="handleFileSelected(this.files)">
+    </div>
+
+    <div id="fileInfoBox" style="display:none; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:14px 20px; border-radius:12px; margin-bottom:20px; text-align:left; border:1px solid var(--border-subtle);">
+      <span style="font-weight:600; font-size:14px; color:#818cf8;" id="fileNameText">📄 dosya.xlsx</span>
+      <button onclick="clearFile(event)" style="background:none; border:none; color:#f43f5e; cursor:pointer; font-weight:700; font-size:12px;">Kaldır</button>
+    </div>
+
+    <button id="sendBtn" class="btn btn-primary" style="width:100%; padding:14px; font-size:15px;" onclick="uploadAndSync()" disabled>
+      🚀 VegaWin Verilerini Gönder
+    </button>
+
+    <div id="progressWrap" style="display:none; margin-top:20px;">
+      <div style="font-size:13px; color:#818cf8;">⏳ Veriler işleniyor ve aktarılıyor...</div>
+    </div>
+
+    <div id="resultBox" style="display:none; margin-top:24px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:16px; padding:22px; text-align:left;">
+      <div style="font-weight:700; color:#34d399; font-size:16px; margin-bottom:14px;">✅ Senkronizasyon Başarılı!</div>
+      <div class="grid-3" style="gap:12px; display:grid; grid-template-columns:repeat(3, 1fr);">
+        <div style="background:rgba(0,0,0,0.35); padding:12px; border-radius:10px; text-align:center;">
+          <div style="font-size:20px; font-weight:800; color:#ffffff;" id="statTotal">0</div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">Toplam Ürün</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.35); padding:12px; border-radius:10px; text-align:center;">
+          <div style="font-size:20px; font-weight:800; color:#ffffff;" id="statNew">0</div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">Yeni Ürün</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.35); padding:12px; border-radius:10px; text-align:center;">
+          <div style="font-size:20px; font-weight:800; color:#fbbf24;" id="statChanges">0</div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">Fiyatı Değişen</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/frontend/js/api.js?v={{ cache_bust }}"></script>
+  <script src="/frontend/js/ui.js?v={{ cache_bust }}"></script>
+  <script>
+    let selectedFile = null;
+    const dropZone = document.getElementById('dropZone');
+
+    ['dragenter', 'dragover'].forEach(eName => {
+      dropZone.addEventListener(eName, e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(eName => {
+      dropZone.addEventListener(eName, e => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+    });
+    dropZone.addEventListener('drop', e => {
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleFileSelected(e.dataTransfer.files);
+      }
+    });
+
+    function handleFileSelected(files) {
+      if (!files || files.length === 0) return;
+      selectedFile = files[0];
+      document.getElementById('fileNameText').textContent = '📄 ' + selectedFile.name;
+      document.getElementById('fileInfoBox').style.display = 'flex';
+      document.getElementById('sendBtn').disabled = false;
+      document.getElementById('resultBox').style.display = 'none';
+    }
+
+    function clearFile(e) {
+      if (e) e.stopPropagation();
+      selectedFile = null;
+      document.getElementById('fileInput').value = '';
+      document.getElementById('fileInfoBox').style.display = 'none';
+      document.getElementById('sendBtn').disabled = true;
+    }
+
+    async function uploadAndSync() {
+      if (!selectedFile) return;
+      const sendBtn = document.getElementById('sendBtn');
+      const progressWrap = document.getElementById('progressWrap');
+      const resultBox = document.getElementById('resultBox');
+      const devName = (document.getElementById('deviceNameInput').value || 'VegaWin Kasa Bilgisayarı').trim();
+
+      sendBtn.disabled = true;
+      progressWrap.style.display = 'block';
+      resultBox.style.display = 'none';
+
+      try {
+        const res = await API.uploadVegawin(selectedFile, devName);
+        const data = res.data || res;
+        progressWrap.style.display = 'none';
+
+        if (res.status === 'success' || data.total_received !== undefined) {
+          animateCount(document.getElementById('statTotal'), data.total_received || 0);
+          animateCount(document.getElementById('statNew'), data.new_products || 0);
+          animateCount(document.getElementById('statChanges'), data.price_changes_count || 0);
+          resultBox.style.display = 'block';
+          showToast(`${devName} verileri başarıyla aktarıldı!`, 'success');
+        } else {
+          showToast('Hata: ' + (res.message || 'Dosya aktarılamadı.'), 'error');
+          sendBtn.disabled = false;
+        }
+      } catch (err) {
+        progressWrap.style.display = 'none';
+        showToast('Sunucu iletişim hatası: ' + err.message, 'error');
+        sendBtn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

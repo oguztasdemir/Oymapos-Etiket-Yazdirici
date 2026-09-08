@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OYMAPOS - Etiket ve Fiş Yazdırıcı Kontrol Merkezi</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;800&family=Oswald:wght@700&display=swap" rel="stylesheet">
+  
+  <!-- JsBarcode & QRCode CDN (OYMAPOS Standart) -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+
+  <!-- OYMAPOS Master Stylesheets -->
+  <link rel="stylesheet" href="/frontend/stiller/masaustu/style.css?v={{ cache_bust }}">
+  <link rel="stylesheet" href="/frontend/css/style.css?v={{ cache_bust }}">
+  <link rel="stylesheet" href="/frontend/css/components.css?v={{ cache_bust }}">
+</head>
+<body class="app-layout">
+
+  <!-- TOAST BİLDİRİM KONTEYNERİ -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- SOL MENÜ (OYMAPOS APP SIDEBAR) -->
+  <aside class="app-sidebar" id="appSidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏷️</div>
+      <div class="logo-text">
+        <h2 style="font-size:15px; font-weight:800; color:#fff; margin:0;">OYMAPOS</h2>
+        <span style="font-size:11px; color:var(--text-muted);">Etiket & Fiş Merkezi</span>
+      </div>
+    </div>
+
+    <button class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Menüyü Daralt / Genişlet">◀</button>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item tab-btn" data-tab="tab-home">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Ana Sayfa</span>
+      </button>
+      <button class="nav-item tab-btn active" data-tab="tab-search">
+        <span class="nav-icon">📦</span>
+        <span class="nav-label">Ürünler & Etiket Masası</span>
+      </button>
+      <button class="nav-item tab-btn" data-tab="tab-design">
+        <span class="nav-icon">🎨</span>
+        <span class="nav-label">Etiket Düzenle & Şablonlar</span>
+      </button>
+      <button class="nav-item tab-btn" data-tab="tab-vegawin">
+        <span class="nav-icon">⚡</span>
+        <span class="nav-label">VegaWin Senkronizasyonu</span>
+      </button>
+      <button class="nav-item tab-btn" data-tab="tab-mobile-qr">
+        <span class="nav-icon">📱</span>
+        <span class="nav-label">Mobil QR & Cihazlar</span>
+      </button>
+      <button class="nav-item tab-btn" data-tab="tab-settings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Yazıcı & Donanım Ayarları</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer" style="padding:14px 16px; border-top:1px solid var(--border-color); margin-top:auto;">
+      <div style="font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+        <span class="status-dot" style="width:8px; height:8px; background:#10b981; border-radius:50%; display:inline-block;"></span>
+        <span>VegaWin DB Aktif</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ANA İÇERİK ALANI -->
+  <div class="main-content-wrapper" style="flex:1; display:flex; flex-direction:column; min-width:0; overflow:hidden;">
+
+    <!-- ÜST ÇUBUK (TOPBAR) -->
+    <header class="topbar">
+      <div class="brand" style="display:flex; align-items:center; gap:12px;">
+        <button id="topbarSidebarToggle" class="btn btn-secondary btn-sm" onclick="toggleSidebar()" title="Sol Menüyü Gizle / Göster (Tam Ekran Modu)" style="display:flex; align-items:center; gap:6px; font-weight:700; padding:6px 12px; border-color:rgba(56,189,248,0.3); background:rgba(15,23,42,0.8);">
+          <span id="topbarSidebarIcon" style="font-size:14px;">☰</span>
+          <span class="btn-text" id="topbarSidebarText">Menü</span>
+        </button>
+        <button class="brand-link" onclick="switchTab('tab-home')" style="background:none; border:none; padding:0; cursor:pointer; text-align:left; display:flex; align-items:center; gap:10px;" title="Ana Sayfaya Git">
+          <div class="brand-info">
+            <h1 style="font-size:15px; font-weight:800; color:#fff; margin:0; display:flex; align-items:center; gap:6px;">
+              <span>Etiket ve Fiş Yazdırıcı</span>
+              <span style="font-size:11px; font-weight:700; background:rgba(56,189,248,0.15); color:#38bdf8; padding:2px 6px; border-radius:4px;">YARENLER</span>
+            </h1>
+            <p style="font-size:12px; color:var(--text-secondary); margin:0;">VegaWin Stok & Otomatik Fiyat Senkronizasyonu</p>
+          </div>
+        </button>
+      </div>
+
+      <div class="topbar-actions" style="display:flex; align-items:center; gap:10px;">
+        <button class="btn btn-secondary btn-sm" onclick="switchTab('tab-home')" style="font-weight:700; display:flex; align-items:center; gap:5px;">
+          <span>🏠</span> <span>Ana Sayfa</span>
+        </button>
+        <div class="status-pill">
+          <span class="dot"></span>
+          <span>Ana PC IP: <strong id="topbarIp">{{ local_ip }}</strong></span>
+        </div>
+        <a href="/mobile" target="_blank" class="btn btn-secondary btn-sm">
+          📱 Mobil Terminal
+        </a>
+        <a href="/sync" target="_blank" class="btn btn-secondary btn-sm">
+          ⚡ VegaWin Aktarımı
+        </a>
+        <button class="btn btn-danger btn-sm" onclick="confirmShutdown()">
+          🛑 Sunucuyu Kapat
+        </button>
+      </div>
+    </header>
+
+    <!-- PANELLER ALANI -->
+    <main class="main-wrapper" style="flex:1; overflow-y:auto; padding:20px; box-sizing:border-box;">
+
+      <!-- =========================================================================
+           SEKME 0: ANA SAYFA & KONTROL MERKEZİ (DASHBOARD)
+           ========================================================================= -->
+      <section id="tab-home" class="tab-pane">
+        <!-- Banner & Sol Menü Kontrol Alanı -->
+        <div class="home-hero-card">
+          <div style="display: flex; align-items: center; gap: 18px;">
+            <div style="width: 54px; height: 54px; border-radius: 14px; background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4); flex-shrink: 0;">
+              🏷️
+            </div>
+            <div>
+              <h2 style="font-size: 19px; font-weight: 800; color: #fff; margin: 0 0 4px 0;">OYMAPOS Etiket ve Fiş Yönetim Merkezi</h2>
+              <p style="font-size: 13px; color: #94a3b8; margin: 0;">
+                İşletme: <strong style="color: #38bdf8; font-weight: 700;">YARENLER</strong> &bull; VegaWin Entegre Barkod, Fiyat & Raf Etiketi Otomasyonu
+              </p>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="toggleSidebar()" style="font-weight: 700; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);">
+              <span id="homeSidebarToggleIcon">📂</span>
+              <span id="homeSidebarToggleText">Sol Menüyü Gizle / Aç</span>
+            </button>
+            <button class="btn btn-secondary" onclick="switchTab('tab-search')" style="font-weight: 700;">
+              📦 Ürünler Masasına Git ➔
+            </button>
+          </div>
+        </div>
+
+        <!-- 2 Sütunlu Dashboard Alanı -->
+        <div class="home-dashboard-layout">
+          
+          <!-- SOL / ORTA BÖLÜM: HIZLI MODÜLLER VE İŞLEMLER -->
+          <div class="home-left-col" style="display: flex; flex-direction: column; gap: 20px;">
+            
+            <!-- Hızlı Modül Kartları -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+              
+              <!-- Modül 1: Ürünler & Etiket Masası -->
+              <div class="home-action-card" onclick="switchTab('tab-search')">
+                <div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <span style="font-size: 26px; background: rgba(56, 189, 248, 0.12); padding: 8px; border-radius: 10px;">📦</span>
+                    <span class="badge badge-success" id="homeBadgeTotalProducts">4.925 Ürün</span>
+                  </div>
+                  <h3 style="font-size: 15.5px; font-weight: 800; color: #fff; margin: 0 0 6px 0;">Ürünler & Etiket Masası</h3>
+                  <p style="font-size: 12.5px; color: #94a3b8; line-height: 1.45; margin: 0;">
+                    Tüm stok listesi, canlı arama (Ctrl+K), tek tıkla raf etiketi basımı ve Excel formatında liste görünümü.
+                  </p>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+                  <span style="font-size: 12px; color: #38bdf8; font-weight: 700;">Masayı Aç ➔</span>
+                  <span style="font-size: 11px; color: #64748b;">Kısayol: Ctrl+K</span>
+                </div>
+              </div>
+
+              <!-- Modül 2: Etiket Düzenle & Şablonlar -->
+              <div class="home-action-card" onclick="switchTab('tab-design')">
+                <div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <span style="font-size: 26px; background: rgba(168, 85, 247, 0.12); padding: 8px; border-radius: 10px;">🎨</span>
+                    <span class="badge" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">Sürükle-Bırak</span>
+                  </div>
+                  <h3 style="font-size: 15.5px; font-weight: 800; color: #fff; margin: 0 0 6px 0;">Etiket Tasarım Stüdyosu</h3>
+                  <p style="font-size: 12.5px; color: #94a3b8; line-height: 1.45; margin: 0;">
+                    Şablon galerisi, Yarenler market başlığı, dinamik güncel tarih ve canlı etiket tasarım stüdyosu.
+                  </p>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+                  <span style="font-size: 12px; color: #c084fc; font-weight: 700;">Şablonları Gör ➔</span>
+                  <span style="font-size: 11px; color: #64748b;">58x40mm Standart</span>
+                </div>
+              </div>
+
+              <!-- Modül 3: VegaWin Senkronizasyonu -->
+              <div class="home-action-card" onclick="switchTab('tab-vegawin')">
+                <div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <span style="font-size: 26px; background: rgba(234, 179, 8, 0.12); padding: 8px; border-radius: 10px;">⚡</span>
+                    <span class="badge badge-warning">Otomatik Aktarım</span>
+                  </div>
+                  <h3 style="font-size: 15.5px; font-weight: 800; color: #fff; margin: 0 0 6px 0;">VegaWin Senkronizasyonu</h3>
+                  <p style="font-size: 12.5px; color: #94a3b8; line-height: 1.45; margin: 0;">
+                    VegaWin kasa veritabanından değişen fiyatları otomatik tespit etme, Excel/CSV dosyasından toplu ürün aktarımı.
+                  </p>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+                  <span style="font-size: 12px; color: #facc15; font-weight: 700;">Senkronizasyonu Aç ➔</span>
+                  <span style="font-size: 11px; color: #64748b;">Canlı Fiyat Takibi</span>
+                </div>
+              </div>
+
+              <!-- Modül 4: Mobil Terminal -->
+              <div class="home-action-card" onclick="switchTab('tab-mobile-qr')">
+                <div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <span style="font-size: 26px; background: rgba(168, 85, 247, 0.12); padding: 8px; border-radius: 10px;">📱</span>
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">Wi-Fi / QR</span>
+                  </div>
+                  <h3 style="font-size: 15.5px; font-weight: 800; color: #fff; margin: 0 0 6px 0;">Mobil QR & Terminal</h3>
+                  <p style="font-size: 12.5px; color: #94a3b8; line-height: 1.45; margin: 0;">
+                    Telefon kamerasını barkod okuyucuya dönüştürün. Reyon aralarında gezerken hızlıca etiket basın.
+                  </p>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+                  <span style="font-size: 12px; color: #34d399; font-weight: 700;">QR ve Bağlantıyı Gör ➔</span>
+                  <span style="font-size: 11px; color: #64748b;">Kurulumsuz Web</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Hızlı Operasyon Butonları -->
+            <div class="card" style="margin-bottom: 0;">
+              <div class="card-header" style="padding: 12px 18px;">
+                <div class="card-title" style="font-size: 14px;">
+                  <span>⚡ Hızlı Operasyon Masası</span>
+                </div>
+              </div>
+              <div style="padding: 16px 18px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                <button class="btn btn-secondary" onclick="syncAllLabelPrices()" style="font-weight: 700; color: #34d399; border-color: rgba(52, 211, 153, 0.4); display: flex; align-items: center; gap: 6px;">
+                  <span>⚖️</span> Tüm Etiket Fiyatlarını Eşitle
+                </button>
+                <button class="btn btn-secondary" onclick="testPrint()" style="font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+                  <span>🖨️</span> Hızlı Test Baskısı (F2)
+                </button>
+                <button class="btn btn-secondary" onclick="toggleSidebar()" style="font-weight: 700; color: #fbbf24; display: flex; align-items: center; gap: 6px;">
+                  <span id="homeActionSidebarIcon">📂</span> Sol Menüyü Gizle / Aç (Tam Ekran)
+                </button>
+                <button class="btn btn-secondary" onclick="refreshAllData()" style="font-weight: 700; margin-left: auto; display: flex; align-items: center; gap: 6px;">
+                  <span>🔄</span> Verileri Yenile
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- SAĞ SÜTUN: SİSTEM & DONANIM BİLGİLENDİRME PANELİ -->
+          <div class="home-right-col" style="display: flex; flex-direction: column; gap: 16px;">
+            
+            <!-- Bilgilendirme 1: İşletme & Veritabanı -->
+            <div class="card" style="margin-bottom: 0; background: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);">
+              <div class="card-header" style="padding: 12px 16px;">
+                <div class="card-title" style="font-size: 13.5px;">
+                  <span>🏪 İşletme & Sistem Durumu</span>
+                </div>
+              </div>
+              <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
+                <div class="home-info-row">
+                  <span style="color: #94a3b8;">Market / Firma:</span>
+                  <strong style="color: #38bdf8; font-size: 14px;" id="homeMarketName">YARENLER</strong>
+                </div>
+                <div class="home-info-row">
+                  <span style="color: #94a3b8;">Sistem Motoru:</span>
+                  <span style="color: #e2e8f0; font-weight: 700;">OYMAPOS v2.4</span>
+                </div>
+                <div class="home-info-row">
+                  <span style="color: #94a3b8;">Toplam Stok:</span>
+                  <strong style="color: #34d399; font-weight: 800;" id="homeInfoTotalStock">4.925 Ürün</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: #94a3b8;">Veritabanı:</span>
+                  <span style="display: inline-flex; align-items: center; gap: 6px; color: #10b981; font-weight: 700;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block; box-shadow: 0 0 6px #10b981;"></span>
+                    Aktif & Bağlı
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bilgilendirme 2: Donanım & Yazıcı -->
+            <div class="card" style="margin-bottom: 0; background: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);">
+              <div class="card-header" style="padding: 12px 16px;">
+                <div class="card-title" style="font-size: 13.5px;">
+                  <span>🖨️ Yazıcı & Donanım Durumu</span>
+                </div>
+              </div>
+              <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
+                <div class="home-info-row">
+                  <span style="color: #94a3b8;">Varsayılan Yazıcı:</span>
+                  <strong style="color: #e2e8f0;" id="homeInfoPrinterName">Termal Etiket Yazici</strong>
+                </div>
+                <div class="home-info-row">
+                  <span style="color: #94a3b8;">Etiket Formatı:</span>
+                  <span style="color: #cbd5e1; font-weight: 600;">58mm × 40mm Termal</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: #94a3b8;">Bağlantı:</span>
+                  <span style="color: #34d399; font-weight: 700;">🟢 Çevrimiçi</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bilgilendirme 3: Ağ & Mobil Terminal IP -->
+            <div class="card" style="margin-bottom: 0; background: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);">
+              <div class="card-header" style="padding: 12px 16px;">
+                <div class="card-title" style="font-size: 13.5px;">
+                  <span>🌐 Ağ & Mobil Terminal Bilgisi</span>
+                </div>
+              </div>
+              <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
+                <div class="home-info-row">
+                  <span style="color: #94a3b8;">Ana PC IP Adresi:</span>
+                  <strong style="color: #38bdf8;" id="homeInfoIpAddress">{{ local_ip }}</strong>
+                </div>
+                <div class="home-info-row">
+                  <span style="color: #94a3b8;">Mobil Web Port:</span>
+                  <span style="color: #e2e8f0; font-weight: 700;">8000</span>
+                </div>
+                <div>
+                  <span style="color: #94a3b8; display: block; margin-bottom: 6px;">Mobil Terminal URL:</span>
+                  <a href="/mobile" target="_blank" id="homeInfoMobileUrl" style="color: #38bdf8; font-size: 12px; word-break: break-all; text-decoration: underline;">
+                    http://{{ local_ip }}:8000/mobile
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bilgilendirme 4: İpuçları & Kısayollar -->
+            <div class="card" style="margin-bottom: 0; background: rgba(15, 23, 42, 0.6); border-color: rgba(56, 189, 248, 0.2);">
+              <div class="card-header" style="padding: 10px 16px; background: rgba(56, 189, 248, 0.08);">
+                <div class="card-title" style="font-size: 13px; color: #38bdf8;">
+                  <span>💡 Pratik Kullanım İpuçları</span>
+                </div>
+              </div>
+              <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: #94a3b8;">
+                <div>⌨️ <strong style="color: #e2e8f0;">Ctrl + K</strong> : Ürün arama kutusuna anında odaklanır.</div>
+                <div>🖨️ <strong style="color: #e2e8f0;">F2 Tuşu</strong> : Hızlı test etiketi yazdırır.</div>
+                <div>📂 <strong style="color: #e2e8f0;">Sol Paneli Gizleme</strong> : Sol menüyü kapatıp tüm ekranda tam genişlikte çalışmak için sol üstteki <strong>Menü</strong> butonuna basabilirsiniz.</div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- =========================================================================
+           SEKME 1: ÜRÜNLER & ETİKET MASASI (EXCEL TABLO GRİDİ)
+           ========================================================================= -->
+      <section id="tab-search" class="tab-pane active">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <span>📦 Güncel Stok & Hızlı Etiket Masası</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="display:inline-flex; border:1px solid var(--border-subtle); border-radius:8px; overflow:hidden;">
+                <button id="filterAllBtn" class="btn btn-secondary btn-sm active" style="border-radius:0; border:none;" onclick="toggleFilter('all')">
+                  Tüm Stok (<span id="totalProductsCount">0</span>)
+                </button>
+                <button id="filterDiffBtn" class="btn btn-secondary btn-sm" style="border-radius:0; border:none; border-left:1px solid var(--border-subtle);" onclick="toggleFilter('diff')">
+                  ⚠️ Fiyat Farkı Olanlar
+                </button>
+                <button id="filterNewBtn" class="btn btn-secondary btn-sm" style="border-radius:0; border:none; border-left:1px solid var(--border-subtle);" onclick="toggleFilter('new')">
+                  ✨ Yeni Eklenenler
+                </button>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="syncAllLabelPrices()" title="Tüm ürünlerin etiket fiyatlarını kasa satış fiyatına eşitler" style="font-weight:700; color:#34d399;">
+                ⚖️ Etiket Fiyatlarını Eşitle
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="copyTableToClipboard('productsTable')">
+                📋 Kopyala
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="openA4SheetModal()" title="Seçili veya filtrelenen ürünleri A4 yapışkanlı etiket kağıdına dizer ve yazdırır" style="font-weight:700; background:linear-gradient(135deg, #0284c7, #2563eb);">
+                📄 A4 Çoklu Etiket Bas
+              </button>
+              <a href="/api/export/products/csv" class="btn btn-secondary btn-sm">
+                📊 Excel (.csv)
+              </a>
+              <a href="/api/export/products/json" class="btn btn-secondary btn-sm">
+                💾 JSON
+              </a>
+            </div>
+          </div>
+
+          <div class="search-bar-wrap">
+            <input type="text" class="search-input" id="productSearchInput" placeholder="Barkod numarası veya ürün adı ile anında ara..." oninput="handleSearchInput(event)" autofocus>
+            <div class="search-shortcut-badge">
+              <kbd>Ctrl+K</kbd>
+            </div>
+          </div>
+
+          <div class="table-container" style="max-height: calc(100vh - 280px); overflow-y: auto; overflow-x: hidden;">
+            <table id="productsTable" class="table-excel">
+              <thead>
+                <tr>
+                  <th class="col-idx">#</th>
+                  <th class="col-barcode">Barkod</th>
+                  <th class="col-title">Ürün Adı</th>
+                  <th class="col-pos-price">Satış Fiyatı (Kasa)</th>
+                  <th class="col-label-price">Etiket Fiyatı (Raf)</th>
+                  <th class="col-price-date">Fiyat Değişim</th>
+                  <th class="col-print-date">Yazdırma Tarihi</th>
+                  <th class="col-status">Durum</th>
+                  <th class="col-action" style="text-align: center;">İşlemler</th>
+                </tr>
+              </thead>
+              <tbody id="productsTableBody">
+                <!-- JS Dinamik Doldurur -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================================
+           SEKME 2: ETİKET DÜZENLE & ŞABLONLAR (OYMAPOS 1-TO-1 STÜDYO)
+           ========================================================================= -->
+      <section id="tab-design" class="tab-pane">
+
+        <!-- GÖRÜNÜM 1: ŞABLON LİSTESİ / GALERİ -->
+        <div id="studio-view-list" class="panel-section">
+          <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+            <div>
+              <h2 class="panel-title" style="font-size:18px; font-weight:800; color:#fff;">🏷️ Etiket Modelleri & Şablonlar</h2>
+              <span class="panel-desc" style="font-size:12px; color:var(--text-secondary);">Yazdırmak ve özelleştirmek istediğiniz etiket şablonunu seçin</span>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="onPromptNewTemplate()" style="font-weight:800; padding:6px 14px;">
+              ➕ Yeni Şablon Oluştur
+            </button>
+          </div>
+
+          <div id="templatesGridContainer" class="template-grid">
+            <!-- JS Dinamik Doldurur -->
+          </div>
+        </div>
+
+        <!-- GÖRÜNÜM 2: ETİKET ÖZELLEŞTİRME & STÜDYO DÜZENLEYİCİ -->
+        <div id="studio-view-editor" class="panel-section" style="display:none;">
+          <!-- Üst Geri Dön Çubuğu -->
+          <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px; background:#070d1e; padding:10px 14px; border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <button class="btn btn-secondary btn-sm" onclick="showTemplatesListView()" style="font-weight:800; padding:5px 12px; color:#38bdf8; display:flex; align-items:center; gap:6px;">
+                ⬅ Şablon Listesine Geri Dön
+              </button>
+              <div style="font-size:14px; font-weight:800; color:#fff;">
+                🎨 Düzenleniyor: <span id="editor-active-tpl-title" style="color:#38bdf8;">Standart Raf Modeli</span>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" id="editor-btn-make-default" class="btn btn-primary btn-sm" onclick="onMakeTemplateDefault()" style="font-weight:800; background:linear-gradient(135deg, #059669, #047857);">
+                ⭐ Varsayılan Yap
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="saveCurrentTemplate()" style="font-weight:800; color:#38bdf8;">
+                💾 Tasarımı Kaydet
+              </button>
+            </div>
+          </div>
+
+          <!-- Stüdyo 2 Sütun Grid Alanı -->
+          <div class="label-studio-grid" style="display:grid; grid-template-columns:330px 1fr; gap:18px; align-items:start;">
+            
+            <!-- SOL SÜTUN: ETİKET PARAMETRELERİ & HIZLI BİLGİ GİRİŞİ -->
+            <div class="studio-sidebar-card card" style="padding:14px; display:flex; flex-direction:column; gap:12px; max-height:calc(100vh - 200px); overflow-y:auto;">
+              
+              <!-- 0. KUTU: Etiket Şablonu & Varsayılan Yönetimi -->
+              <div style="background:rgba(15,23,42,0.9); border:1.5px solid rgba(56,189,248,0.25); border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <label style="font-size:11px; font-weight:800; color:#38bdf8;">🏷️ Etiket Şablonu:</label>
+                  <span id="studio-tpl-badge" class="badge" style="background:rgba(52,211,153,0.15); color:#34d399; font-size:9.5px; font-weight:800; padding:2px 6px;">⭐ Varsayılan</span>
+                </div>
+                <select id="studio-template-select" class="form-select" onchange="onStudioTemplateSelect(this.value)" style="font-size:11.5px; padding:5px 8px; font-weight:700; color:#f8fafc; background:#0b1329; border:1.5px solid #38bdf8;">
+                  <!-- JS Doldurur -->
+                </select>
+
+                <!-- Şablon Aksiyonları -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                  <button type="button" id="btn-set-default-tpl" class="btn btn-primary btn-sm" onclick="onMakeTemplateDefault()" style="font-size:10.5px; padding:4px 6px; font-weight:800; background:linear-gradient(135deg, #059669, #047857);" title="Bu şablonu tüm yazdırmalarda varsayılan aktif etiket yap">
+                    ⭐ Varsayılan Yap
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="onPromptNewTemplate()" style="font-size:10.5px; padding:4px 6px; font-weight:700;" title="Mevcut tasarımdan yeni özel şablon oluştur">
+                    ➕ Yeni Şablon
+                  </button>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px;">
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="saveCurrentTemplate()" style="font-size:10px; padding:4px 5px; color:#38bdf8;" title="Şablon değişikliklerini kaydet">
+                    💾 Kaydet
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="duplicateCurrentTemplate()" style="font-size:10px; padding:4px 5px;" title="Şablonun kopyasını çıkar">
+                    📋 Kopyala
+                  </button>
+                  <button type="button" id="btn-delete-tpl" class="btn btn-danger btn-sm" onclick="deleteCurrentTemplate()" style="font-size:10px; padding:4px 5px;" title="Şablonu sil">
+                    🗑️ Sil
+                  </button>
+                </div>
+              </div>
+
+              <!-- 1. KUTU: Stoktan Ürün Seç & Canlı Yükle -->
+              <div class="search-box">
+                <label style="font-size:11px; font-weight:700; color:#38bdf8; display:block; margin-bottom:4px;">🔍 Stoktan Ürün Seç (Otomatik Doldur):</label>
+                <input type="text" id="studio-product-search" class="form-input" placeholder="Barkod veya ürün adı yazın..." oninput="onStudioSearchProduct(this.value)" autocomplete="off" style="font-size:11.5px; padding:6px 10px;">
+                <div id="studio-stock-dropdown" class="stock-dropdown"></div>
+              </div>
+
+              <!-- 2. KUTU: Hızlı Etiket Bilgileri Giriş Formu (Canlı Senkronize) -->
+              <div style="background:rgba(15,23,42,0.85); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:8px;">
+                <div style="font-size:11px; font-weight:800; color:#38bdf8; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:4px;">
+                  ✏️ Etiket Bilgilerini Düzenle
+                </div>
+
+                <!-- Market Adı (Marka) -->
+                <div>
+                  <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:2px;">Market / Mağaza Adı:</label>
+                  <input type="text" id="studio-inp-market" class="form-input" value="YARENLER" placeholder="Örn: YARENLER" oninput="onStudioMarketNameChange(this.value)" style="font-size:11.5px; padding:5px 8px; font-weight:800; color:#34d399;">
+                </div>
+
+                <!-- Ürün Başlığı 1. Satır -->
+                <div>
+                  <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:2px;">Ürün Adı (1. Satır):</label>
+                  <input type="text" id="studio-inp-title1" class="form-input" value="ULK 398-6 PIKO PORTAKAL" placeholder="Ürün adı" oninput="onStudioTitle1Change(this.value)" style="font-size:11.5px; padding:5px 8px;">
+                </div>
+
+                <!-- Ürün Başlığı 2. Satır -->
+                <div>
+                  <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:2px;">Ürün Alt Detayı (2. Satır):</label>
+                  <input type="text" id="studio-inp-title2" class="form-input" value="PIR PAT KAP" placeholder="Alt açıklama (isteğe bağlı)" oninput="onStudioTitle2Change(this.value)" style="font-size:11.5px; padding:5px 8px;">
+                </div>
+
+                <!-- Fiyat ve Barkod (Yan Yana) -->
+                <div style="display:grid; grid-template-columns:1fr 1.2fr; gap:8px;">
+                  <div>
+                    <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:2px;">Fiyat:</label>
+                    <input type="text" id="studio-inp-price" class="form-input" value="25,00 TL" placeholder="25,00 TL" oninput="onStudioPriceInputChange(this.value)" style="font-size:11.5px; padding:5px 8px; font-weight:800; color:#fbbf24;">
+                  </div>
+                  <div>
+                    <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:2px;">Barkod:</label>
+                    <input type="text" id="studio-inp-barcode" class="form-input" value="8690504114925" placeholder="8690504114925" oninput="onStudioBarcodeInputChange(this.value)" style="font-size:11px; padding:5px 8px; font-family:monospace;">
+                  </div>
+                </div>
+
+                <!-- Menşei ve Tarih (Yan Yana) -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                  <div>
+                    <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:2px;">Menşei / Üretim:</label>
+                    <input type="text" id="studio-inp-origin" class="form-input" value="TURKIYE" placeholder="TURKIYE" oninput="onStudioOriginInputChange(this.value)" style="font-size:11px; padding:5px 8px;">
+                  </div>
+                  <div>
+                    <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:2px;">Fiyat Tarihi:</label>
+                    <input type="text" id="studio-inp-date" class="form-input" placeholder="Bugünün Tarihi" oninput="onStudioDateInputChange(this.value)" style="font-size:11px; padding:5px 8px;">
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. KUTU: Boyut & Sağ Üst Köşe Seçimi -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div>
+                  <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:3px;">Etiket Ebadı:</label>
+                  <select id="studio-size-select" class="form-select" onchange="onStudioLabelSizeChange(this.value)" style="font-size:11px; padding:5px 6px;">
+                    <option value="size-76x40" selected>76 x 40 mm (Standart)</option>
+                    <option value="size-60x40">60 x 40 mm (Kompakt)</option>
+                    <option value="size-85x45">85 x 45 mm (Büyük Boy)</option>
+                    <option value="size-40x20">40 x 20 mm (Mini Barkod)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:3px;">Sağ Üst Rozet:</label>
+                  <select id="studio-opt-top-right" class="form-select" onchange="onStudioTopRightChange(this.value)" style="font-size:11px; padding:5px 6px;">
+                    <option value="empty" selected>Boş / Gizli</option>
+                    <option value="yerli">🇹🇷 Yerli Üretim</option>
+                    <option value="discount">🔥 İndirim</option>
+                    <option value="unit_price">⚖️ Birim Fiyat</option>
+                    <option value="custom_text">📝 Özel Metin</option>
+                    <option value="qr">📱 QR Kodu</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- 4. KUTU: Punto Sürgüleri (Fiyat & Ürün Adı) -->
+              <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:8px 10px; display:flex; flex-direction:column; gap:6px;">
+                <!-- Fiyat Punto -->
+                <div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; color:#94a3b8; font-weight:700; margin-bottom:2px;">
+                    <span>Fiyat Punto Boyutu:</span>
+                    <span id="studio-price-size-val" style="color:#38bdf8; font-family:monospace; font-weight:800; background:rgba(56,189,248,0.15); padding:1px 5px; border-radius:3px;">26px</span>
+                  </div>
+                  <input type="range" id="studio-price-size-slider" min="20" max="50" value="26" oninput="onStudioPriceSizeChange(this.value)" style="width:100%; height:4px; accent-color:#0284c7; cursor:pointer;">
+                </div>
+
+                <!-- Ürün Adı Punto -->
+                <div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; color:#94a3b8; font-weight:700; margin-bottom:2px;">
+                    <span>Ürün Adı Punto Boyutu:</span>
+                    <span id="studio-title-size-val" style="color:#38bdf8; font-family:monospace; font-weight:800; background:rgba(56,189,248,0.15); padding:1px 5px; border-radius:3px;">12px</span>
+                  </div>
+                  <input type="range" id="studio-title-size-slider" min="10" max="22" value="12" oninput="onStudioTitleSizeChange(this.value)" style="width:100%; height:4px; accent-color:#0284c7; cursor:pointer;">
+                </div>
+              </div>
+
+              <!-- 5. KUTU: Görünür Alanlar (2x2 Kompakt Grid) -->
+              <div style="display:flex; flex-direction:column; gap:4px;">
+                <label style="font-size:10px; font-weight:700; color:#94a3b8;">Görünür Alanlar:</label>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                  <label style="display:flex; justify-content:space-between; align-items:center; background:#070d1e; padding:5px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); font-size:10px; color:#e2e8f0; font-weight:600; cursor:pointer;">
+                    <span>🏷️ Barkod</span>
+                    <input type="checkbox" id="studio-chk-show-barcode" checked onchange="toggleStudioElement('barcode', this.checked)" style="accent-color:#0284c7;">
+                  </label>
+                  <label style="display:flex; justify-content:space-between; align-items:center; background:#070d1e; padding:5px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); font-size:10px; color:#e2e8f0; font-weight:600; cursor:pointer;">
+                    <span>⚖️ Birim F.</span>
+                    <input type="checkbox" id="studio-chk-show-unit-price" checked onchange="toggleStudioElement('unit-price', this.checked)" style="accent-color:#0284c7;">
+                  </label>
+                  <label style="display:flex; justify-content:space-between; align-items:center; background:#070d1e; padding:5px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); font-size:10px; color:#e2e8f0; font-weight:600; cursor:pointer;">
+                    <span>🇹🇷 Menşei</span>
+                    <input type="checkbox" id="studio-chk-show-origin" checked onchange="toggleStudioElement('origin', this.checked)" style="accent-color:#0284c7;">
+                  </label>
+                  <label style="display:flex; justify-content:space-between; align-items:center; background:#070d1e; padding:5px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); font-size:10px; color:#e2e8f0; font-weight:600; cursor:pointer;">
+                    <span>📅 Tarih</span>
+                    <input type="checkbox" id="studio-chk-show-date" checked onchange="toggleStudioElement('date', this.checked)" style="accent-color:#0284c7;">
+                  </label>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- SAĞ SÜTUN: OYMAPOS CANLI TASARIM SAHNESİ -->
+            <div class="studio-main-area card" style="padding:0; overflow:hidden; display:flex; flex-direction:column; background:#090d16; border:1px solid rgba(255,255,255,0.08); border-radius:10px;">
+              
+              <!-- Üst Araç Çubuğu (Toolbar) -->
+              <div class="studio-toolbar" style="display:flex; justify-content:space-between; align-items:center; padding:8px 14px; background:#070d1e; border-bottom:1px solid rgba(255,255,255,0.08); flex-wrap:wrap; gap:8px;">
+                <div class="toolbar-tools-group" style="display:flex; gap:6px; align-items:center;">
+                  <button class="tool-btn btn btn-secondary btn-sm" onclick="addTextElement()" title="Yeni Metin Ekle" style="padding:4px 9px; font-size:11px;">📝 Metin</button>
+                  <button class="tool-btn btn btn-secondary btn-sm" onclick="addLineElement()" title="Çizgi Ekle" style="padding:4px 9px; font-size:11px;">➖ Çizgi</button>
+                  <button class="tool-btn btn btn-secondary btn-sm" onclick="addBoxElement()" title="Kare / Kutu Ekle" style="padding:4px 9px; font-size:11px;">⬜ Kare</button>
+                  <button class="tool-btn btn btn-danger btn-sm" id="btn-delete-selected-el" onclick="deleteSelectedElement()" title="Seçili Öğeyi Sil" style="display:none; padding:4px 9px; font-size:11px;">🗑️ Sil</button>
+                  <span style="font-size:10.5px; color:#94a3b8; margin-left:4px;">💡 Öğeleri fare ile sürükleyip taşıyabilirsiniz</span>
+                </div>
+
+                <div class="toolbar-actions-group" style="display:flex; align-items:center; gap:8px;">
+                  <span id="editor-preview-name" class="badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; font-size:11px; font-weight:700;">🔒 Standart Raf Modeli</span>
+                  <div class="zoom-controls" style="display:inline-flex; align-items:center; gap:4px; margin-left:4px;">
+                    <button class="btn btn-secondary btn-sm" style="padding:2px 7px; font-size:11px;" onclick="adjustZoom(-10)">-</button>
+                    <span id="zoomPercentText" style="font-size:11px; font-weight:700; color:#94a3b8; min-width:36px; text-align:center;">135%</span>
+                    <button class="btn btn-secondary btn-sm" style="padding:2px 7px; font-size:11px;" onclick="adjustZoom(10)">+</button>
+                    <button class="btn btn-secondary btn-sm" style="padding:2px 7px; font-size:10px;" onclick="resetZoom()">Sıfırla</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Yazıcı Seçimi & Test Baskı Şeridi -->
+              <div class="studio-printer-bar" style="display:flex; justify-content:space-between; align-items:center; padding:7px 14px; background:#060b17; border-bottom:1px solid rgba(255,255,255,0.06); flex-wrap:wrap; gap:8px;">
+                <div class="printer-select-group" style="display:flex; align-items:center; gap:8px;">
+                  <label style="font-size:11px; font-weight:800; color:#94a3b8; white-space:nowrap;">🖨️ Etiket Yazıcısı:</label>
+                  <select id="studio-active-printer-select" class="form-select" style="width:210px; padding:3px 8px; font-size:11px; font-weight:700; color:#38bdf8; background:#0b1329; border:1.5px solid #38bdf8; border-radius:4px;">
+                    <option>Yazıcılar taranıyor...</option>
+                  </select>
+                  <span class="status-indicator" id="studioPrinterStatusBadge" style="font-size:10.5px; color:#34d399; font-weight:700;">
+                    🟢 Hazır (USB / Ağ)
+                  </span>
+                </div>
+                <button id="btn-studio-test-print" class="btn btn-primary btn-sm" onclick="testPrint()" style="padding:5px 14px; font-size:11px; font-weight:800; background:linear-gradient(135deg, #0284c7, #0369a1);">
+                  🖨️ Test Etiketi Bas (F2)
+                </button>
+              </div>
+
+              <!-- Canlı Termal Raf Etiketi Sahnesi (Canvas) -->
+              <div class="printable-wrapper studio-canvas-area" onclick="onCanvasBackgroundClick(event)" style="min-height:360px; display:flex; justify-content:center; align-items:center; padding:30px; background:radial-gradient(circle, #1e293b 10%, #020617 90%); overflow:auto; position:relative;">
+                <div class="market-label size-76x40 studio-canvas" id="editor-shelf-label" style="transform: scale(1.35); transform-origin: center center;" onclick="event.stopPropagation()">
+                  
+                  <!-- 1. Üst Bölüm (Ürün Adı ve Sağ Üst Rozet) -->
+                  <div class="ml-top-row draggable-item" id="editor-top-row">
+                    <div class="ml-title-area full-width" id="editor-title-area">
+                      <div class="ml-title-line1 editable-text" id="editor-lbl-title-1" contenteditable="true" spellcheck="false" oninput="syncLabelText(this)">ULK 398-6 PIKO PORTAKAL</div>
+                      <div class="ml-title-line2 editable-text" id="editor-lbl-title-2" contenteditable="true" spellcheck="false" oninput="syncLabelText(this)">PIR PAT KAP</div>
+                    </div>
+                    <div class="ml-top-right-box" id="editor-lbl-top-right-box" style="display:none;"></div>
+                  </div>
+
+                  <!-- 2. Orta Bölüm (Market Adı & Yasal Metin) -->
+                  <div class="ml-mid-row draggable-item" id="editor-mid-row">
+                    <div class="ml-brand-col editable-text" id="editor-lbl-brand" contenteditable="true" spellcheck="false" oninput="syncLabelText(this)">YARENLER</div>
+                    <div class="ml-legal-col">
+                      <div>Üretim Yeri: <strong class="editable-text" id="editor-lbl-origin" contenteditable="true" spellcheck="false" oninput="syncLabelText(this)">TURKIYE</strong></div>
+                      <div>Fiyatlarımıza Kdv Dahildir.</div>
+                      <div>Fiyat Değiştirme Tarihi: <span id="editor-lbl-date" class="editable-text" contenteditable="true" spellcheck="false" oninput="syncLabelText(this)"></span></div>
+                    </div>
+                  </div>
+
+                  <!-- 3. Alt Bölüm (Gerçek SVG Barkod, Satış Fiyatı Bölücü, Büyük Fiyat) -->
+                  <div class="ml-bottom-row draggable-item" id="editor-bottom-row">
+                    <div class="ml-barcode-col">
+                      <svg id="editor-barcode-svg"></svg>
+                    </div>
+                    <div class="ml-divider-col">
+                      <span>Satış</span>
+                      <span>Fiyatı</span>
+                    </div>
+                    <div class="ml-price-col">
+                      <span class="price-val editable-text" id="editor-lbl-price" contenteditable="true" spellcheck="false" oninput="syncLabelText(this)">25,00 TL</span>
+                    </div>
+                  </div>
+
+                  <!-- Kullanıcının Eklediği Dinamik Katmanlar -->
+                  <div id="editor-custom-layers" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+
+      <!-- =========================================================================
+           SEKME 3: VEGAWIN SENKRONİZASYONU
+           ========================================================================= -->
+      <section id="tab-vegawin" class="tab-pane">
+        <div class="grid-2">
+          <!-- Dosya Yükleme Alanı -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>📤 VegaWin Toplu Stok Aktarımı</span>
+              </div>
+            </div>
+
+            <div class="dropzone" id="vegaDropzone" onclick="document.getElementById('vegaFileInput').click()">
+              <div class="dropzone-icon">📁</div>
+              <div class="dropzone-title">VegaWin Excel veya CSV Dosyasını Sürükleyin</div>
+              <div class="dropzone-desc">Toplu stok, yeni ürünler ve güncel fiyatları aktarmak için tıklayın (.xlsx, .xls, .csv)</div>
+              <input type="file" id="vegaFileInput" style="display:none;" accept=".xlsx,.xls,.csv" onchange="handleVegaFileSelect(this.files)">
+            </div>
+
+            <div class="upload-progress" id="vegaUploadProgress" style="display:none; margin-top:14px;">
+              <div style="font-size:13px; font-weight:600; margin-bottom:8px;" id="vegaUploadStatus">Dosya işleniyor...</div>
+              <div class="progress-bar">
+                <div class="progress-fill"></div>
+              </div>
+            </div>
+
+            <div style="margin-top:20px; font-size:13px; color:var(--text-secondary); line-height:1.6;">
+              <strong>📌 Senkronizasyon Nasıl Çalışır?</strong>
+              <ul style="margin-top:8px; margin-left:18px;">
+                <li>VegaWin'den alınan <code>toplu stok</code> Excel dosyasını buraya aktarın.</li>
+                <li>Sistem tüm ürünlerin barkod ve fiyatlarını otomatik eşleştirir.</li>
+                <li>Değişen fiyatlar ve yeni eklenen ürünler anında tespit edilir.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Aktarım İstatistikleri -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>📊 Veritabanı & Fiyat Güncelleme Durumu</span>
+              </div>
+            </div>
+
+            <div class="stat-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+              <div class="stat-box" style="background:#0e1424; border:1px solid var(--border-subtle); padding:14px; border-radius:8px;">
+                <div class="stat-box-title" style="font-size:11px; color:var(--text-muted);">TOPLAM STOK</div>
+                <div class="stat-box-val" id="statTotalStock" style="font-size:22px; font-weight:800; color:#fff;">0</div>
+              </div>
+              <div class="stat-box" style="background:#0e1424; border:1px solid var(--border-subtle); padding:14px; border-radius:8px;">
+                <div class="stat-box-title" style="font-size:11px; color:#34d399;">YENİ EKLENEN</div>
+                <div class="stat-box-val" id="statNewCount" style="font-size:22px; font-weight:800; color:#34d399;">0</div>
+              </div>
+            </div>
+
+            <div class="card-title" style="font-size:13px; margin-bottom:10px;">
+              <span>🕒 Son Fiyat Değişen Ürünler</span>
+            </div>
+            <div class="table-container" style="max-height:220px; overflow-y:auto;">
+              <table class="table-excel">
+                <thead>
+                  <tr>
+                    <th>Barkod</th>
+                    <th>Ürün</th>
+                    <th>Eski Fiyat</th>
+                    <th>Yeni Fiyat</th>
+                  </tr>
+                </thead>
+                <tbody id="priceChangesTableBody">
+                  <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Henüz fiyat değişimi kaydedilmedi.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================================
+           SEKME 4: MOBİL QR BAĞLANTISI & CİHAZLAR
+           ========================================================================= -->
+      <section id="tab-mobile-qr" class="tab-pane">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>📱 Telefon Kamerasıyla Barkod Okuma</span>
+              </div>
+            </div>
+
+            <div class="qr-container" style="text-align:center; padding:20px 0;">
+              <img id="qrImage" src="" alt="Mobil QR Kodu" style="width:200px; height:200px; border-radius:12px; background:#fff; padding:10px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+              <div style="font-size:13px; color:var(--text-secondary); margin-top:14px;">
+                Aynı Wi-Fi ağına bağlı telefonunuzla QR kodu okutun.
+              </div>
+            </div>
+
+            <div class="info-box" style="background:#0e1424; border:1px solid var(--border-subtle); padding:12px; border-radius:8px; margin-top:10px;">
+              <div class="info-label" style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Mobil URL Adresi:</div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <code class="info-code" id="mobileUrlText" style="flex:1; font-family:monospace; color:#38bdf8;">-</code>
+                <button class="btn btn-secondary btn-sm" onclick="copyUrl('mobileUrlText')">Kopyala</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>🛒 Ağ Üzerinden Dosya Aktarım Adresi</span>
+              </div>
+            </div>
+
+            <div class="info-box" style="background:#0e1424; border:1px solid var(--border-subtle); padding:12px; border-radius:8px; margin-bottom:14px;">
+              <div class="info-label" style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Tarayıcı Dosya Yükleme Adresi:</div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <code class="info-code" id="syncUrlText" style="flex:1; font-family:monospace; color:#38bdf8;">-</code>
+                <button class="btn btn-secondary btn-sm" onclick="copyUrl('syncUrlText')">Kopyala</button>
+              </div>
+            </div>
+
+            <div style="font-size:13px; color:var(--text-secondary); line-height:1.6;">
+              <strong>📌 Diğer Bilgisayardan Veri Nasıl Gönderilir?</strong>
+              <ul style="margin-top:8px; margin-left:18px;">
+                <li>VegaWin'in kurulu olduğu bilgisayardan tarayıcıyı açın.</li>
+                <li>Yukarıdaki URL adresine girin.</li>
+                <li>VegaWin Excel/CSV dosyasını seçip "Verileri Gönder" butonuna basın.</li>
+                <li>Veriler anında Ana PC'ye aktarılır; yeni ürünler etiket masasında listelenir.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================================
+           SEKME 5: YAZICI & DONANIM AYARLARI (OYMAPOS 4-CARD KALİBRASYON)
+           ========================================================================= -->
+      <section id="tab-settings" class="tab-pane">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+          
+          <!-- Kart 1: Market & Şube Genel Bilgileri -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>🏪 Market & Şube Genel Bilgileri</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Market / Mağaza Adı (Etiket Üst Başlığı)</label>
+              <input type="text" class="form-input" id="marketName" value="YARENLER" placeholder="Örn: YARENLER SÜPERMARKET" oninput="updateLabelPreview()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Para Birimi & Simge</label>
+              <input type="text" class="form-input" id="currencySymbol" value="₺" placeholder="₺, TL, EUR, USD">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Yasal Açıklama Metni</label>
+              <input type="text" class="form-input" id="legalNoticeText" value="Fiyatlarımıza Kdv Dahildir.">
+            </div>
+          </div>
+
+          <!-- Kart 2: Yazıcılar & Donanım Kalibrasyonu -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>🖨️ Yazıcılar & Donanım Kalibrasyonu</span>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="loadPrinters()" title="Sistemdeki yazıcı listesini yeniden tara">
+                ↺ Yenile
+              </button>
+            </div>
+
+            <!-- Çift Yazıcı Seçici -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div class="form-group">
+                <label class="form-label" style="color:#818cf8;">🏷️ Raf Etiketi Yazıcısı</label>
+                <select class="form-select" id="printerSelect" style="border-color:rgba(99,102,241,0.4);">
+                  <option>Yazıcılar aranıyor...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="color:#34d399;">🧾 Fiş Yazıcısı</label>
+                <select class="form-select" id="receiptPrinterSelect" style="border-color:rgba(16,185,129,0.4);">
+                  <option>Yazıcılar aranıyor...</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Ebat ve Besleme Yönü -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div class="form-group">
+                <label class="form-label">Varsayılan Etiket Boyutu</label>
+                <select class="form-select" id="labelPresetSelect" onchange="handlePresetChange(this.value)">
+                  <option value="76x40" selected>76 x 40 mm (Standart Market)</option>
+                  <option value="60x40">60 x 40 mm (Kompakt Raf)</option>
+                  <option value="85x45">85 x 45 mm (Büyük Boy)</option>
+                  <option value="50x30">50 x 30 mm (Küçük Ürün)</option>
+                  <option value="custom">Özel Boyut...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Besleme Yönü</label>
+                <select class="form-select" id="labelOrientation">
+                  <option value="POR" selected>🔄 90° Yatay (Termal Rulo)</option>
+                  <option value="PON">↕️ 0° Düz</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Milimetre Boyutları -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div class="form-group">
+                <label class="form-label">Genişlik (mm)</label>
+                <input type="number" class="form-input" id="labelWidth" value="76" oninput="updateLabelPreview()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Yükseklik (mm)</label>
+                <input type="number" class="form-input" id="labelHeight" value="40" oninput="updateLabelPreview()">
+              </div>
+            </div>
+
+            <!-- Kontrast ve Ofsetler -->
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+              <div class="form-group">
+                <label class="form-label">Kontrast</label>
+                <input type="number" class="form-input" id="labelDarkness" value="22" min="10" max="30">
+              </div>
+              <div class="form-group">
+                <label class="form-label">X Ofset</label>
+                <input type="number" class="form-input" id="labelXOffset" value="0" step="5">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Y Ofset</label>
+                <input type="number" class="form-input" id="labelYOffset" value="0" step="5">
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:14px;">
+              <button class="btn btn-primary" onclick="savePrinterSettings()" style="flex:1;">
+                💾 Kaydet (Ctrl+S)
+              </button>
+              <button class="btn btn-secondary" onclick="testPrint()">
+                🖨️ Test Baskısı (F2)
+              </button>
+              <button class="btn btn-secondary" onclick="purgeQueue()" style="color:#f43f5e;" title="Kuyruğu Temizle">
+                🧹 Temizle
+              </button>
+            </div>
+          </div>
+
+          <!-- Kart 3: Sistem & Veritabanı Yedekleme -->
+          <div class="card" style="grid-column: span 2;">
+            <div class="card-header">
+              <div class="card-title">
+                <span>💾 Sistem, Veritabanı & Şablon Yedekleme</span>
+              </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:center;">
+              <div>
+                <strong style="color:#fff; font-size:13px; display:block; margin-bottom:4px;">📦 Anlık Yedek İndir</strong>
+                <p style="color:var(--text-secondary); font-size:12px; margin:0 0 10px 0; line-height:1.4;">
+                  Tüm ürün veritabanını, etiket şablonlarını ve yazıcı kalibrasyon ayarlarını zaman damgalı <code>.zip</code> arşivi olarak bilgisayarınıza indirin.
+                </p>
+                <a href="/api/system/backup" class="btn btn-primary btn-sm" style="font-weight:700; display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg, #059669, #047857);">
+                  <span>📥</span> Yedeği İndir (.zip)
+                </a>
+              </div>
+              <div style="border-left:1px solid rgba(255,255,255,0.08); padding-left:16px;">
+                <strong style="color:#fff; font-size:13px; display:block; margin-bottom:4px;">📂 Yedekten Geri Yükle</strong>
+                <p style="color:var(--text-secondary); font-size:12px; margin:0 0 10px 0; line-height:1.4;">
+                  Önceden indirilmiş <code>.zip</code> veya <code>.db</code> yedek dosyasını seçip tüm sistemi anında geri yükleyin.
+                </p>
+                <div style="display:flex; gap:8px;">
+                  <input type="file" id="systemRestoreFileInput" accept=".zip,.db" style="display:none;" onchange="handleSystemRestoreUpload(this.files)">
+                  <button class="btn btn-secondary btn-sm" onclick="document.getElementById('systemRestoreFileInput').click()" style="font-weight:700; color:#38bdf8; border-color:rgba(56,189,248,0.4);">
+                    <span>📂</span> Yedek Dosyası Seç & Geri Yükle
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- =========================================================
+       OYMAPOS TEKLİ ETİKET ÖNİZLEME VE BASKI MODALI
+       ========================================================= -->
+  <div id="modal-label-preview" class="modal-backdrop" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(6px); z-index:99999; align-items:center; justify-content:center; padding:20px;">
+    <div class="modal-card" style="background:#0b1329; border:1px solid rgba(56,189,248,0.3); border-radius:12px; max-width:600px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.9); overflow:hidden; display:flex; flex-direction:column;">
+      
+      <!-- Modal Header -->
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 20px; background:#070d1e; border-bottom:1px solid rgba(255,255,255,0.08);">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:20px;">🏷️</span>
+          <div>
+            <strong style="font-size:14px; color:#fff; display:block;">Etiket Canlı Önizlemesi</strong>
+            <span style="font-size:11px; color:#94a3b8;">Yarenler Market Raf Etiketi Standart Formatı</span>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="closeLabelPreviewModal()" style="padding:4px 10px; font-size:13px; border-radius:6px;">✕</button>
+      </div>
+
+      <!-- Modal Body (Preview Canvas & Info) -->
+      <div style="padding:24px 20px; background:radial-gradient(circle, #1e293b 10%, #020617 90%); display:flex; flex-direction:column; align-items:center; gap:16px;">
+        <div class="market-label size-76x40" id="modal-shelf-label" style="transform:scale(1.25); transform-origin:center center; box-shadow:0 15px 35px rgba(0,0,0,0.65), 0 0 0 1px rgba(0,0,0,0.15); border-radius:4px; margin: 10px 0;">
+          
+          <div class="ml-top-row" style="border-bottom:1.5px solid #000; padding-bottom:2mm; width:100%;">
+            <div class="ml-title-area full-width" style="width:100%;">
+              <div class="ml-title-line1" id="modal-lbl-title-1" style="font-size:13.5px; font-weight:900; line-height:1.2; letter-spacing:-0.2px; text-transform:uppercase;">ÜRÜN ADI</div>
+              <div class="ml-title-line2" id="modal-lbl-title-2" style="font-size:12px; font-weight:900; line-height:1.2; letter-spacing:-0.2px; text-transform:uppercase; margin-top:1px;"></div>
+            </div>
+          </div>
+
+          <div class="ml-mid-row" style="border-bottom:1.5px solid #000; padding:1.5mm 0; display:flex; justify-content:space-between; align-items:center;">
+            <div class="ml-brand-col" id="modal-lbl-brand" style="font-size:12px; font-weight:900; letter-spacing:-0.2px; text-transform:uppercase; color:#000;">YARENLER</div>
+            <div class="ml-legal-col" style="font-size:7.5px; line-height:1.3; font-weight:600; text-align:right;">
+              <div>Üretim Yeri: <strong id="modal-lbl-origin">TÜRKİYE</strong></div>
+              <div>Fiyatlarımıza KDV Dahildir.</div>
+              <div>Fiyat Değiştirme Tarihi: <span id="modal-lbl-date">-</span></div>
+            </div>
+          </div>
+
+          <div class="ml-bottom-row" style="display:flex; align-items:center; justify-content:space-between; padding-top:1.5mm;">
+            <div class="ml-barcode-col" style="flex:1;">
+              <svg id="modal-barcode-svg" style="max-height:38px; width:auto;"></svg>
+            </div>
+            <div class="ml-divider-col" style="display:flex; flex-direction:column; align-items:center; font-size:7px; font-weight:800; line-height:1.1; text-transform:uppercase; padding:0 4px; border-left:1px solid #000; border-right:1px solid #000; margin:0 4px;">
+              <span>SATIŞ</span>
+              <span>FİYATI</span>
+            </div>
+            <div class="ml-price-col" style="text-align:right;">
+              <span class="price-val" id="modal-lbl-price" style="font-size:25px; font-weight:900; font-family:'Inter', sans-serif; letter-spacing:-0.8px; white-space:nowrap;">0,00 TL</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Terazi / Gramaj Rozeti (Varsa) -->
+        <div id="modal-scale-badge" style="display:none; width:100%; background:rgba(234,179,8,0.12); border:1px solid rgba(234,179,8,0.3); border-radius:6px; padding:6px 12px; font-size:12px; color:#facc15; font-weight:700; text-align:center;">
+          ⚖️ Terazi / Gramajlı Ürün
+        </div>
+
+        <!-- Fiyat Değişim Geçmişi Özeti -->
+        <div id="modal-price-history-wrap" style="width:100%; background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px 14px; font-size:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <strong style="color:#38bdf8; font-size:11.5px;">📈 Fiyat Değişim Geçmişi:</strong>
+            <span id="modal-history-count" style="color:var(--text-muted); font-size:11px;">0 Değişim</span>
+          </div>
+          <div id="modal-history-list" style="max-height:80px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;">
+            <div style="color:var(--text-muted); font-size:11px;">Kayıtlı fiyat değişimi bulunmuyor.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 20px; background:#070d1e; border-top:1px solid rgba(255,255,255,0.08);">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <label style="font-size:12px; font-weight:700; color:#94a3b8;">Baskı Adedi (Kopya):</label>
+          <div style="display:inline-flex; align-items:center; border:1px solid rgba(255,255,255,0.15); border-radius:6px; overflow:hidden; background:#0f172a;">
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('modal-print-copies').value = Math.max(1, parseInt(document.getElementById('modal-print-copies').value||1)-1)" style="padding:4px 8px; border:none; border-radius:0;">-</button>
+            <input type="number" id="modal-print-copies" value="1" min="1" max="99" style="width:44px; padding:4px 0; background:transparent; border:none; color:#fff; font-size:13px; font-weight:800; text-align:center;">
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('modal-print-copies').value = Math.min(99, parseInt(document.getElementById('modal-print-copies').value||1)+1)" style="padding:4px 8px; border:none; border-radius:0;">+</button>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-secondary btn-sm" onclick="openProductInStudio()" style="font-weight:700; padding:7px 14px;">
+            🎨 Stüdyoda Düzenle
+          </button>
+          <button id="modal-btn-print" class="btn btn-primary btn-sm" onclick="printFromModal()" style="font-weight:800; padding:7px 20px; background:linear-gradient(135deg, #10b981, #059669); box-shadow:0 4px 12px rgba(16,185,129,0.35);">
+            🖨️ Hemen Yazdır (Enter)
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================
+       A4 ÇOKLU ETİKET DİZGİSİ VE YAZDIRMA MODALI
+       ========================================================= -->
+  <div id="modal-a4-sheet" class="modal-backdrop" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.88); backdrop-filter:blur(6px); z-index:99999; align-items:center; justify-content:center; padding:20px;">
+    <div class="modal-card" style="background:#0b1329; border:1px solid rgba(56,189,248,0.3); border-radius:12px; max-width:650px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.9); overflow:hidden; display:flex; flex-direction:column;">
+      
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 20px; background:#070d1e; border-bottom:1px solid rgba(255,255,255,0.08);">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:22px;">📄</span>
+          <div>
+            <strong style="font-size:15px; color:#fff; display:block;">A4 Çoklu Etiket Sayfa Dizgisi</strong>
+            <span style="font-size:11.5px; color:#94a3b8;">Lazer & Mürekkep Püskürtmeli Yazıcılar için A4 Etiket Dizgisi</span>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="closeA4SheetModal()" style="padding:4px 10px; font-size:13px; border-radius:6px;">✕</button>
+      </div>
+
+      <div style="padding:22px 20px; display:flex; flex-direction:column; gap:16px;">
+        <div>
+          <label style="font-size:12px; font-weight:700; color:#38bdf8; display:block; margin-bottom:6px;">📐 A4 Etiket Kağıdı Modeli (Şablon):</label>
+          <select id="a4-sheet-preset-select" class="form-select" style="font-size:13px; padding:8px 10px; background:#0f172a; border-color:rgba(56,189,248,0.3); color:#fff; font-weight:700;">
+            <option value="a4-24" selected>📄 24'lü Standart A4 (3 Sütun × 8 Satır - 70 × 37 mm)</option>
+            <option value="a4-40">📄 40'lı Kompakt A4 (4 Sütun × 10 Satır - 52.5 × 29.7 mm)</option>
+            <option value="a4-65">📄 65'li Mini A4 (5 Sütun × 13 Satır - 38 × 21.2 mm)</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size:12px; font-weight:700; color:#38bdf8; display:block; margin-bottom:6px;">📦 Basılacak Ürün Kapsamı:</label>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <label style="display:flex; align-items:center; gap:8px; background:rgba(15,23,42,0.8); padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); cursor:pointer;">
+              <input type="radio" name="a4-scope" value="filtered" checked style="accent-color:#0284c7;">
+              <span style="font-size:12px; color:#fff; font-weight:600;">Arama Sonuçları / Filtrelenenler</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; background:rgba(15,23,42,0.8); padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); cursor:pointer;">
+              <input type="radio" name="a4-scope" value="diff_only" style="accent-color:#0284c7;">
+              <span style="font-size:12px; color:#fbbf24; font-weight:600;">Sadece Fiyatı Değişenler</span>
+            </label>
+          </div>
+        </div>
+
+        <div style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.2); border-radius:8px; padding:12px; font-size:12px; color:#94a3b8; line-height:1.5;">
+          💡 <strong>Nasıl Çalışır?</strong> "A4 Önizle ve Yazdır" butonuna bastığınızda seçilen ürünler barkodlarıyla beraber A4 sayfasına dizilir ve tarayıcının standart yazdırma ekranı (PDF kaydetme veya Lazer Yazıcıya gönderme) açılır.
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px; padding:14px 20px; background:#070d1e; border-top:1px solid rgba(255,255,255,0.08);">
+        <button class="btn btn-secondary" onclick="closeA4SheetModal()">Vazgeç</button>
+        <button class="btn btn-primary" onclick="generateAndPrintA4Sheet()" style="font-weight:800; padding:8px 20px; background:linear-gradient(135deg, #0284c7, #2563eb); box-shadow:0 4px 12px rgba(2,132,199,0.35);">
+          🖨️ A4 Önizle ve Yazdır
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JS Modülleri -->
+  <script src="/frontend/js/api.js?v={{ cache_bust }}"></script>
+  <script src="/frontend/js/ui.js?v={{ cache_bust }}"></script>
+  <script src="/frontend/js/app.js?v={{ cache_bust }}"></script>
+</body>
+</html>
+

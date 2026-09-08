@@ -1,0 +1,20 @@
+/* =========================================================
+   OYMAPOS & MARKET RAF ETİKETİ - ANA CSS GİRİŞ NOKTASI
+   Modüler yapı: Tüm CSS dosyaları @import ile düzenli yüklenir.
+   ========================================================= */
+
+@import url('/frontend/stiller/masaustu/temel/degiskenler.css');
+@import url('/frontend/stiller/masaustu/temel/sidebar_ve_topbar.css');
+@import url('/frontend/stiller/masaustu/temel/ortak_bilesenler.css');
+@import url('/frontend/stiller/masaustu/paneller/ana_sayfa.css');
+@import url('/frontend/stiller/masaustu/paneller/hizli_satis.css');
+@import url('/frontend/stiller/masaustu/paneller/katalog.css');
+@import url('/frontend/stiller/masaustu/paneller/senkronizasyon.css');
+@import url('/frontend/stiller/masaustu/paneller/etiket_tasarim.css');
+@import url('/frontend/stiller/masaustu/paneller/manav_terazi.css');
+@import url('/frontend/stiller/masaustu/paneller/raporlar.css');
+@import url('/frontend/stiller/masaustu/paneller/qr_ve_cihazlar.css');
+@import url('/frontend/stiller/masaustu/paneller/yedekleme.css');
+@import url('/frontend/stiller/masaustu/paneller/ayarlar.css');
+@import url('/frontend/stiller/masaustu/modallar/modallar.css');
+@import url('/frontend/stiller/masaustu/temalar/acik_tema.css');
