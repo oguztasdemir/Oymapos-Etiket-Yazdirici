@@ -1,0 +1,294 @@
+<!-- SEKME 2: ETİKET DÜZENLE & ŞABLONLAR (OYMAPOS 1-TO-1 STÜDYO) -->
+<section id="tab-design" class="tab-pane">
+
+  <!-- GÖRÜNÜM 1: ETİKET ŞABLONLARI DİKEY LİSTESİ & CANLI TASARIM ÖNİZLEMELERİ -->
+  <div id="studio-view-list" class="panel-section">
+    <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:18px;">
+      <div>
+        <h2 class="panel-title" style="font-size:18px; font-weight:800; color:#fff;">🏷️ Etiket Modelleri & Şablonlar</h2>
+        <span class="panel-desc" style="font-size:12px; color:var(--text-secondary);">Tüm etiket şablonlarının gerçek tasarımlarını ve önizlemelerini aşağıda inceleyebilirsiniz</span>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="onPromptNewTemplate()" style="font-weight:800; padding:6px 14px;">
+        ➕ Yeni Şablon Oluştur
+      </button>
+    </div>
+
+    <!-- Alt Alta Listelenen Şablon Kartları -->
+    <div id="templatesListContainer" class="template-full-list" style="display:flex; flex-direction:column; gap:16px;">
+      <!-- JS Dinamik Doldurur -->
+    </div>
+  </div>
+
+  <!-- GÖRÜNÜM 2: ETİKET ÖZELLEŞTİRME & STÜDYO DÜZENLEYİCİ -->
+  <div id="studio-view-editor" class="panel-section" style="display:none;">
+    <!-- Üst Geri Dön Çubuğu -->
+    <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px; background:#070d1e; padding:10px 14px; border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="btn btn-secondary btn-sm" onclick="showTemplatesListView()" style="font-weight:800; padding:5px 12px; color:#38bdf8; display:flex; align-items:center; gap:6px;">
+          ⬅ Şablon Listesine Geri Dön
+        </button>
+        <div style="font-size:14px; font-weight:800; color:#fff;">
+          🎨 Düzenleniyor: <span id="editor-active-tpl-title" style="color:#38bdf8;">Standart Raf Modeli</span>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" id="editor-btn-make-default" class="btn btn-primary btn-sm" onclick="onMakeTemplateDefault()" style="font-weight:800; background:linear-gradient(135deg, #059669, #047857);">
+          ⭐ Varsayılan Yap
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="saveCurrentTemplate()" style="font-weight:800; color:#38bdf8;">
+          💾 Tasarımı Kaydet
+        </button>
+      </div>
+    </div>
+
+    <!-- Stüdyo 2 Sütun Grid Alanı -->
+    <div class="label-studio-grid" style="display:grid; grid-template-columns:330px 1fr; gap:18px; align-items:start;">
+      
+      <!-- SOL SÜTUN: ETİKET PARAMETRELERİ & HIZLI BİLGİ GİRİŞİ -->
+      <div class="studio-sidebar-card card" style="padding:14px; display:flex; flex-direction:column; gap:12px; max-height:calc(100vh - 200px); overflow-y:auto;">
+        
+        <!-- 0. KUTU: Etiket Şablonu & Varsayılan Yönetimi -->
+        <div style="background:rgba(15,23,42,0.9); border:1.5px solid rgba(56,189,248,0.25); border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <label style="font-size:11px; font-weight:800; color:#38bdf8;">🏷️ Etiket Şablonu:</label>
+            <span id="studio-tpl-badge" class="badge" style="background:rgba(52,211,153,0.15); color:#34d399; font-size:9.5px; font-weight:800; padding:2px 6px;">⭐ Varsayılan</span>
+          </div>
+          <select id="studio-template-select" class="form-select" onchange="onStudioTemplateSelect(this.value)" style="font-size:11.5px; padding:5px 8px; font-weight:700; color:#f8fafc; background:#0b1329; border:1.5px solid #38bdf8;">
+            <!-- JS Doldurur -->
+          </select>
+
+          <!-- Şablon Aksiyonları -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+            <button type="button" id="btn-set-default-tpl" class="btn btn-primary btn-sm" onclick="onMakeTemplateDefault()" style="font-size:10.5px; padding:4px 6px; font-weight:800; background:linear-gradient(135deg, #059669, #047857);" title="Bu şablonu tüm yazdırmalarda varsayılan aktif etiket yap">
+              ⭐ Varsayılan Yap
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="onPromptNewTemplate()" style="font-size:10.5px; padding:4px 6px; font-weight:700;" title="Mevcut tasarımdan yeni özel şablon oluştur">
+              ➕ Yeni Şablon
+            </button>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="saveCurrentTemplate()" style="font-size:10px; padding:4px 5px; color:#38bdf8;" title="Şablon değişikliklerini kaydet">
+              💾 Kaydet
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="duplicateCurrentTemplate()" style="font-size:10px; padding:4px 5px;" title="Şablonun kopyasını çıkar">
+              📋 Kopyala
+            </button>
+            <button type="button" id="btn-delete-tpl" class="btn btn-danger btn-sm" onclick="deleteCurrentTemplate()" style="font-size:10px; padding:4px 5px;" title="Şablonu sil">
+              🗑️ Sil
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. KUTU: Stoktan Ürün Seç & Canlı Yükle -->
+        <div class="search-box">
+          <label style="font-size:11px; font-weight:700; color:#38bdf8; display:block; margin-bottom:4px;">🔍 Stoktan Ürün Seç (Otomatik Doldur):</label>
+          <input type="text" id="studio-product-search" class="form-input" placeholder="Barkod veya ürün adı yazın..." oninput="onStudioSearchProduct(this.value)" autocomplete="off" style="font-size:11.5px; padding:6px 10px;">
+          <div id="studio-stock-dropdown" class="stock-dropdown"></div>
+        </div>
+
+        <!-- 2. KUTU: Hızlı Etiket Bilgileri Giriş Formu (Canlı Senkronize) -->
+        <div style="background:rgba(15,23,42,0.85); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:8px;">
+          <div style="font-size:11px; font-weight:800; color:#38bdf8; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:4px;">
+            ✏️ Etiket Bilgilerini Düzenle
+          </div>
+
+          <!-- Market Adı (Marka) -->
+          <div>
+            <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:2px;">Market / Mağaza Adı:</label>
+            <input type="text" id="studio-inp-market" class="form-input" value="YARENLER" placeholder="Örn: YARENLER" oninput="onStudioMarketNameChange(this.value)" style="font-size:11.5px; padding:5px 8px; font-weight:800; color:#34d399;">
+          </div>
+
+          <!-- Ürün Başlığı 1. Satır -->
+          <div>
+            <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:2px;">Ürün Adı (1. Satır):</label>
+            <input type="text" id="studio-inp-title1" class="form-input" value="ULK 398-6 PIKO PORTAKAL" placeholder="Ürün adı" oninput="onStudioTitle1Change(this.value)" style="font-size:11.5px; padding:5px 8px;">
+          </div>
+
+          <!-- Ürün Başlığı 2. Satır -->
+          <div>
+            <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:2px;">Ürün Alt Detayı (2. Satır):</label>
+            <input type="text" id="studio-inp-title2" class="form-input" value="PIR PAT KAP" placeholder="Alt açıklama (isteğe bağlı)" oninput="onStudioTitle2Change(this.value)" style="font-size:11.5px; padding:5px 8px;">
+          </div>
+
+          <!-- Fiyat ve Barkod (Yan Yana) -->
+          <div style="display:grid; grid-template-columns:1fr 1.2fr; gap:8px;">
+            <div>
+              <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:2px;">Fiyat:</label>
+              <input type="text" id="studio-inp-price" class="form-input" value="25,00 TL" placeholder="25,00 TL" oninput="onStudioPriceInputChange(this.value)" style="font-size:11.5px; padding:5px 8px; font-weight:800; color:#fbbf24;">
+            </div>
+            <div>
+              <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:2px;">Barkod:</label>
+              <input type="text" id="studio-inp-barcode" class="form-input" value="8690504114925" placeholder="8690504114925" oninput="onStudioBarcodeInputChange(this.value)" style="font-size:11px; padding:5px 8px; font-family:monospace;">
+            </div>
+          </div>
+
+          <!-- Menşei ve Tarih (Yan Yana) -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div>
+              <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:2px;">Menşei / Üretim:</label>
+              <input type="text" id="studio-inp-origin" class="form-input" value="TURKIYE" placeholder="TURKIYE" oninput="onStudioOriginInputChange(this.value)" style="font-size:11px; padding:5px 8px;">
+            </div>
+            <div>
+              <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:2px;">Fiyat Tarihi:</label>
+              <input type="text" id="studio-inp-date" class="form-input" placeholder="Bugünün Tarihi" oninput="onStudioDateInputChange(this.value)" style="font-size:11px; padding:5px 8px;">
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. KUTU: Boyut & Sağ Üst Köşe Seçimi -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div>
+            <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:3px;">Etiket Ebadı:</label>
+            <select id="studio-size-select" class="form-select" onchange="onStudioLabelSizeChange(this.value)" style="font-size:11px; padding:5px 6px;">
+              <option value="size-76x40" selected>76 x 40 mm (Standart)</option>
+              <option value="size-60x40">60 x 40 mm (Kompakt)</option>
+              <option value="size-85x45">85 x 45 mm (Büyük Boy)</option>
+              <option value="size-40x20">40 x 20 mm (Mini Barkod)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:10px; font-weight:700; color:#94a3b8; display:block; margin-bottom:3px;">Sağ Üst Rozet:</label>
+            <select id="studio-opt-top-right" class="form-select" onchange="onStudioTopRightChange(this.value)" style="font-size:11px; padding:5px 6px;">
+              <option value="empty" selected>Boş / Gizli</option>
+              <option value="yerli">🇹🇷 Yerli Üretim</option>
+              <option value="discount">🔥 İndirim</option>
+              <option value="unit_price">⚖️ Birim Fiyat</option>
+              <option value="custom_text">📝 Özel Metin</option>
+              <option value="qr">📱 QR Kodu</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 4. KUTU: Punto Sürgüleri (Fiyat & Ürün Adı) -->
+        <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:8px 10px; display:flex; flex-direction:column; gap:6px;">
+          <!-- Fiyat Punto -->
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; color:#94a3b8; font-weight:700; margin-bottom:2px;">
+              <span>Fiyat Punto Boyutu:</span>
+              <span id="studio-price-size-val" style="color:#38bdf8; font-family:monospace; font-weight:800; background:rgba(56,189,248,0.15); padding:1px 5px; border-radius:3px;">26px</span>
+            </div>
+            <input type="range" id="studio-price-size-slider" min="20" max="50" value="26" oninput="onStudioPriceSizeChange(this.value)" style="width:100%; height:4px; accent-color:#0284c7; cursor:pointer;">
+          </div>
+
+          <!-- Ürün Adı Punto -->
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; color:#94a3b8; font-weight:700; margin-bottom:2px;">
+              <span>Ürün Adı Punto Boyutu:</span>
+              <span id="studio-title-size-val" style="color:#38bdf8; font-family:monospace; font-weight:800; background:rgba(56,189,248,0.15); padding:1px 5px; border-radius:3px;">12px</span>
+            </div>
+            <input type="range" id="studio-title-size-slider" min="10" max="22" value="12" oninput="onStudioTitleSizeChange(this.value)" style="width:100%; height:4px; accent-color:#0284c7; cursor:pointer;">
+          </div>
+        </div>
+
+        <!-- 5. KUTU: Görünür Alanlar (2x2 Kompakt Grid) -->
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <label style="font-size:10px; font-weight:700; color:#94a3b8;">Görünür Alanlar:</label>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+            <label style="display:flex; justify-content:space-between; align-items:center; background:#070d1e; padding:5px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); font-size:10px; color:#e2e8f0; font-weight:600; cursor:pointer;">
+              <span>🏷️ Barkod</span>
+              <input type="checkbox" id="studio-chk-show-barcode" checked onchange="toggleStudioElement('barcode', this.checked)" style="accent-color:#0284c7;">
+            </label>
+            <label style="display:flex; justify-content:space-between; align-items:center; background:#070d1e; padding:5px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); font-size:10px; color:#e2e8f0; font-weight:600; cursor:pointer;">
+              <span>⚖️ Birim F.</span>
+              <input type="checkbox" id="studio-chk-show-unit-price" checked onchange="toggleStudioElement('unit-price', this.checked)" style="accent-color:#0284c7;">
+            </label>
+            <label style="display:flex; justify-content:space-between; align-items:center; background:#070d1e; padding:5px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); font-size:10px; color:#e2e8f0; font-weight:600; cursor:pointer;">
+              <span>🇹🇷 Menşei</span>
+              <input type="checkbox" id="studio-chk-show-origin" checked onchange="toggleStudioElement('origin', this.checked)" style="accent-color:#0284c7;">
+            </label>
+            <label style="display:flex; justify-content:space-between; align-items:center; background:#070d1e; padding:5px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); font-size:10px; color:#e2e8f0; font-weight:600; cursor:pointer;">
+              <span>📅 Tarih</span>
+              <input type="checkbox" id="studio-chk-show-date" checked onchange="toggleStudioElement('date', this.checked)" style="accent-color:#0284c7;">
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SAĞ SÜTUN: OYMAPOS CANLI TASARIM SAHNESİ -->
+      <div class="studio-main-area card" style="padding:0; overflow:hidden; display:flex; flex-direction:column; background:#090d16; border:1px solid rgba(255,255,255,0.08); border-radius:10px;">
+        
+        <!-- Üst Araç Çubuğu (Toolbar) -->
+        <div class="studio-toolbar" style="display:flex; justify-content:space-between; align-items:center; padding:8px 14px; background:#070d1e; border-bottom:1px solid rgba(255,255,255,0.08); flex-wrap:wrap; gap:8px;">
+          <div class="toolbar-tools-group" style="display:flex; gap:6px; align-items:center;">
+            <button class="tool-btn btn btn-secondary btn-sm" onclick="addTextElement()" title="Yeni Metin Ekle" style="padding:4px 9px; font-size:11px;">📝 Metin</button>
+            <button class="tool-btn btn btn-secondary btn-sm" onclick="addLineElement()" title="Çizgi Ekle" style="padding:4px 9px; font-size:11px;">➖ Çizgi</button>
+            <button class="tool-btn btn btn-secondary btn-sm" onclick="addBoxElement()" title="Kare / Kutu Ekle" style="padding:4px 9px; font-size:11px;">⬜ Kare</button>
+            <button class="tool-btn btn btn-danger btn-sm" id="btn-delete-selected-el" onclick="deleteSelectedElement()" title="Seçili Öğeyi Sil" style="display:none; padding:4px 9px; font-size:11px;">🗑️ Sil</button>
+            <span style="font-size:10.5px; color:#94a3b8; margin-left:4px;">💡 Öğeleri fare ile sürükleyip taşıyabilirsiniz</span>
+          </div>
+
+          <div class="toolbar-actions-group" style="display:flex; align-items:center; gap:8px;">
+            <span id="editor-preview-name" class="badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; font-size:11px; font-weight:700;">🔒 Standart Raf Modeli</span>
+            <div class="zoom-controls" style="display:inline-flex; align-items:center; gap:4px; margin-left:4px;">
+              <button class="btn btn-secondary btn-sm" style="padding:2px 7px; font-size:11px;" onclick="adjustZoom(-10)">-</button>
+              <span id="zoomPercentText" style="font-size:11px; font-weight:700; color:#94a3b8; min-width:36px; text-align:center;">135%</span>
+              <button class="btn btn-secondary btn-sm" style="padding:2px 7px; font-size:11px;" onclick="adjustZoom(10)">+</button>
+              <button class="btn btn-secondary btn-sm" style="padding:2px 7px; font-size:10px;" onclick="resetZoom()">Sıfırla</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Yazıcı Seçimi & Test Baskı Şeridi -->
+        <div class="studio-printer-bar" style="display:flex; justify-content:space-between; align-items:center; padding:7px 14px; background:#060b17; border-bottom:1px solid rgba(255,255,255,0.06); flex-wrap:wrap; gap:8px;">
+          <div class="printer-select-group" style="display:flex; align-items:center; gap:8px;">
+            <label style="font-size:11px; font-weight:800; color:#94a3b8; white-space:nowrap;">🖨️ Etiket Yazıcısı:</label>
+            <select id="studio-active-printer-select" class="form-select" style="width:210px; padding:3px 8px; font-size:11px; font-weight:700; color:#38bdf8; background:#0b1329; border:1.5px solid #38bdf8; border-radius:4px;">
+              <option>Yazıcılar taranıyor...</option>
+            </select>
+            <span class="status-indicator" id="studioPrinterStatusBadge" style="font-size:10.5px; color:#34d399; font-weight:700;">
+              🟢 Hazır (USB / Ağ)
+            </span>
+          </div>
+          <button id="btn-studio-test-print" class="btn btn-primary btn-sm" onclick="testPrint()" style="padding:5px 14px; font-size:11px; font-weight:800; background:linear-gradient(135deg, #0284c7, #0369a1);">
+            🖨️ Test Etiketi Bas (F2)
+          </button>
+        </div>
+
+        <!-- Canlı Termal Raf Etiketi Sahnesi (Canvas) -->
+        <div class="printable-wrapper studio-canvas-area" onclick="onCanvasBackgroundClick(event)" style="min-height:360px; display:flex; justify-content:center; align-items:center; padding:30px; background:radial-gradient(circle, #1e293b 10%, #020617 90%); overflow:auto; position:relative;">
+          <div class="market-label size-76x40 studio-canvas" id="editor-shelf-label" style="transform: scale(1.35); transform-origin: center center;" onclick="event.stopPropagation()">
+            
+            <!-- 1. Üst Bölüm (Ürün Adı ve Sağ Üst Rozet) -->
+            <div class="ml-top-row draggable-item" id="editor-top-row">
+              <div class="ml-title-area full-width" id="editor-title-area">
+                <div class="ml-title-line1 editable-text" id="editor-lbl-title-1" contenteditable="true" spellcheck="false" oninput="syncLabelText(this)">ULK 398-6 PIKO PORTAKAL</div>
+                <div class="ml-title-line2 editable-text" id="editor-lbl-title-2" contenteditable="true" spellcheck="false" oninput="syncLabelText(this)">PIR PAT KAP</div>
+              </div>
+              <div class="ml-top-right-box" id="editor-lbl-top-right-box" style="display:none;"></div>
+            </div>
+
+            <!-- 2. Orta Bölüm (Market Adı & Yasal Metin) -->
+            <div class="ml-mid-row draggable-item" id="editor-mid-row">
+              <div class="ml-brand-col editable-text" id="editor-lbl-brand" contenteditable="true" spellcheck="false" oninput="syncLabelText(this)">YARENLER</div>
+              <div class="ml-legal-col">
+                <div>Üretim Yeri: <strong class="editable-text" id="editor-lbl-origin" contenteditable="true" spellcheck="false" oninput="syncLabelText(this)">TURKIYE</strong></div>
+                <div>Fiyatlarımıza Kdv Dahildir.</div>
+                <div>Fiyat Değiştirme Tarihi: <span id="editor-lbl-date" class="editable-text" contenteditable="true" spellcheck="false" oninput="syncLabelText(this)"></span></div>
+              </div>
+            </div>
+
+            <!-- 3. Alt Bölüm (Gerçek SVG Barkod, Satış Fiyatı Bölücü, Büyük Fiyat) -->
+            <div class="ml-bottom-row draggable-item" id="editor-bottom-row">
+              <div class="ml-barcode-col">
+                <svg id="editor-barcode-svg"></svg>
+              </div>
+              <div class="ml-divider-col">
+                <span>Satış</span>
+                <span>Fiyatı</span>
+              </div>
+              <div class="ml-price-col">
+                <span class="price-val editable-text" id="editor-lbl-price" contenteditable="true" spellcheck="false" oninput="syncLabelText(this)">25,00 TL</span>
+              </div>
+            </div>
+
+            <!-- Kullanıcının Eklediği Dinamik Katmanlar -->
+            <div id="editor-custom-layers" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>

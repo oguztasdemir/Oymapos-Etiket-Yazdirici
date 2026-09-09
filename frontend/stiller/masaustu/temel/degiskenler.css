@@ -2,18 +2,18 @@
    1. TEMEL DEĞİŞKENLER VE SIFIRLAMALAR
    ========================================================= */
 :root {
-  --bg-dark: #090d16;
-  --bg-sidebar: #0e1424;
-  --bg-card: #131b2e;
-  --bg-input: #090d16;
-  --border-color: #23304d;
+  --bg-dark: #0f172a;
+  --bg-sidebar: #1e293b;
+  --bg-card: #1e293b;
+  --bg-input: #0f172a;
+  --border-color: #334155;
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --accent: #10b981;
-  --danger: #ef4444;
-  --radius: 8px;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --accent: #16a34a;
+  --danger: #dc2626;
+  --radius: 6px;
 }
 
 * {

@@ -1,0 +1,91 @@
+<!-- OYMAPOS TEKLİ ETİKET ÖNİZLEME VE BASKI MODALI -->
+<div id="modal-label-preview" class="modal-backdrop" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(6px); z-index:99999; align-items:center; justify-content:center; padding:20px;">
+  <div class="modal-card" style="background:#0b1329; border:1px solid rgba(56,189,248,0.3); border-radius:12px; max-width:600px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.9); overflow:hidden; display:flex; flex-direction:column;">
+    
+    <!-- Modal Header -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 20px; background:#070d1e; border-bottom:1px solid rgba(255,255,255,0.08);">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:20px;">🏷️</span>
+        <div>
+          <strong style="font-size:14px; color:#fff; display:block;">Etiket Canlı Önizlemesi</strong>
+          <span style="font-size:11px; color:#94a3b8;">Yarenler Market Raf Etiketi Standart Formatı</span>
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="closeLabelPreviewModal()" style="padding:4px 10px; font-size:13px; border-radius:6px;">✕</button>
+    </div>
+
+    <!-- Modal Body (Preview Canvas & Info) -->
+    <div style="padding:24px 20px; background:radial-gradient(circle, #1e293b 10%, #020617 90%); display:flex; flex-direction:column; align-items:center; gap:16px;">
+      <div class="market-label size-76x40" id="modal-shelf-label" style="transform:scale(1.25); transform-origin:center center; box-shadow:0 15px 35px rgba(0,0,0,0.65), 0 0 0 1px rgba(0,0,0,0.15); border-radius:4px; margin: 10px 0;">
+        
+        <div class="ml-top-row" style="border-bottom:1.5px solid #000; padding-bottom:2mm; width:100%;">
+          <div class="ml-title-area full-width" style="width:100%;">
+            <div class="ml-title-line1" id="modal-lbl-title-1" style="font-size:13.5px; font-weight:900; line-height:1.2; letter-spacing:-0.2px; text-transform:uppercase;">ÜRÜN ADI</div>
+            <div class="ml-title-line2" id="modal-lbl-title-2" style="font-size:12px; font-weight:900; line-height:1.2; letter-spacing:-0.2px; text-transform:uppercase; margin-top:1px;"></div>
+          </div>
+        </div>
+
+        <div class="ml-mid-row" style="border-bottom:1.5px solid #000; padding:1.5mm 0; display:flex; justify-content:space-between; align-items:center;">
+          <div class="ml-brand-col" id="modal-lbl-brand" style="font-size:12px; font-weight:900; letter-spacing:-0.2px; text-transform:uppercase; color:#000;">YARENLER</div>
+          <div class="ml-legal-col" style="font-size:7.5px; line-height:1.3; font-weight:600; text-align:right;">
+            <div>Üretim Yeri: <strong id="modal-lbl-origin">TÜRKİYE</strong></div>
+            <div>Fiyatlarımıza KDV Dahildir.</div>
+            <div>Fiyat Değiştirme Tarihi: <span id="modal-lbl-date">-</span></div>
+          </div>
+        </div>
+
+        <div class="ml-bottom-row" style="display:flex; align-items:center; justify-content:space-between; padding-top:1.5mm;">
+          <div class="ml-barcode-col" style="flex:1;">
+            <svg id="modal-barcode-svg" style="max-height:38px; width:auto;"></svg>
+          </div>
+          <div class="ml-divider-col" style="display:flex; flex-direction:column; align-items:center; font-size:7px; font-weight:800; line-height:1.1; text-transform:uppercase; padding:0 4px; border-left:1px solid #000; border-right:1px solid #000; margin:0 4px;">
+            <span>SATIŞ</span>
+            <span>FİYATI</span>
+          </div>
+          <div class="ml-price-col" style="text-align:right;">
+            <span class="price-val" id="modal-lbl-price" style="font-size:25px; font-weight:900; font-family:'Inter', sans-serif; letter-spacing:-0.8px; white-space:nowrap;">0,00 TL</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Terazi / Gramaj Rozeti (Varsa) -->
+      <div id="modal-scale-badge" style="display:none; width:100%; background:rgba(234,179,8,0.12); border:1px solid rgba(234,179,8,0.3); border-radius:6px; padding:6px 12px; font-size:12px; color:#facc15; font-weight:700; text-align:center;">
+        ⚖️ Terazi / Gramajlı Ürün
+      </div>
+
+      <!-- Fiyat Değişim Geçmişi Özeti -->
+      <div id="modal-price-history-wrap" style="width:100%; background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px 14px; font-size:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <strong style="color:#38bdf8; font-size:11.5px;">📈 Fiyat Değişim Geçmişi:</strong>
+          <span id="modal-history-count" style="color:var(--text-muted); font-size:11px;">0 Değişim</span>
+        </div>
+        <div id="modal-history-list" style="max-height:80px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;">
+          <div style="color:var(--text-muted); font-size:11px;">Kayıtlı fiyat değişimi bulunmuyor.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 20px; background:#070d1e; border-top:1px solid rgba(255,255,255,0.08);">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <label style="font-size:12px; font-weight:700; color:#94a3b8;">Baskı Adedi (Kopya):</label>
+        <div style="display:inline-flex; align-items:center; border:1px solid rgba(255,255,255,0.15); border-radius:6px; overflow:hidden; background:#0f172a;">
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('modal-print-copies').value = Math.max(1, parseInt(document.getElementById('modal-print-copies').value||1)-1)" style="padding:4px 8px; border:none; border-radius:0;">-</button>
+          <input type="number" id="modal-print-copies" value="1" min="1" max="99" style="width:44px; padding:4px 0; background:transparent; border:none; color:#fff; font-size:13px; font-weight:800; text-align:center;">
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('modal-print-copies').value = Math.min(99, parseInt(document.getElementById('modal-print-copies').value||1)+1)" style="padding:4px 8px; border:none; border-radius:0;">+</button>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-secondary btn-sm" onclick="openProductInStudio()" style="font-weight:700; padding:7px 14px;">
+          🎨 Stüdyoda Düzenle
+        </button>
+        <button id="modal-btn-print" class="btn btn-primary btn-sm" onclick="printFromModal()" style="font-weight:800; padding:7px 20px; background:linear-gradient(135deg, #10b981, #059669); box-shadow:0 4px 12px rgba(16,185,129,0.35);">
+          🖨️ Hemen Yazdır (Enter)
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

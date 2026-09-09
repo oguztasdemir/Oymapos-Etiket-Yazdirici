@@ -1,11 +1,30 @@
 // ==========================================================================
-// REST API İSTEMCİSİ - api.js (taslak copy/02_KLASOR_HIYERARSISI)
+// REST API İSTEMCİSİ - api.js
 // ==========================================================================
 
 const API = {
-  // 1. Ağ & QR Bilgisi
+  // 1. Ağ & QR & Bağlı Cihazlar
   async getNetworkInfo() {
     const res = await fetch('/api/network/info');
+    return await res.json();
+  },
+
+  async getConnectedDevices() {
+    const res = await fetch('/api/network/devices');
+    return await res.json();
+  },
+
+  async getDeviceData(deviceId) {
+    const res = await fetch(`/api/network/devices/${encodeURIComponent(deviceId)}/data`);
+    return await res.json();
+  },
+
+  async registerDevice(deviceData = {}) {
+    const res = await fetch('/api/network/register-device', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(deviceData)
+    });
     return await res.json();
   },
 
@@ -35,6 +54,14 @@ const API = {
   },
 
   // 3. Ürün İşlemleri
+  async getProducts(query = '', onlyNew = false, onlyDiff = false, limit = 0) {
+    const newParam = onlyNew ? '&only_new=true' : '';
+    const diffParam = onlyDiff ? '&only_diff=true' : '';
+    const limitParam = limit > 0 ? `&limit=${limit}` : '';
+    const res = await fetch(`/api/products?q=${encodeURIComponent(query)}${limitParam}${newParam}${diffParam}`);
+    return await res.json();
+  },
+
   async searchProducts(query = '', limit = 0, onlyNew = false, onlyDiff = false) {
     const newParam = onlyNew ? '&only_new=true' : '';
     const diffParam = onlyDiff ? '&only_diff=true' : '';
@@ -71,6 +98,11 @@ const API = {
 
   async syncLabelPrices() {
     const res = await fetch('/api/products/sync-label-prices', { method: 'POST' });
+    return await res.json();
+  },
+
+  async confirmProductPrinted(barcode) {
+    const res = await fetch(`/api/products/${encodeURIComponent(barcode)}/confirm-printed`, { method: 'POST' });
     return await res.json();
   },
 

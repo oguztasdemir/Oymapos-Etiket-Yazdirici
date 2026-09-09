@@ -1,0 +1,148 @@
+<!-- SEKME 4: BAĞLI CİHAZLAR & TERMİNALLER (AYRI ÖZEL PANEL) -->
+<section id="tab-devices" class="tab-pane">
+  
+  <!-- Üst Başlık & Cihaz Durum Bannerı -->
+  <div class="card" style="margin-bottom: 18px; background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%); border-color: rgba(56, 189, 248, 0.25);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; padding: 6px 4px;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+          📱
+        </div>
+        <div>
+          <h2 style="font-size: 17px; font-weight: 800; color: #fff; margin: 0;">Bağlı Cihazlar, Mobil Terminaller & Ağ Merkezi</h2>
+          <span style="font-size: 12px; color: var(--text-muted);">Yerel ağdaki (Wi-Fi) tüm mobil telefonlar, reyon el terminalleri ve VegaWin PC bağlantıları</span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-secondary btn-sm" onclick="loadNetworkInfo(); showToast('Ağ durumu yenilendi', 'info');">
+          🔄 Ağı Yenile
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    
+    <!-- CİHAZ 1: Telefon Kamerası & Mobil Barkod Okuyucu -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>📱 1. Mobil Barkod Terminali (Telefon / Tablet)</span>
+        </div>
+        <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; font-weight: 700; font-size: 11px;">🟢 Wi-Fi Aktif</span>
+      </div>
+
+      <div class="qr-container" style="text-align:center; padding:16px 0;">
+        <img id="qrImage" src="" alt="Mobil QR Kodu" style="width:190px; height:190px; border-radius:12px; background:#fff; padding:10px; box-shadow:0 10px 30px rgba(0,0,0,0.4);">
+        <div style="font-size:12.5px; color:var(--text-secondary); margin-top:12px; font-weight: 500;">
+          Aynı Wi-Fi ağına bağlı telefonunuzun kamerası ile QR kodu okutun.
+        </div>
+      </div>
+
+      <div class="info-box" style="background:#0e1424; border:1px solid var(--border-subtle); padding:12px; border-radius:8px; margin-top:8px;">
+        <div class="info-label" style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Doğrudan Mobil Terminal Bağlantı Adresi:</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <code class="info-code" id="mobileUrlText" style="flex:1; font-family:monospace; color:#38bdf8;">-</code>
+          <button class="btn btn-secondary btn-sm" onclick="copyUrl('mobileUrlText')">Kopyala</button>
+          <a id="mobileDirectOpenBtn" href="/mobile" target="_blank" class="btn btn-primary btn-sm" style="text-decoration:none;">Aç ↗</a>
+        </div>
+      </div>
+
+      <div style="margin-top: 14px; font-size: 12px; color: var(--text-muted); line-height: 1.5; background: rgba(56, 189, 248, 0.05); padding: 10px; border-radius: 8px;">
+        💡 <strong>Ne İşe Yarar?</strong> Reyonlarda gezerken telefon kamerasıyla ürün barkodunu okutabilir, kasa fiyatını anında görebilir ve tek dokunuşla ana bilgisayardaki yazıcıdan etiket bastırabilirsiniz.
+      </div>
+    </div>
+
+    <!-- CİHAZ 2: VegaWin Kasa PC & Ağ Dosya Aktarımı -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>⚡ 2. VegaWin PC Ağ Senkronizasyon Portalı</span>
+        </div>
+        <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; font-weight: 700; font-size: 11px;">🌐 Tarayıcı Portalı</span>
+      </div>
+
+      <div class="info-box" style="background:#0e1424; border:1px solid var(--border-subtle); padding:12px; border-radius:8px; margin-bottom:14px; margin-top: 6px;">
+        <div class="info-label" style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">VegaWin Bilgisayarından Giriş Adresi:</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <code class="info-code" id="syncUrlText" style="flex:1; font-family:monospace; color:#38bdf8;">-</code>
+          <button class="btn btn-secondary btn-sm" onclick="copyUrl('syncUrlText')">Kopyala</button>
+          <a id="syncDirectOpenBtn" href="/sync" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;">Aç ↗</a>
+        </div>
+      </div>
+
+      <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.6;">
+        <strong style="color: var(--text-main);">📌 VegaWin Bilgisayarından Veri Nasıl Gönderilir?</strong>
+        <ol style="margin-top:8px; margin-left:18px; display: flex; flex-direction: column; gap: 6px;">
+          <li>VegaWin'in kurulu olduğu muhasebe veya kasa bilgisayarından Google Chrome'u açın.</li>
+          <li>Adres satırına yukarıdaki <strong>Senkronizasyon Adresini</strong> yazın.</li>
+          <li>VegaWin'den dışa aktardığınız Excel (.xlsx) veya CSV dosyasını seçip gönderin.</li>
+          <li>Tüm yeni ürünler ve değişen fiyatlar anında bu ekrandaki etiket masasına yansır.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- CİHAZ 3: DİĞER BİLGİSAYARLAR İÇİN TEK TIKLA .EXE İNDİRİCİ & KURULUM -->
+  <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%); border: 1.5px solid #10b981;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; padding: 6px 4px;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: #34d399; display: flex; align-items: center; justify-content: center; font-size: 26px;">
+          💻
+        </div>
+        <div>
+          <h3 style="font-size: 16px; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
+            Başka Bilgisayarlar İçin Doğrudan Program İndirici (.EXE)
+            <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 700;">Hazır Windows Uygulaması</span>
+          </h3>
+          <p style="font-size: 12.5px; color: #94a3b8; margin: 3px 0 0 0;">
+            Bu sistemi dükkandaki başka bir bilgisayara kurmak için aşağıdaki linkten tek tıkla indirip çift tıklayarak çalıştırabilirsiniz (Python veya kurulum gerektirmez).
+          </p>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <a href="/api/system/download-installer" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); font-weight: 800; padding: 10px 22px; font-size: 13.5px; text-decoration: none; border-radius: 8px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4); display: flex; align-items: center; gap: 8px;">
+          <span>⬇️</span> Programı İndir (.ZIP / .EXE)
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. KART: CANLI BAĞLI CİHAZLAR VE TERMİNAL LİSTESİ -->
+  <div class="card" style="margin-top: 20px;">
+    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+      <div class="card-title">
+        <span>🖥️ Canlı Bağlanan Cihazlar & Terminaller</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="badge badge-success" id="connectedDevicesCountBadge">0 Cihaz Çevrimiçi</span>
+        <button class="btn btn-secondary btn-sm" onclick="loadConnectedDevicesTable()" style="padding:4px 10px; font-size:11.5px;">
+          🔄 Yenile
+        </button>
+      </div>
+    </div>
+    <div style="padding:16px;">
+      <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:14px;">
+        Bu ana bilgisayara yerel ağdan bağlanan dükkan bilgisayarları, kasa terminalleri ve mobil barkod okuyucular aşağıda listelenir.
+      </p>
+      <div class="table-container" style="max-height:240px; overflow-y:auto;">
+        <table class="table-excel">
+          <thead>
+            <tr>
+              <th>Cihaz / Terminal Adı</th>
+              <th>Cihaz Türü</th>
+              <th>IP Adresi</th>
+              <th>Son Bağlantı / Görülme</th>
+              <th style="text-align:center; width:120px;">Bağlantı Durumu</th>
+              <th style="text-align:center; width:130px;">İşlem / Seçim</th>
+            </tr>
+          </thead>
+          <tbody id="connectedDevicesTableBody">
+            <tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">Bağlı cihaz aranıyor...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>

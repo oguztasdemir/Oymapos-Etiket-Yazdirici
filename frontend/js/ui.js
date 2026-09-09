@@ -1,6 +1,17 @@
 // ==========================================================================
-// UI MOTORU VE ETKİLEŞİMLER - ui.js (taslak copy/04_ARAYUZ_TASARIM)
+// UI MOTORU VE ETKİLEŞİMLER - ui.js
 // ==========================================================================
+
+// Global HTML Escape Güvenlik Yardımcısı
+function escapeHtml(text) {
+  if (text === null || text === undefined) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 // 1. SESLİ GERİ BİLDİRİM (Web Audio API)
 class SoundFeedback {

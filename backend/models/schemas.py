@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-📐 Pydantic Veri Modelleri ve Şemalar (taslak copy/02_KLASOR_HIYERARSISI_VE_MODULERLIK)
+📐 Pydantic Veri Modelleri ve Şemalar
 """
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-🛠️ API Yanıt ve UTF-8 Konsol Yardımcıları (taslak copy/08_KOD_KALITESI_GUVENLIK_VE_VERI_YONETIMI)
+🛠️ API Yanıt ve UTF-8 Konsol Yardımcıları
 """
 import sys
 from typing import Any, Dict, Optional

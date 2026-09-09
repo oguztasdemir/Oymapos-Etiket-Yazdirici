@@ -1,0 +1,148 @@
+<!-- SEKME 0: ANA SAYFA & HOŞ GELDİNİZ ÖZET PANELİ -->
+<section id="tab-home" class="tab-pane active">
+  
+  <!-- Üst Hoş Geldiniz Karşılama Alanı -->
+  <div class="home-welcome-hero">
+    <div class="welcome-text-group">
+      <div class="welcome-badge">
+        <span class="badge-dot"></span>
+        <span>Sistem Aktif &bull; VegaWin Bağlantısı Hazır</span>
+      </div>
+      <h1 class="welcome-title">
+        Hoş Geldiniz, <span id="homeMarketName" class="highlight-text">YARENLER</span> 👋
+      </h1>
+      <p class="welcome-subtitle">
+        Reyon etiketleri, kasa fiyat değişimleri ve mobil terminalleri tek bir yerden kolayca yönetin.
+      </p>
+    </div>
+
+    <div class="welcome-hero-action">
+      <button class="btn btn-primary btn-hero" onclick="switchTab('tab-search')">
+        <span>📦 Ürünler & Etiket Masası</span>
+        <span class="arrow-icon">➔</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 3'lü Büyük Özet Metrik Kartları -->
+  <div class="home-summary-grid">
+    
+    <div class="summary-card" onclick="switchTab('tab-search')">
+      <div class="summary-card-header">
+        <div class="summary-icon blue">📦</div>
+        <span class="summary-tag">Kayıtlı Stok</span>
+      </div>
+      <div class="summary-val" id="homeBadgeTotalProducts">4.925 Ürün</div>
+      <div class="summary-desc">VegaWin veritabanındaki tüm barkodlu ürünler</div>
+    </div>
+
+    <div class="summary-card warning" onclick="switchTab('tab-search'); toggleFilter('diff');">
+      <div class="summary-card-header">
+        <div class="summary-icon yellow">⚠️</div>
+        <span class="summary-tag tag-warning">Fiyat Takibi</span>
+      </div>
+      <div class="summary-val text-warning" id="homeInfoDiffStock">Fiyat Farkı Kontrolü</div>
+      <div class="summary-desc">Kasa fiyatı ile raftaki etiket fiyatı uyuşmayanlar</div>
+    </div>
+
+    <div class="summary-card success" onclick="switchTab('tab-devices')">
+      <div class="summary-card-header">
+        <div class="summary-icon green">📱</div>
+        <span class="summary-tag tag-success">Ağ & Terminaller</span>
+      </div>
+      <div class="summary-val text-green" id="homeInfoIpAddress">{{ local_ip }}</div>
+      <div class="summary-desc">Reyon el terminali ve Wi-Fi aktarım servisi</div>
+    </div>
+
+  </div>
+
+  <!-- 2 Kolonlu Özet & Hızlı Bilgi Paneli -->
+  <div class="home-overview-layout">
+    
+    <!-- Sol Kolon: Doğrudan Temel Modüller -->
+    <div class="home-overview-card">
+      <div class="overview-header">
+        <h3>🧭 Hızlı Modül Yönlendirmesi</h3>
+        <span class="overview-sub">Sık kullanılan ana çalışma alanları</span>
+      </div>
+      
+      <div class="overview-nav-list">
+        <div class="nav-overview-item" onclick="switchTab('tab-search')">
+          <div class="item-icon-wrap blue">📦</div>
+          <div class="item-text">
+            <strong>Ürünler & Etiket Masası</strong>
+            <span>Tüm stok listesi, canlı barkod arama, anlık baskı ve Excel listesi</span>
+          </div>
+          <span class="item-arrow">➔</span>
+        </div>
+
+        <div class="nav-overview-item" onclick="switchTab('tab-design')">
+          <div class="item-icon-wrap purple">🎨</div>
+          <div class="item-text">
+            <strong>Etiket Düzenle & Şablonlar</strong>
+            <span>Raf etiketi şablonu, market başlığı, indirim ve görsel stüdyo</span>
+          </div>
+          <span class="item-arrow">➔</span>
+        </div>
+
+        <div class="nav-overview-item" onclick="switchTab('tab-vegawin')">
+          <div class="item-icon-wrap yellow">⚡</div>
+          <div class="item-text">
+            <strong>VegaWin Senkronizasyonu</strong>
+            <span>Fiyat değişimlerini içeri aktar, yeni ürünleri kontrol et ve geçmişi incele</span>
+          </div>
+          <span class="item-arrow">➔</span>
+        </div>
+
+        <div class="nav-overview-item" onclick="switchTab('tab-devices')">
+          <div class="item-icon-wrap green">📱</div>
+          <div class="item-text">
+            <strong>Bağlı Cihazlar & Terminaller</strong>
+            <span>Telefon kamerası QR barkod okuyucu ve ağ dosya aktarım merkezi</span>
+          </div>
+          <span class="item-arrow">➔</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sağ Kolon: Sistem Durumu & Kısayol İpuçları -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      
+      <div class="home-overview-card">
+        <div class="overview-header">
+          <h3>🖨️ Donanım & Sistem</h3>
+          <span class="badge badge-success" style="font-size:11px;">Aktif</span>
+        </div>
+        
+        <div class="system-status-list">
+          <div class="sys-item">
+            <span class="sys-label">Yazıcı Modeli:</span>
+            <span class="sys-val" id="homeInfoPrinterName">Termal Etiket Yazıcı</span>
+          </div>
+          <div class="sys-item">
+            <span class="sys-label">Etiket Formatı:</span>
+            <span class="sys-val">58mm × 40mm Termal Standart</span>
+          </div>
+          <div class="sys-item">
+            <span class="sys-label">Veritabanı:</span>
+            <span class="sys-val status-online">🟢 VegaWin DB Bağlı</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="home-overview-card shortcut-card">
+        <div class="overview-header">
+          <h3>💡 Pratik Kısayollar</h3>
+        </div>
+        <div class="shortcut-list">
+          <div class="sc-item"><kbd>Ctrl</kbd> + <kbd>K</kbd> <span>Ürün arama kutusuna odaklan</span></div>
+          <div class="sc-item"><kbd>F2</kbd> <span>Hızlı test etiketi yazdır</span></div>
+          <div class="sc-item"><kbd>Menü</kbd> <span>Sol menüyü gizleyip tam ekrana geç</span></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>

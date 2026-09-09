@@ -1,0 +1,91 @@
+<!-- SEKME 1: ÜRÜNLER & ETİKET MASASI (EXCEL TABLO GRİDİ) -->
+<section id="tab-search" class="tab-pane active">
+  <div class="card" style="padding: 16px 20px;">
+    <div class="card-header" style="margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
+      <div class="card-title" style="font-size: 15px;">
+        <span>📦 Güncel Stok & Hızlı Etiket Masası</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <div style="display:inline-flex; border:1px solid var(--border-subtle); border-radius:6px; overflow:hidden;">
+          <button id="filterAllBtn" class="btn btn-secondary btn-sm active" style="border-radius:0; border:none; padding:6px 12px; font-size:12px;" onclick="toggleFilter('all')">
+            Tüm Stok (<span id="totalProductsCount">0</span>)
+          </button>
+          <button id="filterDiffBtn" class="btn btn-secondary btn-sm" style="border-radius:0; border:none; border-left:1px solid var(--border-subtle); padding:6px 12px; font-size:12px;" onclick="toggleFilter('diff')">
+            ⚠️ Fiyat Farkı Olanlar
+          </button>
+          <button id="filterNewBtn" class="btn btn-secondary btn-sm" style="border-radius:0; border:none; border-left:1px solid var(--border-subtle); padding:6px 12px; font-size:12px;" onclick="toggleFilter('new')">
+            ✨ Yeni Eklenenler
+          </button>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="copyTableToClipboard('productsTable')" style="padding:6px 12px; font-size:12px;">
+          📋 Kopyala
+        </button>
+        <a href="/api/export/products/csv" class="btn btn-secondary btn-sm" style="padding:6px 12px; font-size:12px;">
+          📊 Excel (.csv)
+        </a>
+        <a href="/api/export/products/json" class="btn btn-secondary btn-sm" style="padding:6px 12px; font-size:12px;">
+          💾 JSON
+        </a>
+        <button class="btn btn-secondary btn-sm" onclick="syncAllLabelPrices()" style="font-weight:700; color:#38bdf8; border-color:rgba(56,189,248,0.35); background:rgba(56,189,248,0.08); padding:6px 12px; font-size:12px;" title="Tüm etiket fiyatlarını kasa satış fiyatına eşitler ve basıldı olarak onaylar">
+          🏷️ Tüm Etiketleri Eşitle
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="openBlacklistModal()" style="font-weight:700; color:#f87171; border-color:rgba(248,113,113,0.35); background:rgba(248,113,113,0.08); padding:6px 12px; font-size:12px;" title="Engellenen test barkodları, kelimeler ve mantıksız ürün filtreleri">
+          🚫 Kara Liste
+        </button>
+      </div>
+    </div>
+
+    <div class="search-bar-wrap" style="margin-bottom: 12px;">
+      <input type="text" class="search-input" id="productSearchInput" placeholder="Barkod numarası veya ürün adı ile anında ara..." oninput="handleSearchInput(event)" autofocus style="padding: 10px 16px; font-size: 13px; border-radius: 8px;">
+      <div class="search-shortcut-badge" style="right: 12px;">
+        <kbd style="font-size: 11px; padding: 2px 6px;">Ctrl+K</kbd>
+      </div>
+    </div>
+
+    <div class="table-container" style="max-height: calc(100vh - 220px); overflow-y: auto; overflow-x: hidden;">
+      <table id="productsTable" class="table-excel">
+        <colgroup>
+          <col style="width: 32px;">
+          <col style="width: 105px;">
+          <col style="width: auto;">
+          <col style="width: 90px;">
+          <col style="width: 90px;">
+          <col style="width: 85px;">
+          <col style="width: 95px;">
+          <col style="width: 105px;">
+          <col style="width: 135px;">
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-idx">#</th>
+            <th class="col-barcode" onclick="sortTable('barcode')" style="cursor: pointer; user-select: none;" title="Barkoda göre sırala (A-Z / Z-A)">
+              <span>Barkod</span> <span id="sort-icon-barcode" class="sort-indicator">↕️</span>
+            </th>
+            <th class="col-title" onclick="sortTable('title')" style="cursor: pointer; user-select: none;" title="Ürün adına göre sırala (A-Z / Z-A)">
+              <span>Ürün Adı (Yazıcıda Çıkacak İsim)</span> <span id="sort-icon-title" class="sort-indicator">↕️</span>
+            </th>
+            <th class="col-pos-price" onclick="sortTable('price')" style="cursor: pointer; user-select: none; text-align: right;" title="Satış fiyatına göre sırala (Küçükten Büyüğe / Büyükten Küçüğe)">
+              <span>Satış Fiyatı</span> <span id="sort-icon-price" class="sort-indicator">↕️</span>
+            </th>
+            <th class="col-label-price" onclick="sortTable('label_price')" style="cursor: pointer; user-select: none; text-align: right;" title="Etiket fiyatına göre sırala">
+              <span>Etiket Fiyatı</span> <span id="sort-icon-label_price" class="sort-indicator">↕️</span>
+            </th>
+            <th class="col-price-date" onclick="sortTable('date')" style="cursor: pointer; user-select: none;" title="Fiyat değişim tarihine göre sırala">
+              <span>Tarih</span> <span id="sort-icon-date" class="sort-indicator">↕️</span>
+            </th>
+            <th class="col-print-date" onclick="sortTable('print_date')" style="cursor: pointer; user-select: none;" title="Yazdırma tarihine göre sırala">
+              <span>Baskı Tarihi</span> <span id="sort-icon-print_date" class="sort-indicator">↕️</span>
+            </th>
+            <th class="col-status" onclick="sortTable('status')" style="cursor: pointer; user-select: none;" title="Duruma göre sırala">
+              <span>Durum</span> <span id="sort-icon-status" class="sort-indicator">↕️</span>
+            </th>
+            <th class="col-action" style="text-align: center;">İşlemler</th>
+          </tr>
+        </thead>
+        <tbody id="productsTableBody">
+          <!-- JS Dinamik Doldurur -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

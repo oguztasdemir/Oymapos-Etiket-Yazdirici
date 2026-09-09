@@ -1,0 +1,131 @@
+<!-- SEKME 3: BAĞLI CİHAZLAR & DÜKKAN VERİ AKTARIM MASASI -->
+<section id="tab-vegawin" class="tab-pane">
+  
+  <!-- Üst Bilgilendirme ve Cihaz Seçim Kartı -->
+  <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px solid rgba(56, 189, 248, 0.35); border-radius: 16px; padding: 22px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #0284c7, #2563eb); display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4); flex-shrink: 0;">
+          ⚡
+        </div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <h2 style="font-size: 17.5px; font-weight: 800; color: #fff; margin: 0;">Bağlı Cihazlar & Dükkan Veri Takip Masası</h2>
+            <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; font-weight: 800; font-size: 11px;">🟢 Sunucu Dinlemede</span>
+          </div>
+          <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 10px 0; max-width: 760px; line-height: 1.5;">
+            Dükkan veya kasa bilgisayarından aşağıdaki bağlantı adresi ile bağlanıldığında cihaz anında algılanır:
+          </p>
+          <!-- Bağlantı Linki & Kopyalama Butonu -->
+          <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(2,132,199,0.12); border:1.5px solid rgba(56,189,248,0.35); border-radius:8px; padding:6px 12px;">
+            <span style="font-size:12px; color:#94a3b8; font-weight:700;">🔗 Dükkan Bağlantı Adresi:</span>
+            <code id="vegawinSyncUrlCode" style="font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:800; color:#38bdf8;">http://192.168.1.37:8000/sync</code>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="copySyncLinkToClipboard()" style="padding:3px 8px; font-size:11px; font-weight:700; color:#38bdf8;" title="Linki Kopyala">
+              📋 Kopyala
+            </button>
+            <a id="vegawinSyncUrlLink" href="/sync" target="_blank" class="btn btn-secondary btn-sm" style="padding:3px 8px; font-size:11px; font-weight:700;" title="Sekmede Aç">
+              ↗️ Aç
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- CİHAZ SEÇİCİ DROPDOWN & YENİLE -->
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 8px; background: #0b1329; border: 1.5px solid #38bdf8; padding: 4px 10px; border-radius: 8px;">
+          <label style="font-size: 11.5px; font-weight: 800; color: #38bdf8; white-space: nowrap;">🖥️ İncelecek Cihaz:</label>
+          <select id="vegawinDeviceSelect" class="form-select" onchange="onSelectVegawinDevice(this.value)" style="background: transparent; border: none; color: #fff; font-size: 12px; font-weight: 700; outline: none; cursor: pointer;">
+            <option value="">Bağlı Cihazlar Taranıyor...</option>
+          </select>
+        </div>
+
+        <button class="btn btn-secondary" onclick="loadVegawinDevicesAndData(); showToast('Cihazlar ve veriler yenilendi', 'info');" style="font-weight: 700;">
+          🔄 Yenile
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1. KART: SEÇİLİ CİHAZDAN GELEN VERİLER VE TABLO GÖRÜNÜMÜ -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+      <div class="card-title">
+        <span id="selectedDeviceTitleHeader">📦 Seçili Cihaz Verileri</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <input type="text" id="vegawinDeviceSearchInput" placeholder="🔍 Gelen verilerde ara..." oninput="filterDeviceDataTable(this.value)" style="background:#0b1329; border:1px solid rgba(255,255,255,0.1); padding:6px 12px; border-radius:6px; color:#fff; font-size:12px; width:220px;">
+        <span class="badge badge-secondary" id="selectedDeviceCountBadge" style="font-size:11px;">Cihaz Seçilmedi</span>
+      </div>
+    </div>
+
+    <!-- Henüz Veri Yok veya Tablo Alanı -->
+    <div id="deviceDataEmptyPlaceholder" style="padding: 48px 20px; text-align: center; background: rgba(15,23,42,0.6); border-radius: 8px; margin: 16px;">
+      <div style="font-size: 42px; margin-bottom: 12px;">📡</div>
+      <h3 style="font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 6px;" id="emptyPlaceholderTitle">Henüz Veri Gönderilmedi</h3>
+      <p style="font-size: 12.5px; color: #94a3b8; max-width: 540px; margin: 0 auto 16px; line-height: 1.5;" id="emptyPlaceholderDesc">
+        Dükkan bilgisayarından <code>http://{{ local_ip }}:8000/sync</code> adresine girip <strong>"Verileri İncele ve Gönder"</strong> butonuna basıldığında gelen tüm güncel ürün ve fiyatlar burada listelenecektir.
+      </p>
+    </div>
+
+    <div class="table-container" id="deviceDataTableContainer" style="display: none; max-height: 400px; overflow-y: auto;">
+      <table class="table-excel">
+        <thead>
+          <tr>
+            <th style="width: 140px;">Barkod</th>
+            <th>Ürün Adı</th>
+            <th style="text-align: right; width: 120px;">Eski Sistem Fiyatı</th>
+            <th style="text-align: right; width: 120px;">Dükkandan Gelen Fiyat</th>
+            <th style="text-align: right; width: 120px;">Fark</th>
+            <th style="text-align: center; width: 110px;">Durum</th>
+            <th style="text-align: center; width: 100px;">İşlem</th>
+          </tr>
+        </thead>
+        <tbody id="deviceDataTableBody">
+          <!-- JS Doldurur -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 2. KART: SENKRONİZASYON GEÇMİŞİ & GERİ ALMA (ROLLBACK) -->
+  <div class="card">
+    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <div class="card-title">
+        <span>📜 Aktarım Geçmişi & Toplu Geri Alma (Rollback / Undo)</span>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-secondary btn-sm" onclick="clearAllSyncHistoryConfirm()" style="padding:4px 10px; font-size:11.5px; color:#f87171; border-color:rgba(248,113,113,0.3); font-weight:700;">
+          🗑️ Tüm Geçmişi Temizle
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="loadSyncHistory()" style="padding:4px 10px; font-size:11.5px;">
+          🔄 Yenile
+        </button>
+      </div>
+    </div>
+    <div style="padding:16px;">
+      <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:12px;">
+        Dükkan bilgisayarından yapılan tüm aktarımların geçmişi aşağıda listelenir. Hatalı bir aktarımı <strong>"↩️ Aktarımı Geri Al"</strong> butonuyla tek tıkla geri alabilirsiniz.
+      </p>
+      <div class="table-container" style="max-height:260px; overflow-y:auto;">
+        <table class="table-excel">
+          <thead>
+            <tr>
+              <th style="width:70px;">İşlem ID</th>
+              <th>Tarih & Saat</th>
+              <th>Kaynak / Dosya</th>
+              <th>Cihaz / PC</th>
+              <th style="text-align:center;">Toplam Ürün</th>
+              <th style="text-align:center;">Fiyat Değişen</th>
+              <th style="text-align:center;">Yeni Ürün</th>
+              <th style="text-align:center;">Durum</th>
+              <th style="text-align:center; width:140px;">İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="syncHistoryTableBody">
+            <tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:20px;">Aktarım geçmişi yükleniyor...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>

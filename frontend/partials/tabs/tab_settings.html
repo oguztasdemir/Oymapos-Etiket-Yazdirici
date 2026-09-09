@@ -1,0 +1,148 @@
+<!-- SEKME 5: YAZICI & DONANIM AYARLARI (OYMAPOS 4-CARD KALİBRASYON) -->
+<section id="tab-settings" class="tab-pane">
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+    
+    <!-- Kart 1: Market & Şube Genel Bilgileri -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>🏪 Market & Şube Genel Bilgileri</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Market / Mağaza Adı (Etiket Üst Başlığı)</label>
+        <input type="text" class="form-input" id="marketName" value="YARENLER" placeholder="Örn: YARENLER SÜPERMARKET" oninput="updateLabelPreview()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Para Birimi & Simge</label>
+        <input type="text" class="form-input" id="currencySymbol" value="₺" placeholder="₺, TL, EUR, USD">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Yasal Açıklama Metni</label>
+        <input type="text" class="form-input" id="legalNoticeText" value="Fiyatlarımıza Kdv Dahildir.">
+      </div>
+    </div>
+
+    <!-- Kart 2: Yazıcılar & Donanım Kalibrasyonu -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>🖨️ Yazıcılar & Donanım Kalibrasyonu</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="loadPrinters()" title="Sistemdeki yazıcı listesini yeniden tara">
+          ↺ Yenile
+        </button>
+      </div>
+
+      <!-- Çift Yazıcı Seçici -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label" style="color:#818cf8;">🏷️ Raf Etiketi Yazıcısı</label>
+          <select class="form-select" id="printerSelect" style="border-color:rgba(99,102,241,0.4);">
+            <option>Yazıcılar aranıyor...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="color:#34d399;">🧾 Fiş Yazıcısı</label>
+          <select class="form-select" id="receiptPrinterSelect" style="border-color:rgba(16,185,129,0.4);">
+            <option>Yazıcılar aranıyor...</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Ebat ve Besleme Yönü -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label">Varsayılan Etiket Boyutu</label>
+          <select class="form-select" id="labelPresetSelect" onchange="handlePresetChange(this.value)">
+            <option value="76x40" selected>76 x 40 mm (Standart Market)</option>
+            <option value="60x40">60 x 40 mm (Kompakt Raf)</option>
+            <option value="85x45">85 x 45 mm (Büyük Boy)</option>
+            <option value="50x30">50 x 30 mm (Küçük Ürün)</option>
+            <option value="custom">Özel Boyut...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Besleme Yönü</label>
+          <select class="form-select" id="labelOrientation">
+            <option value="POR" selected>🔄 90° Yatay (Termal Rulo)</option>
+            <option value="PON">↕️ 0° Düz</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Milimetre Boyutları -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label">Genişlik (mm)</label>
+          <input type="number" class="form-input" id="labelWidth" value="76" oninput="updateLabelPreview()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Yükseklik (mm)</label>
+          <input type="number" class="form-input" id="labelHeight" value="40" oninput="updateLabelPreview()">
+        </div>
+      </div>
+
+      <!-- Kontrast ve Ofsetler -->
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+        <div class="form-group">
+          <label class="form-label">Kontrast</label>
+          <input type="number" class="form-input" id="labelDarkness" value="22" min="10" max="30">
+        </div>
+        <div class="form-group">
+          <label class="form-label">X Ofset</label>
+          <input type="number" class="form-input" id="labelXOffset" value="0" step="5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Y Ofset</label>
+          <input type="number" class="form-input" id="labelYOffset" value="0" step="5">
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <button class="btn btn-primary" onclick="savePrinterSettings()" style="flex:1;">
+          💾 Kaydet (Ctrl+S)
+        </button>
+        <button class="btn btn-secondary" onclick="testPrint()">
+          🖨️ Test Baskısı (F2)
+        </button>
+        <button class="btn btn-secondary" onclick="purgeQueue()" style="color:#f43f5e;" title="Kuyruğu Temizle">
+          🧹 Temizle
+        </button>
+      </div>
+    </div>
+
+    <!-- Kart 3: Sistem & Veritabanı Yedekleme -->
+    <div class="card" style="grid-column: span 2;">
+      <div class="card-header">
+        <div class="card-title">
+          <span>💾 Sistem, Veritabanı & Şablon Yedekleme</span>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:center;">
+        <div>
+          <strong style="color:#fff; font-size:13px; display:block; margin-bottom:4px;">📦 Anlık Yedek İndir</strong>
+          <p style="color:var(--text-secondary); font-size:12px; margin:0 0 10px 0; line-height:1.4;">
+            Tüm ürün veritabanını, etiket şablonlarını ve yazıcı kalibrasyon ayarlarını zaman damgalı <code>.zip</code> arşivi olarak bilgisayarınıza indirin.
+          </p>
+          <a href="/api/system/backup" class="btn btn-primary btn-sm" style="font-weight:700; display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg, #059669, #047857);">
+            <span>📥</span> Yedeği İndir (.zip)
+          </a>
+        </div>
+        <div style="border-left:1px solid rgba(255,255,255,0.08); padding-left:16px;">
+          <strong style="color:#fff; font-size:13px; display:block; margin-bottom:4px;">📂 Yedekten Geri Yükle</strong>
+          <p style="color:var(--text-secondary); font-size:12px; margin:0 0 10px 0; line-height:1.4;">
+            Önceden indirilmiş <code>.zip</code> veya <code>.db</code> yedek dosyasını seçip tüm sistemi anında geri yükleyin.
+          </p>
+          <div style="display:flex; gap:8px;">
+            <input type="file" id="systemRestoreFileInput" accept=".zip,.db" style="display:none;" onchange="handleSystemRestoreUpload(this.files)">
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('systemRestoreFileInput').click()" style="font-weight:700; color:#38bdf8; border-color:rgba(56,189,248,0.4);">
+              <span>📂</span> Yedek Dosyası Seç & Geri Yükle
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>

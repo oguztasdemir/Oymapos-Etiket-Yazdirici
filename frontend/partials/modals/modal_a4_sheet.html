@@ -1,0 +1,53 @@
+<!-- A4 ÇOKLU ETİKET DİZGİSİ VE YAZDIRMA MODALI -->
+<div id="modal-a4-sheet" class="modal-backdrop" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.88); backdrop-filter:blur(6px); z-index:99999; align-items:center; justify-content:center; padding:20px;">
+  <div class="modal-card" style="background:#0b1329; border:1px solid rgba(56,189,248,0.3); border-radius:12px; max-width:650px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.9); overflow:hidden; display:flex; flex-direction:column;">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 20px; background:#070d1e; border-bottom:1px solid rgba(255,255,255,0.08);">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:22px;">📄</span>
+        <div>
+          <strong style="font-size:15px; color:#fff; display:block;">A4 Çoklu Etiket Sayfa Dizgisi</strong>
+          <span style="font-size:11.5px; color:#94a3b8;">Lazer & Mürekkep Püskürtmeli Yazıcılar için A4 Etiket Dizgisi</span>
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="closeA4SheetModal()" style="padding:4px 10px; font-size:13px; border-radius:6px;">✕</button>
+    </div>
+
+    <div style="padding:22px 20px; display:flex; flex-direction:column; gap:16px;">
+      <div>
+        <label style="font-size:12px; font-weight:700; color:#38bdf8; display:block; margin-bottom:6px;">📐 A4 Etiket Kağıdı Modeli (Şablon):</label>
+        <select id="a4-sheet-preset-select" class="form-select" style="font-size:13px; padding:8px 10px; background:#0f172a; border-color:rgba(56,189,248,0.3); color:#fff; font-weight:700;">
+          <option value="a4-24" selected>📄 24'lü Standart A4 (3 Sütun × 8 Satır - 70 × 37 mm)</option>
+          <option value="a4-40">📄 40'lı Kompakt A4 (4 Sütun × 10 Satır - 52.5 × 29.7 mm)</option>
+          <option value="a4-65">📄 65'li Mini A4 (5 Sütun × 13 Satır - 38 × 21.2 mm)</option>
+        </select>
+      </div>
+
+      <div>
+        <label style="font-size:12px; font-weight:700; color:#38bdf8; display:block; margin-bottom:6px;">📦 Basılacak Ürün Kapsamı:</label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label style="display:flex; align-items:center; gap:8px; background:rgba(15,23,42,0.8); padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); cursor:pointer;">
+            <input type="radio" name="a4-scope" value="filtered" checked style="accent-color:#0284c7;">
+            <span style="font-size:12px; color:#fff; font-weight:600;">Arama Sonuçları / Filtrelenenler</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; background:rgba(15,23,42,0.8); padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); cursor:pointer;">
+            <input type="radio" name="a4-scope" value="diff_only" style="accent-color:#0284c7;">
+            <span style="font-size:12px; color:#fbbf24; font-weight:600;">Sadece Fiyatı Değişenler</span>
+          </label>
+        </div>
+      </div>
+
+      <div style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.2); border-radius:8px; padding:12px; font-size:12px; color:#94a3b8; line-height:1.5;">
+        💡 <strong>Nasıl Çalışır?</strong> "A4 Önizle ve Yazdır" butonuna bastığınızda seçilen ürünler barkodlarıyla beraber A4 sayfasına dizilir ve tarayıcının standart yazdırma ekranı (PDF kaydetme veya Lazer Yazıcıya gönderme) açılır.
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:flex-end; gap:10px; padding:14px 20px; background:#070d1e; border-top:1px solid rgba(255,255,255,0.08);">
+      <button class="btn btn-secondary" onclick="closeA4SheetModal()">Vazgeç</button>
+      <button class="btn btn-primary" onclick="generateAndPrintA4Sheet()" style="font-weight:800; padding:8px 20px; background:linear-gradient(135deg, #0284c7, #2563eb); box-shadow:0 4px 12px rgba(2,132,199,0.35);">
+        🖨️ A4 Önizle ve Yazdır
+      </button>
+    </div>
+
+  </div>
+</div>

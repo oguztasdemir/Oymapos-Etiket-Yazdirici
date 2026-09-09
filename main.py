@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-⚡ 01. Tek Başlatıcı main.py (taslak copy/03_TERMINAL_PORT_VE_SUREC_YONETIMI Standartları)
+⚡ Ana Başlatıcı main.py
 FastAPI Sunucusu, Otomatik Port Yönetimi, No-Spam Terminal, Live-Reload ve Web Zarif Kapanış
 """
 import sys
@@ -68,9 +68,9 @@ if __name__ == "__main__":
     print("\n" + "=" * 60)
     print(" 🏷️  ETİKET VE FİŞ YAZDIRICI (FastAPI & Live-Reload)")
     print("=" * 60)
-    print(f" 🖥️  Masaüstü Paneli  : http://localhost:{port}")
-    print(f" 📱  Mobil Terminal   : http://{local_ip}:{port}/mobile")
-    print(f" 🛒  VegaWin Aktarımı  : http://{local_ip}:{port}/sync")
+    print(f" 🖥️  Ana Bilgisayar Paneli   : http://localhost:{port}")
+    print(f" 💻  Katılan Dükkan PC Linki : http://{local_ip}:{port}/sync")
+    print(f" 📱  Reyon Mobil Terminali   : http://{local_ip}:{port}/mobile")
     print("=" * 60)
     print(" [Sunucu kesintisiz modda çalışıyor. Web panelindeki 'Sunucuyu Kapat' ile kapatabilirsiniz]\n")
 
@@ -83,16 +83,26 @@ if __name__ == "__main__":
     open_browser_delayed(f"http://127.0.0.1:{port}")
 
     try:
-        # No-Spam Terminal ve Kod Değişiminde Otomatik Canlı Yenileme (Live Reload)
-        uvicorn.run(
-            "backend.app:app",
-            host="0.0.0.0",
-            port=port,
-            reload=True,
-            reload_dirs=[os.path.join(BASE_DIR, "backend"), os.path.join(BASE_DIR, "frontend")],
-            log_level="warning",
-            access_log=False
-        )
+        is_frozen = getattr(sys, 'frozen', False)
+        if is_frozen:
+            from backend.app import app
+            uvicorn.run(
+                app,
+                host="0.0.0.0",
+                port=port,
+                log_level="warning",
+                access_log=False
+            )
+        else:
+            uvicorn.run(
+                "backend.app:app",
+                host="0.0.0.0",
+                port=port,
+                reload=True,
+                reload_dirs=[os.path.join(BASE_DIR, "backend"), os.path.join(BASE_DIR, "frontend")],
+                log_level="warning",
+                access_log=False
+            )
     except (KeyboardInterrupt, SystemExit):
         pass
     except Exception as e:

@@ -1,8 +1,12 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# C extensions
 *.so
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -16,17 +20,45 @@ parts/
 sdist/
 var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Virtual Environment
-venv/
-.venv/
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Environments
+.env
+.venv
 env/
+venv/
 ENV/
+env.bak/
+venv.bak/
 
-# IDE & Editörler
+# IDE & Editors
 .vscode/
 .idea/
 *.swp
@@ -35,16 +67,26 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Geçici ve Log Dosyaları
-*.log
-scratch/
-*.tmp
-
-# SQLite Geçici WAL Dosyaları
+# Database & SQLite files
+*.db
 *.db-wal
 *.db-shm
 *.db-journal
+*.sqlite
+*.sqlite3
 
-# Uploads klasörü (klasörün kendisi korunur, içi hariç tutulur)
+# Large archives, data dumps & test backups
+*.zip
+*.tar.gz
+*.rar
+*.7z
+taslak/
+backup/
 data/uploads/*
 !data/uploads/.gitkeep
+
+# Temporary & Log files
+*.log
+*.tmp
+scratch/
+backend/certs/

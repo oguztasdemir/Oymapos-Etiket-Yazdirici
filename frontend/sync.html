@@ -3,174 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VegaWin -> Ana PC Veri Aktarım & Karşılaştırma İstasyonu</title>
+  <title>Toplu Ürün & Fiyat Aktarım Masası</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/frontend/css/style.css?v={{ cache_bust }}">
   <link rel="stylesheet" href="/frontend/css/components.css?v={{ cache_bust }}">
-  <style>
-    body {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 24px 16px 60px;
-      background-color: var(--bg-main, #0b0f19);
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      color: #f8fafc;
-    }
-    .sync-container {
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .sync-card {
-      background: #111827;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
-      padding: 32px;
-      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
-      margin-bottom: 24px;
-    }
-    .drop-zone {
-      border: 2px dashed rgba(99, 102, 241, 0.4);
-      border-radius: 14px;
-      padding: 36px 20px;
-      background: rgba(99, 102, 241, 0.04);
-      cursor: pointer;
-      margin: 18px 0;
-      text-align: center;
-      transition: all 0.2s ease;
-    }
-    .drop-zone:hover, .drop-zone.dragover {
-      border-color: #818cf8;
-      background: rgba(99, 102, 241, 0.1);
-      transform: translateY(-2px);
-    }
-    .badge-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: 9999px;
-      font-size: 11.5px;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-    }
-    .badge-price-change {
-      background: rgba(245, 158, 11, 0.15);
-      color: #fbbf24;
-      border: 1px solid rgba(245, 158, 11, 0.35);
-    }
-    .badge-new-product {
-      background: rgba(16, 185, 129, 0.15);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.35);
-    }
-    .badge-title-change {
-      background: rgba(56, 189, 248, 0.15);
-      color: #38bdf8;
-      border: 1px solid rgba(56, 189, 248, 0.35);
-    }
-    .badge-identical {
-      background: rgba(148, 163, 184, 0.12);
-      color: #94a3b8;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-    }
-    .filter-btn {
-      padding: 7px 14px;
-      border-radius: 8px;
-      font-size: 12.5px;
-      font-weight: 700;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(255, 255, 255, 0.04);
-      color: #cbd5e1;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .filter-btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
-    }
-    .filter-btn.active {
-      background: #4f46e5;
-      color: #fff;
-      border-color: #6366f1;
-      box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
-    }
-    .diff-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      text-align: left;
-    }
-    .diff-table th {
-      background: #1f2937;
-      color: #94a3b8;
-      padding: 12px 14px;
-      font-weight: 700;
-      font-size: 11.5px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    .diff-table td {
-      padding: 12px 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      vertical-align: middle;
-    }
-    .diff-table tr:hover td {
-      background: rgba(255, 255, 255, 0.02);
-    }
-    .price-tag {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-    }
-    .price-diff-up {
-      color: #f87171;
-      font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-    }
-    .price-diff-down {
-      color: #34d399;
-      font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-    }
-    .price-diff-zero {
-      color: #64748b;
-      font-size: 12px;
-    }
-    .table-scroll {
-      max-height: 520px;
-      overflow-y: auto;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 10px;
-      background: #0f172a;
-    }
-    .stat-tile {
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .stat-tile:hover {
-      border-color: rgba(255, 255, 255, 0.15);
-      background: rgba(0, 0, 0, 0.5);
-    }
-  </style>
+  <link rel="stylesheet" href="/frontend/css/sync.css?v={{ cache_bust }}">
 </head>
 <body>
 
@@ -178,88 +17,131 @@
 
   <div class="sync-container">
     
-    <!-- ÜST BAŞLIK & AĞ DURUMU -->
-    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 14px;">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <span style="font-size: 32px;">⚡</span>
-        <div>
-          <h1 style="font-size: 20px; font-weight: 800; color: #fff; margin: 0;">VegaWin Veri Aktarım & Karşılaştırma İstasyonu</h1>
-          <p style="font-size: 12.5px; color: #94a3b8; margin: 0;">Ana PC: <strong>{{ local_ip }}</strong> | Diğer bilgisayarlardan hızlı ve güvenli senkronizasyon</p>
+    <!-- EN ÜST PANEL: BİLGİSAYAR ADI, SUNUCU BİLGİSİ VE SAĞDA VERİ GÖNDER BUTONU -->
+    <header class="top-panel">
+      <div class="top-panel-left">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 26px;">📊</span>
+          <div>
+            <h1 style="font-size: 16px; font-weight: 800; color: #fff; margin: 0; letter-spacing: -0.2px;">Toplu Ürün & Fiyat Aktarım Masası</h1>
+            <p style="font-size: 11.5px; color: #94a3b8; margin: 0;">Bağlı Ana Bilgisayar: <strong style="color:#38bdf8;">{{ local_ip }}</strong></p>
+          </div>
+        </div>
+
+        <!-- BU BİLGİSAYARIN ADI GİRİŞİ -->
+        <div class="device-name-badge">
+          <span style="font-size: 15px;">🖥️</span>
+          <label for="deviceNameInput">Bu Bilgisayarın Adı:</label>
+          <input type="text" id="deviceNameInput" value="Dükkan Kasa Bilgisayarı" placeholder="Örn: Kasa 1, Market Laptop" title="Bu bilgisayarın sistemdeki adı">
         </div>
       </div>
-      <div class="status-pill" style="margin: 0; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; font-weight: 700; padding: 6px 14px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 8px;">
-        <span class="dot" style="width: 8px; height: 8px; background: #34d399; border-radius: 50%; display: inline-block;"></span>
-        <span>Ana PC Bağlantısı Aktif</span>
+
+      <div class="top-panel-right">
+        <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; font-weight: 700; padding: 6px 12px; border-radius: 20px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
+          <span style="width: 8px; height: 8px; background: #34d399; border-radius: 50%; display: inline-block; box-shadow: 0 0 6px #34d399;"></span>
+          <span>Sistem Bağlantısı Aktif</span>
+        </div>
+
+        <!-- SAĞ ÜSTTE: VERİ GÖNDER BUTONU -->
+        <button id="btnProcessClipboard" type="button" onclick="processClipboardData()" class="btn-send-main">
+          <span>🚀</span> Veri Gönder & Karşılaştır
+        </button>
       </div>
     </header>
 
-    <!-- ADIM 1: DOSYA SEÇİMİ VE ÖN İNCELEME PANELİ -->
-    <div id="stepUploadCard" class="sync-card">
-      <div style="max-width: 680px; margin: 0 auto; text-align: center;">
-        <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 6px; color: #fff;">1. Adım: VegaWin Stok Dosyasını Seçin</h2>
-        <p style="font-size: 13px; color: #94a3b8; margin-bottom: 20px; line-height: 1.5;">
-          VegaWin programından dışa aktardığınız Excel (.xlsx, .xls) veya CSV dosyasını buraya yükleyin. Sistem, ana veritabanındaki fiyatlarla karşılaştırıp fark tablosunu listeleyecektir.
-        </p>
-
-        <!-- Cihaz Adı Girişi -->
-        <div style="text-align: left; margin-bottom: 16px;">
-          <label class="form-label" style="font-size: 12px; font-weight: 700; color: #cbd5e1; margin-bottom: 6px; display: block;">
-            🖥️ Gönderen Bilgisayar / Kasa Adı:
-          </label>
-          <input type="text" id="deviceNameInput" class="form-input" value="VegaWin Kasa Bilgisayarı" placeholder="Örn: Kasa 1, Arka Depo, Muhasebe PC" style="width: 100%; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); padding: 10px 14px; border-radius: 8px; color: #fff;">
+    <!-- ADIM 1: TAM EKRAN İNTERAKTİF EXCEL TABLOSU -->
+    <div id="stepUploadCard" class="main-workspace-card">
+      
+      <!-- Excel / Tablo Araç Çubuğu -->
+      <div class="excel-toolbar">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(59, 130, 246, 0.2); color: #60a5fa; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+            📊
+          </div>
+          <div>
+            <h3 style="font-size: 15px; font-weight: 800; color: #fff; margin: 0;">
+              İnteraktif Ürün Tablosu (Excel Çalışma Sayfası)
+            </h3>
+            <p style="font-size: 12px; color: #94a3b8; margin: 2px 0 0 0;">
+              Tabloya tıklayıp doğrudan <kbd style="background:#283548; padding:2px 6px; border-radius:4px; color:#fff; font-weight:bold;">Ctrl + V</kbd> ile ürünlerinizi yapıştırabilir, hücreleri düzenleyebilir, satır ve sütun ekleyebilirsiniz.
+            </p>
+          </div>
         </div>
 
-        <!-- Sürükle Bırak Alanı -->
-        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-          <div style="font-size: 44px; margin-bottom: 10px;">📊</div>
-          <div style="font-weight: 700; font-size: 15.5px; margin-bottom: 4px; color: #ffffff;">VegaWin Dosyasını Buraya Sürükleyip Bırakın</div>
-          <div style="font-size: 12px; color: #94a3b8;">veya dosya seçmek için tıklayın (.xlsx, .xls, .csv)</div>
-          <input type="file" id="fileInput" style="display: none;" accept=".xlsx,.xls,.csv" onchange="handleFileSelected(this.files)">
-        </div>
-
-        <div id="fileInfoBox" style="display: none; justify-content: space-between; align-items: center; background: rgba(99, 102, 241, 0.1); padding: 12px 18px; border-radius: 10px; margin-bottom: 20px; text-align: left; border: 1px solid rgba(99, 102, 241, 0.3);">
-          <span style="font-weight: 700; font-size: 13.5px; color: #a5b4fc;" id="fileNameText">📄 dosya.xlsx</span>
-          <button onclick="clearFile(event)" style="background: none; border: none; color: #f43f5e; cursor: pointer; font-weight: 700; font-size: 12px;">✕ Dosyayı Değiştir</button>
-        </div>
-
-        <button id="previewBtn" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 15px; font-weight: 800; background: linear-gradient(135deg, #4f46e5, #4338ca); border: none; border-radius: 10px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="analyzeFile()" disabled>
-          <span>🔍</span> Fiyatları & Ürünleri Karşılaştır (Önizleme)
-        </button>
-
-        <div id="progressWrap" style="display: none; margin-top: 18px;">
-          <div style="font-size: 13px; color: #818cf8; font-weight: 600;">⏳ Dosya inceleniyor ve ana sistemdeki verilerle karşılaştırılıyor...</div>
+        <!-- Hızlı Tablo Düzenleme Butonları -->
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <button type="button" onclick="gridAddRow()" class="btn-grid-action btn-add-row" title="Tablonun altına yeni boş satır ekle">
+            <span>➕</span> Satır Ekle
+          </button>
+          <button type="button" onclick="gridAddColumn()" class="btn-grid-action btn-add-col" title="Tabloya yeni sütun ekle">
+            <span>📐</span> Sütun Ekle
+          </button>
+          <button type="button" onclick="gridInsertSample()" class="btn-grid-action btn-sample" title="Örnek ürün verileri yükle">
+            <span>📝</span> Örnek Veri Yükle
+          </button>
+          <button type="button" onclick="gridClearAndPaste()" class="btn-grid-action" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #38bdf8; border: 1.5px solid #38bdf8; font-weight: 800; box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);" title="Panoyu temizle ve kopyalanan veriyi doğrudan yapıştır">
+            <span>📋</span> Panoyu Temizle ve Yapıştır
+          </button>
+          <button type="button" onclick="gridClearAll()" class="btn-grid-action btn-clear" title="Tüm tabloyu temizle">
+            <span>🗑️</span> Temizle
+          </button>
         </div>
       </div>
+
+      <!-- İNTERAKTİF EXCEL TABLOSU ÇALIŞMA ALANI -->
+      <div class="excel-sheet-container" id="excelSheetWrapper">
+        <table class="excel-grid-table" id="interactiveExcelTable">
+          <thead id="gridThead"></thead>
+          <tbody id="gridTbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Alt Durum ve Bilgi Çubuğu -->
+      <div class="stat-bar">
+        <div style="font-size: 13px; color: #94a3b8; font-weight: 600;" id="clipboardStatsText">
+          <span>ℹ️</span> Herhangi bir hücreye tıklayıp doğrudan düzenleyebilir veya klavyeden <strong>Ctrl + V</strong> ile Excel verinizi yapıştırabilirsiniz.
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span id="clipboardCountBadge" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-size: 12.5px; font-weight: 800; padding: 4px 12px; border-radius: 6px;">0 Satır (4 Sütun)</span>
+          <button type="button" onclick="processClipboardData()" class="btn-send-main" style="padding: 8px 20px; font-size: 13px;">
+            <span>🚀</span> Veri Gönder & Karşılaştır
+          </button>
+        </div>
+      </div>
+
     </div>
 
     <!-- ADIM 2: KARŞILAŞTIRMA VE ONAY TABLOSU PANELİ -->
-    <div id="stepComparisonCard" class="sync-card" style="display: none;">
+    <div id="stepComparisonCard" class="main-workspace-card" style="display: none;">
       
       <!-- Üst Özet & Butonlar -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; flex-wrap: wrap; gap: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 14px;">
         <div>
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-            <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; font-weight: 700; font-size: 11px; padding: 3px 8px; border-radius: 4px;">2. ADIM: KARŞILAŞTIRMA</span>
+            <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; font-weight: 700; font-size: 11px; padding: 3px 8px; border-radius: 4px;">2. ADIM: KARŞILAŞTIRMA & ÖNGÖSTERİM</span>
             <span id="previewSourceLabel" style="font-size: 12.5px; color: #94a3b8;"></span>
           </div>
-          <h2 style="font-size: 18px; font-weight: 800; color: #fff; margin: 0;">Ürün & Fiyat Değişiklik Raporu</h2>
+          <h2 style="font-size: 18px; font-weight: 800; color: #fff; margin: 0;">Aktarılacak Ürün & Fiyat Raporu</h2>
+          <p style="font-size: 12.5px; color: #38bdf8; margin: 4px 0 0 0;">
+            🔍 Ürün listesini kontrol edin. Onayladığınızda güncel fiyat ve isimler ana bilgisayara aktarılacaktır.
+          </p>
         </div>
 
         <div style="display: flex; gap: 10px; align-items: center;">
           <button class="btn btn-secondary" onclick="resetToUpload()" style="padding: 10px 16px; font-weight: 700; border-radius: 8px; background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;">
-            ✕ İptal / Dosya Değiştir
+            ✕ Geri Dön
           </button>
-          <button id="confirmSyncBtn" class="btn btn-primary" onclick="commitSync()" style="padding: 10px 22px; font-weight: 800; font-size: 14px; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
-            <span>🚀</span> Onayla ve Sisteme Aktar
+          <button id="confirmSyncBtn" class="btn-send-main" onclick="commitSync()">
+            <span>🚀</span> Onayla & Ana Bilgisayara Aktar
           </button>
         </div>
       </div>
 
       <!-- 4'lü İstatistik Kutuları -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px;">
         <div class="stat-tile" onclick="setFilter('all')">
           <div style="font-size: 24px; font-weight: 800; color: #ffffff;" id="statTotalPreview">0</div>
-          <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Toplam İncelenen Ürün</div>
+          <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Toplam Aktarılan</div>
         </div>
         <div class="stat-tile" onclick="setFilter('price_change')" style="border-color: rgba(245, 158, 11, 0.3);">
           <div style="font-size: 24px; font-weight: 800; color: #fbbf24;" id="statPriceChangePreview">0</div>
@@ -267,7 +149,7 @@
         </div>
         <div class="stat-tile" onclick="setFilter('new_product')" style="border-color: rgba(16, 185, 129, 0.3);">
           <div style="font-size: 24px; font-weight: 800; color: #34d399;" id="statNewProductPreview">0</div>
-          <div style="font-size: 12px; color: #10b981; margin-top: 4px;">✨ Yeni Ürün (Ana Sistemde Yok)</div>
+          <div style="font-size: 12px; color: #10b981; margin-top: 4px;">✨ Yeni Ürün (Ana PC'de Yok)</div>
         </div>
         <div class="stat-tile" onclick="setFilter('identical')">
           <div style="font-size: 24px; font-weight: 800; color: #94a3b8;" id="statIdenticalPreview">0</div>
@@ -276,7 +158,7 @@
       </div>
 
       <!-- Filtreler ve Arama Çubuğu -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 12px;">
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <button class="filter-btn active" id="filter-btn-all" onclick="setFilter('all')">
             <span>Tümü</span> <span id="chipCountAll" style="opacity: 0.7;">(0)</span>
@@ -293,7 +175,7 @@
         </div>
 
         <div style="min-width: 260px; max-width: 360px; width: 100%;">
-          <input type="text" id="tableSearchInput" placeholder="🔍 Barkod veya ürün adı ile ara..." oninput="onSearchTable(this.value)" style="width: 100%; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 8px; color: #fff; font-size: 12.5px;">
+          <input type="text" id="tableSearchInput" placeholder="🔍 Barkod veya ürün adı ile ara..." oninput="onSearchTable(this.value)" style="width: 100%; background: #090d16; border: 1px solid #283548; padding: 8px 12px; border-radius: 8px; color: #fff; font-size: 12.5px; outline: none;">
         </div>
       </div>
 
@@ -302,41 +184,39 @@
         <table class="diff-table">
           <thead>
             <tr>
-              <th style="width: 130px;">Ürün Barkod</th>
-              <th>Ana Sistemdeki Ürün Adı</th>
-              <th>Bu Bilgisayardaki Ürün Adı</th>
-              <th style="text-align: right; width: 115px;">Ana Sistem Fiyat</th>
-              <th style="text-align: right; width: 115px;">Bu PC Fiyat</th>
-              <th style="text-align: right; width: 130px;">Fark (TL / %)</th>
-              <th style="text-align: center; width: 140px;">Durum & Not</th>
+              <th style="width: 140px;">Barkod</th>
+              <th>Ana Sistemdeki Adı</th>
+              <th>Aktarılan Ürün Adı</th>
+              <th style="text-align: right; width: 120px;">Mevcut Fiyat</th>
+              <th style="text-align: right; width: 130px;">Yeni Satış Fiyatı</th>
+              <th style="text-align: right; width: 140px;">Fark (TL / %)</th>
+              <th style="text-align: center; width: 140px;">Durum</th>
             </tr>
           </thead>
-          <tbody id="diffTableBody">
-            <!-- Dinamik doldurulacak -->
-          </tbody>
+          <tbody id="diffTableBody"></tbody>
         </table>
       </div>
 
-      <!-- Alt Bilgi & Hızlı Onay Çubuğu -->
-      <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.06);">
+      <!-- Alt Bilgi & Onay Butonu -->
+      <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);">
         <div style="font-size: 12.5px; color: #94a3b8;" id="tableShowingText">
           Görüntülenen: 0 ürün
         </div>
-        <button class="btn btn-primary" onclick="commitSync()" style="padding: 10px 24px; font-weight: 800; font-size: 14px; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 8px; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-          <span>🚀</span> Değişiklikleri Onayla ve Sisteme Aktar
+        <button id="confirmSyncBtnBottom" class="btn-send-main" onclick="commitSync()">
+          <span>🚀</span> Onayla & Ana Bilgisayara Aktar
         </button>
       </div>
 
     </div>
 
     <!-- ADIM 3: BAŞARI VE SONUÇ PANELİ -->
-    <div id="stepResultCard" class="sync-card" style="display: none; text-align: center; padding: 48px 32px;">
+    <div id="stepResultCard" class="main-workspace-card" style="display: none; text-align: center; padding: 48px 32px;">
       <div style="width: 64px; height: 64px; background: rgba(16, 185, 129, 0.15); border: 2px solid rgba(16, 185, 129, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 32px; color: #34d399;">
         ✓
       </div>
       <h2 style="font-size: 22px; font-weight: 800; color: #34d399; margin-bottom: 8px;">Aktarım Başarıyla Tamamlandı!</h2>
       <p style="font-size: 13.5px; color: #94a3b8; max-width: 540px; margin: 0 auto 24px;" id="resultSummaryText">
-        VegaWin verileri ana sistem veritabanı ile senkronize edildi.
+        Veriler ana sistem veritabanı ile senkronize edildi.
       </p>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; max-width: 600px; margin: 0 auto 32px;">
@@ -354,269 +234,36 @@
         </div>
       </div>
 
-      <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-        <button class="btn btn-secondary" onclick="resetToUpload()" style="padding: 12px 20px; font-weight: 700; border-radius: 8px; background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;">
-          📄 Yeni Dosya Aktar
+      <div style="display: flex; justify-content: center; gap: 14px;">
+        <button class="btn btn-secondary" onclick="resetToUpload()" style="padding: 10px 20px; font-weight: 700; border-radius: 8px; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); cursor: pointer;">
+          🔄 Yeni Bir Liste Yapıştır / Aktar
         </button>
-        <button class="btn btn-primary" onclick="window.location.href='/'" style="padding: 12px 24px; font-weight: 800; border-radius: 8px; background: #4f46e5; color: #fff; border: none; cursor: pointer;">
-          🏷️ Ana Kontrol Paneline Git
-        </button>
+      </div>
+    </div>
+
+    <!-- Pano / Excel Yapıştırma ve İşleme Progress Bar Katmanı -->
+    <div id="syncPortalProgressOverlay" style="display: none; position: fixed; inset: 0; background: rgba(3, 7, 18, 0.82); backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center; flex-direction: column;">
+      <div style="background: #0f172a; border: 1.5px solid #38bdf8; border-radius: 16px; padding: 28px 32px; width: 90%; max-width: 480px; box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 0 30px rgba(56, 189, 248, 0.25); text-align: center;">
+        <div style="font-size: 38px; margin-bottom: 12px;" id="syncPortalProgressIcon">📋</div>
+        <h3 style="font-size: 18px; font-weight: 800; color: #fff; margin: 0 0 6px 0;" id="syncPortalProgressTitle">Pano Verisi İşleniyor...</h3>
+        <p style="font-size: 13px; color: #94a3b8; margin: 0 0 20px 0;" id="syncPortalProgressSubtitle">Lütfen bekleyin, ürünler tabloya aktarılıyor.</p>
+        
+        <!-- Progress Bar Gövdesi -->
+        <div style="width: 100%; height: 12px; background: #1e293b; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid #334155; margin-bottom: 12px;">
+          <div id="syncPortalProgressBarFill" style="height: 100%; width: 0%; background: linear-gradient(90deg, #38bdf8, #10b981); border-radius: 8px; transition: width 0.15s ease-out; box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);"></div>
+        </div>
+
+        <!-- İlerleme Sayacı (Kaç Ürün ve Kaçı Gitti / İşlendi) -->
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-family: 'JetBrains Mono', monospace; color: #cbd5e1;">
+          <span id="syncPortalProgressCount" style="color: #38bdf8; font-weight: 700;">0 / 0 Ürün</span>
+          <span id="syncPortalProgressPercent" style="color: #34d399; font-weight: 800;">%0</span>
+        </div>
       </div>
     </div>
 
   </div>
 
   <script src="/frontend/js/api.js?v={{ cache_bust }}"></script>
-  <script src="/frontend/js/ui.js?v={{ cache_bust }}"></script>
-  <script>
-    let selectedFile = null;
-    let comparisonData = null;
-    let currentFilter = 'all';
-    let searchQuery = '';
-
-    const dropZone = document.getElementById('dropZone');
-
-    ['dragenter', 'dragover'].forEach(eName => {
-      dropZone.addEventListener(eName, e => { e.preventDefault(); dropZone.classList.add('dragover'); });
-    });
-    ['dragleave', 'drop'].forEach(eName => {
-      dropZone.addEventListener(eName, e => { e.preventDefault(); dropZone.classList.remove('dragover'); });
-    });
-    dropZone.addEventListener('drop', e => {
-      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        handleFileSelected(e.dataTransfer.files);
-      }
-    });
-
-    function handleFileSelected(files) {
-      if (!files || files.length === 0) return;
-      selectedFile = files[0];
-      document.getElementById('fileNameText').textContent = '📄 ' + selectedFile.name;
-      document.getElementById('fileInfoBox').style.display = 'flex';
-      document.getElementById('previewBtn').disabled = false;
-    }
-
-    function clearFile(e) {
-      if (e) e.stopPropagation();
-      selectedFile = null;
-      document.getElementById('fileInput').value = '';
-      document.getElementById('fileInfoBox').style.display = 'none';
-      document.getElementById('previewBtn').disabled = true;
-    }
-
-    function resetToUpload() {
-      clearFile();
-      document.getElementById('stepUploadCard').style.display = 'block';
-      document.getElementById('stepComparisonCard').style.display = 'none';
-      document.getElementById('stepResultCard').style.display = 'none';
-      comparisonData = null;
-      currentFilter = 'all';
-      searchQuery = '';
-      document.getElementById('tableSearchInput').value = '';
-    }
-
-    // 1. Dosyayı Gönder ve Karşılaştırma Verisi Al
-    async function analyzeFile() {
-      if (!selectedFile) return;
-      const previewBtn = document.getElementById('previewBtn');
-      const progressWrap = document.getElementById('progressWrap');
-      const devName = (document.getElementById('deviceNameInput').value || 'VegaWin Kasa Bilgisayarı').trim();
-
-      previewBtn.disabled = true;
-      progressWrap.style.display = 'block';
-
-      try {
-        const res = await API.previewVegawin(selectedFile, devName);
-        progressWrap.style.display = 'none';
-
-        if (res.status === 'success' && res.data) {
-          comparisonData = res.data;
-          renderComparisonView();
-        } else {
-          showToast('Hata: ' + (res.message || 'Dosya okunamadı.'), 'error');
-          previewBtn.disabled = false;
-        }
-      } catch (err) {
-        progressWrap.style.display = 'none';
-        showToast('Sunucu iletişim hatası: ' + err.message, 'error');
-        previewBtn.disabled = false;
-      }
-    }
-
-    // 2. Karşılaştırma Ekranını Doldur
-    function renderComparisonView() {
-      if (!comparisonData) return;
-
-      document.getElementById('stepUploadCard').style.display = 'none';
-      document.getElementById('stepComparisonCard').style.display = 'block';
-      document.getElementById('stepResultCard').style.display = 'none';
-
-      document.getElementById('previewSourceLabel').textContent = `${comparisonData.source_filename} (${comparisonData.device_name})`;
-
-      document.getElementById('statTotalPreview').textContent = comparisonData.total_incoming || 0;
-      document.getElementById('statPriceChangePreview').textContent = comparisonData.price_changes || 0;
-      document.getElementById('statNewProductPreview').textContent = comparisonData.new_products || 0;
-      document.getElementById('statIdenticalPreview').textContent = comparisonData.identical || 0;
-
-      document.getElementById('chipCountAll').textContent = `(${comparisonData.total_incoming || 0})`;
-      document.getElementById('chipCountChanges').textContent = `(${comparisonData.price_changes || 0})`;
-      document.getElementById('chipCountNew').textContent = `(${comparisonData.new_products || 0})`;
-      document.getElementById('chipCountIdentical').textContent = `(${comparisonData.identical || 0})`;
-
-      renderTableRows();
-    }
-
-    function setFilter(filterType) {
-      currentFilter = filterType;
-      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-      const activeBtn = document.getElementById(`filter-btn-${filterType}`);
-      if (activeBtn) activeBtn.classList.add('active');
-      renderTableRows();
-    }
-
-    function onSearchTable(query) {
-      searchQuery = (query || '').toLowerCase().trim();
-      renderTableRows();
-    }
-
-    function formatPrice(val) {
-      if (val === null || val === undefined) return '-';
-      return Number(val).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' TL';
-    }
-
-    function renderTableRows() {
-      if (!comparisonData || !comparisonData.items) return;
-      const tbody = document.getElementById('diffTableBody');
-      const items = comparisonData.items;
-
-      let filtered = items.filter(item => {
-        // Durum filtresi
-        if (currentFilter !== 'all' && item.status !== currentFilter) return false;
-        // Arama filtresi
-        if (searchQuery) {
-          const b = (item.barcode || '').toLowerCase();
-          const mt = (item.main_title || '').toLowerCase();
-          const it = (item.incoming_title || '').toLowerCase();
-          const sc = (item.stock_code || '').toLowerCase();
-          if (!b.includes(searchQuery) && !mt.includes(searchQuery) && !it.includes(searchQuery) && !sc.includes(searchQuery)) {
-            return false;
-          }
-        }
-        return true;
-      });
-
-      document.getElementById('tableShowingText').textContent = `Görüntülenen: ${filtered.length} / ${items.length} ürün`;
-
-      if (filtered.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="7" style="text-align:center; padding:36px; color:#94a3b8;">
-              🔍 Seçilen filtrelere uygun ürün bulunamadı.
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      let html = '';
-      filtered.forEach(item => {
-        let badgeHtml = '';
-        let diffHtml = '';
-        let mainPriceStr = item.main_price !== null ? formatPrice(item.main_price) : '<span style="color:#64748b;">(Yok)</span>';
-        let incomingPriceStr = formatPrice(item.incoming_price);
-
-        if (item.status === 'price_change') {
-          badgeHtml = `<span class="badge-pill badge-price-change">⚡ Fiyat Değişti</span>`;
-          const sign = item.diff_amount > 0 ? '+' : '';
-          const diffClass = item.diff_amount > 0 ? 'price-diff-up' : 'price-diff-down';
-          diffHtml = `<span class="${diffClass}">${sign}${item.diff_amount.toFixed(2)} TL (%${item.diff_percent > 0 ? '+' : ''}${item.diff_percent})</span>`;
-        } else if (item.status === 'new_product') {
-          badgeHtml = `<span class="badge-pill badge-new-product">✨ Yeni Ürün</span>`;
-          diffHtml = `<span class="price-diff-up">+${incomingPriceStr}</span>`;
-        } else if (item.status === 'title_change') {
-          badgeHtml = `<span class="badge-pill badge-title-change">📝 İsim Değişti</span>`;
-          diffHtml = `<span class="price-diff-zero">0,00 TL</span>`;
-        } else {
-          badgeHtml = `<span class="badge-pill badge-identical">✅ Birebir Aynı</span>`;
-          diffHtml = `<span class="price-diff-zero">0,00 TL</span>`;
-        }
-
-        const mainTitle = item.main_title ? item.main_title : '<span style="color:#64748b; font-style:italic;">(Ana sistemde henüz kayıtlı değil)</span>';
-        const incomingTitle = item.incoming_title || '-';
-
-        html += `
-          <tr>
-            <td style="font-family:'JetBrains Mono', monospace; font-weight:700; color:#818cf8; font-size:12px;">
-              ${item.barcode || '<span style="color:#64748b;">Barkodsuz</span>'}
-            </td>
-            <td style="color:${item.main_title ? '#f1f5f9' : '#64748b'}; font-weight:600;">
-              ${mainTitle}
-            </td>
-            <td style="color:#38bdf8; font-weight:700;">
-              ${incomingTitle}
-            </td>
-            <td style="text-align:right; font-family:'JetBrains Mono', monospace; color:#cbd5e1;">
-              ${mainPriceStr}
-            </td>
-            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:800; color:#fbbf24;">
-              ${incomingPriceStr}
-            </td>
-            <td style="text-align:right;">
-              ${diffHtml}
-            </td>
-            <td style="text-align:center;">
-              ${badgeHtml}
-            </td>
-          </tr>
-        `;
-      });
-
-      tbody.innerHTML = html;
-    }
-
-    // 3. Onayla ve Sisteme Aktar
-    async function commitSync() {
-      if (!comparisonData || !comparisonData.parsed_items) return;
-      const confirmBtn = document.getElementById('confirmSyncBtn');
-      const originalText = confirmBtn.innerHTML;
-
-      confirmBtn.disabled = true;
-      confirmBtn.innerHTML = '⏳ Aktarılıyor...';
-
-      try {
-        const res = await API.confirmVegawinSync(
-          comparisonData.parsed_items,
-          comparisonData.source_filename || 'VegaWin Dosyası',
-          comparisonData.device_name || 'VegaWin PC'
-        );
-
-        const data = res.data || res;
-
-        if (res.status === 'success' || data.total_received !== undefined) {
-          document.getElementById('stepUploadCard').style.display = 'none';
-          document.getElementById('stepComparisonCard').style.display = 'none';
-          document.getElementById('stepResultCard').style.display = 'block';
-
-          document.getElementById('resTotal').textContent = data.total_received || comparisonData.total_incoming || 0;
-          document.getElementById('resNew').textContent = data.new_products || 0;
-          document.getElementById('resChanges').textContent = data.price_changes_count || 0;
-
-          document.getElementById('resultSummaryText').textContent = 
-            `${comparisonData.device_name} cihazından aktarılan ${data.total_received || 0} adet ürünün fiyatları ve stok bilgileri başarıyla ana sisteme kaydedildi.`;
-
-          showToast('VegaWin verileri başarıyla ana sisteme aktarıldı!', 'success');
-        } else {
-          showToast('Hata: ' + (res.message || 'Aktarım başarısız oldu.'), 'error');
-          confirmBtn.disabled = false;
-          confirmBtn.innerHTML = originalText;
-        }
-      } catch (err) {
-        showToast('Sunucu hatası: ' + err.message, 'error');
-        confirmBtn.disabled = false;
-        confirmBtn.innerHTML = originalText;
-      }
-    }
-  </script>
+  <script src="/frontend/js/modules/sync_portal.js?v={{ cache_bust }}"></script>
 </body>
 </html>
-

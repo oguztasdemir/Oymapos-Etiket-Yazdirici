@@ -92,7 +92,9 @@ def generate_tspl_command(data: dict, width_mm=None, height_mm=None, darkness=No
     lines.append("CLS")
 
     # Başlık ve metin ayrıştırma
-    full_title = clean_turkish((data.get('title') or data.get('title1') or '').strip().upper())
+    from backend.services.db_service import clean_product_title
+    raw_incoming_title = (data.get('title') or data.get('title1') or '').strip()
+    full_title = clean_turkish(clean_product_title(raw_incoming_title).upper())
     max_char_per_line = max(18, int(w_mm * 0.45))
     if len(full_title) <= max_char_per_line:
         title1 = full_title
@@ -263,12 +265,17 @@ def purge_printer_queue(printer_name: str = None) -> tuple:
         return False, f"Kuyruk temizleme hatası: {str(e)}"
 
 def print_single_label(product: dict, copies=1, template_data=None) -> tuple:
+    if not product:
+        return False, "Yazdırılacak ürün verisi boş olamaz."
     settings = load_settings()
     printer_name = settings.get("printer", "Termal Etiket Yazici")
-    raw_tspl = generate_tspl_command(
-        product,
-        copies=copies,
-        template_data=template_data
-    )
-    return send_raw_to_printer(printer_name, raw_tspl)
+    try:
+        raw_tspl = generate_tspl_command(
+            product,
+            copies=copies,
+            template_data=template_data
+        )
+        return send_raw_to_printer(printer_name, raw_tspl)
+    except Exception as e:
+        return False, f"Baskı komutu oluşturulamadı: {str(e)}"
 

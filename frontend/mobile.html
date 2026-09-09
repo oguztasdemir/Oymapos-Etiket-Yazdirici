@@ -3,231 +3,577 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#090a0f">
-  <title>Mobil Barkod & Etiket Terminali</title>
+  <meta name="theme-color" content="#030712">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>OYMAPOS - Reyon Fiyat Gör & Etiket Terminali</title>
   
+  <!-- Font & Tarayıcı Kütüphaneleri -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700;900&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
 
   <style>
     :root {
-      --bg: #090a0f;
-      --surface: #11141d;
-      --card: #141722;
-      --card-hover: #1c2130;
-      --border: rgba(255, 255, 255, 0.08);
-      --primary: #6366f1;
-      --primary-hover: #4f46e5;
-      --success: #10b981;
-      --danger: #f43f5e;
+      --bg: #090d16;
+      --card-bg: #131b2e;
+      --card-inner: #0b1120;
+      --border: #23304d;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --accent: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
       --text: #f8fafc;
       --text-muted: #94a3b8;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     body {
-      background: var(--bg);
+      background-color: var(--bg);
       color: var(--text);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      padding-bottom: 24px;
+      padding-bottom: 80px;
     }
-    .top-bar {
+
+    /* Header */
+    .mobile-header {
+      background: rgba(19, 27, 46, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 10px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 20px;
-      background: rgba(17, 20, 29, 0.95);
       border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
-      z-index: 50;
-      backdrop-filter: blur(16px);
+      z-index: 100;
     }
-    .logo-badge {
+
+    .brand-flex {
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 15px;
+      gap: 8px;
+    }
+
+    .brand-icon {
+      font-size: 20px;
+      background: #1e293b;
+      padding: 4px 7px;
+      border-radius: 8px;
+    }
+
+    .brand-title {
+      font-size: 14.5px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-subtitle {
+      font-size: 10px;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    /* Üst Sekme Geçişi */
+    .mobile-nav-tabs {
+      display: flex;
+      background: #0f172a;
+      border-bottom: 1px solid var(--border);
+      padding: 6px 12px;
+      gap: 8px;
+      position: sticky;
+      top: 55px;
+      z-index: 90;
+    }
+
+    .nav-tab-btn {
+      flex: 1;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nav-tab-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: #38bdf8;
+    }
+
+    .queue-badge {
+      background: var(--danger);
+      color: white;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 10px;
       font-weight: 800;
     }
-    .online-indicator {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 700;
-      color: #34d399;
-      background: rgba(16, 185, 129, 0.12);
-      padding: 4px 10px;
-      border-radius: 9999px;
-      border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-    .online-indicator .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #34d399;
-      box-shadow: 0 0 8px #34d399;
-    }
+
+    /* Ana Konteyner */
     .container {
-      padding: 16px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
       max-width: 500px;
       margin: 0 auto;
       width: 100%;
     }
-    .camera-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      overflow: hidden;
-    }
-    #reader {
-      width: 100%;
-      min-height: 240px;
-      background: #000000;
-    }
-    .camera-controls {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      background: rgba(0, 0, 0, 0.4);
-      border-top: 1px solid var(--border);
-    }
-    .toggle-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-muted);
-    }
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 24px;
-    }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider {
-      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-      background-color: rgba(255, 255, 255, 0.15);
-      transition: .2s;
-      border-radius: 24px;
-    }
-    .slider:before {
-      position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
-      background-color: white;
-      transition: .2s;
-      border-radius: 50%;
-    }
-    input:checked + .slider { background-color: var(--success); }
-    input:checked + .slider:before { transform: translateX(20px); }
 
-    .manual-input-box {
+    /* Butonlar & Aksiyonlar */
+    .btn-action-camera {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(2, 132, 199, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .btn-action-camera:active {
+      transform: scale(0.98);
+    }
+
+    .btn-action-gallery {
+      background: #1e293b;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    /* =========================================================================
+       TAM EKRAN CANLI KAMERA (FULLSCREEN OVERLAY) - KIRMIZI LAZER VE KÖŞELER
+       ========================================================================= */
+    .fullscreen-camera-overlay {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000000;
+      z-index: 99999;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      touch-action: none;
+      user-select: none;
+    }
+
+    #fullscreen-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      background: #000000;
+      z-index: 1;
+    }
+
+    #fullscreen-reader {
+      position: absolute;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      background: #000000;
+      z-index: 1;
+      display: none;
+    }
+
+    #fullscreen-reader video {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+    }
+
+    /* Tam Ekran Üst Kontrol Barı */
+    .fs-top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      z-index: 25;
+      background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 70%, transparent 100%);
+    }
+
+    .fs-btn-close {
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    .fs-btn-tool {
+      background: rgba(30, 41, 59, 0.8);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 7px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s ease;
+    }
+
+    .fs-btn-tool.active {
+      background: rgba(16, 185, 129, 0.3);
+      border-color: #10b981;
+      color: #34d399;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
+    }
+
+    /* 🔍 Zoom Kontrol Çubuğu */
+    .fs-zoom-bar {
+      position: absolute;
+      top: 66px;
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
       gap: 8px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      padding: 6px;
-      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 4px 6px;
+      border-radius: 24px;
+      z-index: 24;
+      backdrop-filter: blur(10px);
     }
-    .manual-input-box input {
+
+    .fs-btn-zoom {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 5px 10px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .fs-btn-zoom.active {
+      background: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+    }
+
+    /* Tam Ekran Ortadaki Odak ve Hedef HUD */
+    .fs-center-hud {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .fs-reticle-box {
+      position: relative;
+      width: 84vw;
+      max-width: 330px;
+      height: 200px;
+      border: 1.5px dashed rgba(255, 255, 255, 0.28);
+      border-radius: 16px;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.42);
+    }
+
+    /* Köşe Kılavuzları */
+    .reticle-corner {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-color: #38bdf8;
+      border-style: solid;
+      border-width: 0;
+    }
+
+    .reticle-corner.tl { top: -2px; left: -2px; border-top-width: 4px; border-left-width: 4px; border-top-left-radius: 8px; }
+    .reticle-corner.tr { top: -2px; right: -2px; border-top-width: 4px; border-right-width: 4px; border-top-right-radius: 8px; }
+    .reticle-corner.bl { bottom: -2px; left: -2px; border-bottom-width: 4px; border-left-width: 4px; border-bottom-left-radius: 8px; }
+    .reticle-corner.br { bottom: -2px; right: -2px; border-bottom-width: 4px; border-right-width: 4px; border-bottom-right-radius: 8px; }
+
+    /* ORTADA SABİT PARLAK KIRMIZI LAZER ÇİZGİSİ */
+    .fs-laser-line {
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 3px;
+      background: #ff0000;
+      box-shadow: 0 0 10px #ff0000, 0 0 22px #ff0000, 0 0 32px #ff0000;
+      z-index: 15;
+      border-radius: 2px;
+      animation: laserSweep 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes laserSweep {
+      0% { top: 25%; opacity: 0.85; }
+      50% { top: 50%; opacity: 1; }
+      100% { top: 75%; opacity: 0.85; }
+    }
+
+    .fs-guide-curve-hint {
+      position: absolute;
+      top: 8px;
+      left: 0;
+      right: 0;
+      text-align: center;
+    }
+
+    .fs-guide-curve-hint span {
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #7dd3fc;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .fs-bottom-bar {
+      position: absolute;
+      bottom: 24px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 20;
+      padding: 0 16px;
+    }
+
+    .fs-hint-banner {
+      display: inline-block;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #f1f5f9;
+      padding: 9px 15px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.4;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Manuel Barkod Arama Satırı */
+    .manual-barcode-bar {
+      display: flex;
+      gap: 6px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 6px 8px;
+      border-radius: 10px;
+    }
+
+    .manual-barcode-bar input {
       flex: 1;
       background: transparent;
       border: none;
-      color: #ffffff;
-      padding: 10px 14px;
-      font-size: 15px;
-      font-weight: 600;
+      color: white;
+      font-size: 13px;
+      padding: 6px;
       outline: none;
       font-family: 'JetBrains Mono', monospace;
     }
-    .manual-input-box button {
+
+    .manual-barcode-bar button {
       background: var(--primary);
-      color: #ffffff;
+      color: white;
       border: none;
-      padding: 10px 18px;
-      border-radius: 10px;
+      padding: 6px 14px;
+      border-radius: 8px;
       font-weight: 700;
-      font-size: 14px;
+      font-size: 12.5px;
       cursor: pointer;
     }
 
-    .product-card {
-      display: none;
-      background: linear-gradient(180deg, #171b29 0%, #11141d 100%);
-      border: 1.5px solid rgba(99, 102, 241, 0.4);
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.6);
-    }
-    .prod-brand {
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #818cf8;
-      margin-bottom: 4px;
-    }
-    .prod-title {
-      font-size: 18px;
-      font-weight: 800;
-      line-height: 1.3;
-      color: #ffffff;
-      margin-bottom: 12px;
-    }
-    .prod-price-box {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      background: rgba(0, 0, 0, 0.35);
-      padding: 14px 18px;
+    /* Ürün Kartı */
+    .product-info-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
       border-radius: 14px;
-      margin-bottom: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 16px;
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     }
-    .prod-price {
-      font-size: 32px;
-      font-weight: 900;
-      font-family: 'JetBrains Mono', monospace;
-      color: #34d399;
-      letter-spacing: -0.02em;
-    }
-    .prod-barcode {
-      font-size: 13px;
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text-muted);
-    }
-    .print-status-badge {
+
+    .card-header-row {
       display: flex;
       align-items: center;
-      gap: 8px;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      padding: 10px 14px;
-      border-radius: 12px;
-      color: #34d399;
-      font-size: 13px;
-      font-weight: 700;
-      margin-bottom: 14px;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
     }
-    .print-actions {
+
+    .product-barcode-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 800;
+      color: #38bdf8;
+      background: #0b1120;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .product-status-pill {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .product-status-pill.found {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .product-status-pill.new {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field-label {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .inp-title-box {
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: white;
+      font-size: 13.5px;
+      font-weight: 600;
+      outline: none;
+    }
+
+    .inp-title-box:focus {
+      border-color: #38bdf8;
+    }
+
+    .price-compare-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
-    .btn-action {
+    .price-box {
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .price-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px;
+      font-weight: 900;
+      margin-top: 4px;
+    }
+
+    /* Listeye Ekle Butonu */
+    .btn-add-queue {
+      width: 100%;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: none;
       padding: 14px;
       border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-add-queue:active { transform: scale(0.98); }
+
+    .btn-print-now {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: white;
       border: none;
+      padding: 12px;
+      border-radius: 10px;
       font-size: 14px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .btn-next-scan {
+      background: #1e293b;
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13.5px;
       font-weight: 700;
       cursor: pointer;
       display: flex;
@@ -235,133 +581,393 @@
       justify-content: center;
       gap: 6px;
     }
-    .btn-action:active { transform: scale(0.97); }
-    .btn-print-again { background: var(--primary); color: #ffffff; }
-    .btn-clear { background: rgba(255, 255, 255, 0.08); color: var(--text-muted); }
 
-    .history-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
-    }
-    .history-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-muted);
-    }
-    .history-list {
+    /* Boş Durum Kartı */
+    .empty-state-card {
+      background: var(--card-bg);
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      padding: 30px 20px;
+      text-align: center;
       display: flex;
       flex-direction: column;
+      align-items: center;
       gap: 8px;
-      max-height: 200px;
+    }
+
+    .empty-icon { font-size: 36px; margin-bottom: 4px; }
+    .empty-title { font-size: 15px; font-weight: 700; }
+    .empty-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+    /* 2. TAB: BASIM LİSTESİ */
+    .queue-container {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .queue-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+    }
+
+    .queue-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #38bdf8;
+    }
+
+    .queue-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: calc(100vh - 240px);
       overflow-y: auto;
     }
-    .history-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--surface);
-      padding: 10px 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      font-size: 13px;
-    }
 
-    .toast-container {
-      position: fixed;
-      top: 16px;
-      left: 16px;
-      right: 16px;
-      z-index: 9999;
+    .queue-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
       gap: 8px;
-      pointer-events: none;
     }
-    .toast {
-      padding: 12px 16px;
-      background: #1e1b4b;
-      border: 1px solid #6366f1;
-      border-radius: 12px;
-      color: #ffffff;
+
+    .queue-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .queue-card-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .btn-remove-item {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .queue-card-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 8px;
+    }
+
+    .queue-barcode {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #818cf8;
+      font-weight: 700;
+    }
+
+    .queue-price-inp {
+      background: #090d16;
+      border: 1px solid #38bdf8;
+      color: #38bdf8;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      width: 110px;
+      text-align: right;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .fixed-bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      gap: 10px;
+      z-index: 100;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .btn-batch-print-mobile {
+      flex: 1;
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: white;
+      border: none;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+    }
+
+    .btn-clear-queue {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 12px 14px;
+      border-radius: 10px;
       font-size: 13px;
       font-weight: 700;
+      cursor: pointer;
+    }
+
+    .toast-box {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      display: none;
       text-align: center;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    .toast-success {
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid var(--accent);
+      color: #34d399;
+    }
+
+    .toast-error {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid var(--danger);
+      color: #f87171;
     }
   </style>
 </head>
 <body>
 
-  <div class="toast-container" id="toastContainer"></div>
-
-  <div class="top-bar">
-    <div class="logo-badge">
-      <span>🏷️ Mobil Etiket Terminali</span>
+  <!-- 1. MOBİL ÜST ÇUBUK -->
+  <header class="mobile-header">
+    <div class="brand-flex">
+      <div class="brand-icon">📱</div>
+      <div>
+        <div class="brand-title">OYMAPOS Mobil Raf Terminali</div>
+        <div class="brand-subtitle">Reyon Fiyat Gör & Etiket Bas</div>
+      </div>
     </div>
-    <div class="online-indicator">
-      <span class="dot"></span>
-      <span>Ana PC Bağlı</span>
+    <div style="font-size: 11px; color: var(--text-muted); display:flex; align-items:center; gap:5px; background: rgba(255,255,255,0.04); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+      <span style="width:6px; height:6px; background:#10b981; border-radius:50%;"></span>
+      <span id="txt-printer-name">Ana PC Bağlı</span>
     </div>
-  </div>
+  </header>
 
-  <div class="container">
-    <div class="camera-card">
-      <div id="reader"></div>
-      <div class="camera-controls">
-        <div class="toggle-wrap">
-          <label class="switch">
-            <input type="checkbox" id="autoPrintSwitch" checked>
-            <span class="slider"></span>
-          </label>
-          <span>Otomatik Yazdır</span>
+  <!-- 2. MOBİL SEKME BUTONLARI -->
+  <nav class="mobile-nav-tabs">
+    <button class="nav-tab-btn active" id="tab-btn-scan" onclick="switchMobileTab('scan')">
+      <span style="font-size: 16px;">🏷️</span>
+      <span>Fiyat Gör & Tara</span>
+    </button>
+    <button class="nav-tab-btn" id="tab-btn-queue" onclick="switchMobileTab('queue')">
+      <span style="font-size: 16px;">📋</span>
+      <span>Basım Listesi</span>
+      <span class="queue-badge" id="badge-queue-count">0</span>
+    </button>
+  </nav>
+
+  <!-- 3. TARAYICI SEKMESİ -->
+  <main class="container" id="section-scan">
+    <!-- 📷 Canlı Kamera Düğmesi (OYMAPOS Standart) -->
+    <div style="display: flex; gap: 8px; margin-bottom: 4px;">
+      <button class="btn-action-camera" onclick="openFullscreenCamera()" style="flex: 1.6; font-weight: 800; padding: 15px 10px;">
+        <span style="font-size: 22px;">📷</span>
+        <span style="font-size: 14.5px;">CANLI TARA</span>
+      </button>
+      <button class="btn-action-gallery" onclick="triggerNativeCaptureFallback()" style="flex: 1.1; padding: 15px 10px; font-weight: 700; font-size: 13px; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8; background: rgba(56, 189, 248, 0.1);">
+        <span style="font-size: 20px;">📸</span>
+        <span>KAMERA ÇEK</span>
+      </button>
+    </div>
+
+    <!-- Manuel Barkod Giriş Satırı -->
+    <div class="manual-barcode-bar">
+      <input type="text" id="inp-manual-barcode" placeholder="Barkod numarası yazın..." onkeydown="if(event.key==='Enter') lookupBarcode(this.value)">
+      <button onclick="lookupBarcode(document.getElementById('inp-manual-barcode').value)">Bul</button>
+    </div>
+
+    <!-- Bildirim Kutusu (Toast) -->
+    <div id="toast" class="toast-box"></div>
+
+    <!-- Son Eklenen Ürün Başarı Kartı -->
+    <div id="added-success-card" class="empty-state-card" style="display: none; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.08); padding: 20px 16px;">
+      <div class="empty-icon" style="font-size: 36px; margin-bottom: 2px;">✅</div>
+      <div class="empty-title" id="added-success-title" style="color: #34d399; font-size: 15.5px; font-weight: 800;">Ürün başarıyla listeye eklendi!</div>
+      <div class="empty-desc" id="added-success-desc" style="color: #e2e8f0; margin-top: 4px; font-size: 12.5px;"></div>
+      <div style="margin-top: 14px; display: flex; gap: 8px; width: 100%;">
+        <button class="btn-action-camera" style="flex: 1.2; padding: 11px 6px; font-size: 12.5px;" onclick="openFullscreenCamera()">
+          <span>📷</span>
+          <span>Sıradaki Barkod</span>
+        </button>
+        <button class="btn-action-gallery" style="flex: 1.1; padding: 11px 6px; font-size: 12.5px;" onclick="switchMobileTab('queue')">
+          <span>📋</span>
+          <span>Listeyi Gör</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Boş Durum Karşılama Kartı -->
+    <div id="empty-state" class="empty-state-card">
+      <div class="empty-icon">🏷️</div>
+      <div class="empty-title">Barkod Okutulması Bekleniyor</div>
+      <div class="empty-desc"><strong>"Barkod Okut / Tara"</strong> butonuna basın. Kamera açılınca barkodu kırmızı lazer çizgisine hizalayın.</div>
+    </div>
+
+    <!-- Okunan Ürün Kartı -->
+    <div id="product-card" class="product-info-card">
+      <div class="card-header-row">
+        <span id="txt-barcode" class="product-barcode-badge">8690000000000</span>
+        <span id="badge-status" class="product-status-pill found">✓ Kayıtlı Ürün</span>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Ürün Adı (Etikette Çıkacak İsim)</label>
+        <input type="text" id="inp-title" class="inp-title-box" placeholder="Ürün adını girin...">
+      </div>
+
+      <!-- Kasa Fiyatı vs Raf Etiketi Karşılaştırması -->
+      <div class="price-compare-grid">
+        <div class="price-box">
+          <span class="field-label" style="color: #34d399;">Kasa Satış Fiyatı</span>
+          <div class="price-val" id="val-pos-price" style="color: #34d399;">₺ 0,00</div>
+        </div>
+        <div class="price-box">
+          <span class="field-label" style="color: #38bdf8;">Basılı Raf Etiketi</span>
+          <div class="price-val" id="val-label-price" style="color: #38bdf8;">₺ 0,00</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Fiyat Düzenle</label>
+        <input type="text" id="inp-price" class="inp-title-box" placeholder="0,00" style="color: #fbbf24; font-size: 16px; font-weight: 800;">
+      </div>
+
+      <!-- Aksiyon Butonları -->
+      <button id="btn-print-direct" class="btn-print-now" onclick="printCurrentProductNow()">
+        <span>🖨️</span>
+        <span>Hemen Etiket Yazdır</span>
+      </button>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <button id="btn-confirm-printed" class="btn-action-gallery" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3); font-weight: 700; padding: 10px;" onclick="confirmPrintedOnly()">
+          <span>✓</span>
+          <span>Basıldı Onayla</span>
+        </button>
+        <button id="btn-add-queue" class="btn-add-queue" style="padding: 10px; font-size: 13.5px;" onclick="addItemToQueue()">
+          <span>➕</span>
+          <span>Listeye Ekle</span>
+        </button>
+      </div>
+
+      <button class="btn-next-scan" onclick="openFullscreenCamera()">
+        📷 Sıradaki Ürünü Okut
+      </button>
+    </div>
+  </main>
+
+  <!-- 4. KUYRUK / BASIM LİSTESİ SEKMESİ -->
+  <main class="container queue-container" id="section-queue">
+    <div class="queue-header-row">
+      <span class="queue-title">📋 Basılacak Ürün Listesi</span>
+      <span id="queue-total-count" style="font-size:12px; color:var(--text-muted);">0 ürün</span>
+    </div>
+
+    <div id="queue-empty-state" class="empty-state-card" style="display: flex;">
+      <div class="empty-icon">🛒</div>
+      <div class="empty-title">Basım Listesi Boş</div>
+      <div class="empty-desc">Henüz listeye ürün eklemediniz. "Fiyat Gör & Tara" sekmesinden ürün okutup listeye ekleyebilirsiniz.</div>
+    </div>
+
+    <div id="queue-items-list" class="queue-items-list"></div>
+
+    <div class="fixed-bottom-bar">
+      <button class="btn-batch-print-mobile" onclick="submitQueueBatchPrint()">
+        <span>🖨️</span>
+        <span id="btn-batch-print-text">Toplu Yazdır (0 Etiket)</span>
+      </button>
+      <button class="btn-clear-queue" onclick="clearQueueWithConfirm()">
+        🗑️ Temizle
+      </button>
+    </div>
+  </main>
+
+  <!-- 5. 🎯 TAM EKRAN GELİŞMİŞ MOBİL KAMERA MODALI (OYMAPOS 1-1 BİREBİR) -->
+  <div id="fullscreen-camera-overlay" class="fullscreen-camera-overlay">
+    <!-- Canlı Video Elementi -->
+    <video id="fullscreen-video" playsinline autoplay muted></video>
+    <div id="fullscreen-reader" style="display: none;"></div>
+
+    <!-- Üst Kontrol Barı -->
+    <div class="fs-top-bar">
+      <button type="button" class="fs-btn-close" onclick="closeFullscreenCamera()">
+        <span>✕</span>
+        <span>Kapat</span>
+      </button>
+
+      <!-- Fener (Flashlight) Butonu -->
+      <button type="button" id="btn-fs-torch" class="fs-btn-tool" style="display: none;" onclick="toggleFlashlight()">
+        <span style="font-size: 16px;">⚡</span>
+        <span id="txt-fs-torch">Fener</span>
+      </button>
+    </div>
+
+    <!-- Zoom Düğmeleri (1.0x, 1.5x, 2.0x, 3.0x) -->
+    <div class="fs-zoom-bar" id="fs-zoom-controls">
+      <button type="button" class="fs-btn-zoom active" id="btn-zoom-1x" onclick="setCameraZoom(1.0)">1.0x</button>
+      <button type="button" class="fs-btn-zoom" id="btn-zoom-15x" onclick="setCameraZoom(1.5)">1.5x</button>
+      <button type="button" class="fs-btn-zoom" id="btn-zoom-2x" onclick="setCameraZoom(2.0)">2.0x</button>
+      <button type="button" class="fs-btn-zoom" id="btn-zoom-3x" onclick="setCameraZoom(3.0)">3.0x</button>
+    </div>
+
+    <!-- ORTA ODAK VE KIRMIZI LAZER ÇİZGİSİ HUD -->
+    <div class="fs-center-hud">
+      <div class="fs-reticle-box">
+        <!-- Köşe Kılavuzları -->
+        <div class="reticle-corner tl"></div>
+        <div class="reticle-corner tr"></div>
+        <div class="reticle-corner bl"></div>
+        <div class="reticle-corner br"></div>
+
+        <!-- KIRMIZI LAZER TARAMA ÇİZGİSİ -->
+        <div class="fs-laser-line"></div>
+
+        <!-- Yuvarlak / Eğri Ambalaj Kılavuz İpucu -->
+        <div class="fs-guide-curve-hint">
+          <span>🥚 Barkodu Kırmızı Çizgiye Hizalayın</span>
         </div>
       </div>
     </div>
 
-    <form class="manual-input-box" onsubmit="handleManualSearch(event)">
-      <input type="text" id="manualBarcodeInput" placeholder="Barkod okutun veya yazın..." autofocus autocomplete="off">
-      <button type="submit">Bul & Bas</button>
-    </form>
-
-    <div class="product-card" id="productCard">
-      <div class="prod-brand" id="prodBrand">MARKA</div>
-      <div class="prod-title" id="prodTitle">Ürün Adı</div>
-      <div class="prod-price-box">
-        <div class="prod-price" id="prodPrice">₺ 0.00</div>
-        <div class="prod-barcode" id="prodBarcode">8690000000000</div>
+    <!-- Alt İpucu Çubuğu -->
+    <div class="fs-bottom-bar">
+      <div class="fs-hint-banner">
+        <span>💡 <strong>İpucu:</strong> Parlayan veya küçük barkodlarda telefonu <strong>20-30 cm geride</strong> tutup <strong>2.0x Zoom</strong> yapın.</span>
       </div>
-      
-      <div class="print-status-badge" id="printBadge">
-        <span>🖨️</span>
-        <span id="printStatusMsg">Ana PC Yazıcısına Gönderildi!</span>
-      </div>
-
-      <div class="print-actions">
-        <button type="button" class="btn-action btn-print-again" onclick="reprintCurrent()">
-          <span>🖨️ 1 Adet Daha Bas</span>
-        </button>
-        <button type="button" class="btn-action btn-clear" onclick="clearCurrentProduct()">
-          <span>✕ Kapat</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Son Tarananlar Geçmişi -->
-    <div class="history-card" id="historyCard" style="display:none;">
-      <div class="history-header">
-        <span>🕒 Son Taranan Ürünler</span>
-        <button onclick="clearHistory()" style="background:none; border:none; color:var(--danger); font-size:11px; font-weight:700; cursor:pointer;">Temizle</button>
-      </div>
-      <div class="history-list" id="historyList"></div>
     </div>
   </div>
 
+  <!-- JAVASCRIPT MOTORLARI -->
   <script src="/frontend/js/mobile.js?v={{ cache_bust }}"></script>
 </body>
 </html>

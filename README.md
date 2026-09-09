@@ -1,4 +1,4 @@
-# 🏷️ OYMAPOS - Etiket ve Fiş Yazdırıcı Kontrol Merkezi
+# 🏷️ OYMAPOS - Kurumsal Etiket & Fiş Otomasyon Merkezi
 
 <div align="center">
 
@@ -8,93 +8,134 @@
 ![TSPL](https://img.shields.io/badge/Printer-TSPL--II_RAW-orange)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-**VegaWin & FasterPOS PC Entegreli & Mobil Terminal Destekli Profesyonel Raf Etiketi ve Fiş Otomasyonu**
+**VegaWin & FasterPOS Entegreli, Kablosuz Mobil Terminal Destekli ve Yerel Ağ Senkronizasyonlu Profesyonel Raf Etiketi Çözümü**
+
+[Özellikler](#-özellikler--yetenekler) • [Kurulum](#-kurulum-ve-başlatma) • [Ağ ve Modüller](#-ağ-ve-cihaz-erişimi) • [Proje Yapısı](#-proje-yapısı) • [Sorun Giderme](#-sorun-giderme)
 
 </div>
 
 ---
 
-## 📌 Genel Bakış
+## 📌 Proje Genel Bakışı
 
-**OYMAPOS Etiket ve Fiş Yazdırıcı**, market ve perakende işletmelerinde kasa programındaki (VegaWin / FasterPOS) güncel fiyat ve stok verilerini yerel ağ üzerinden ana bilgisayara senkronize eden; masaüstü paneli, telefon kamerası veya terazi barkodlarıyla masadaki termal/lazer yazıcılardan tek tıkla standart raf etiketi basılmasını sağlayan modern bir web uygulamasıdır.
+**OYMAPOS**, süpermarketler, şarküteriler, manavlar ve perakende işletmeleri için tasarlanmış yüksek performanslı bir **Etiket ve Fiş Baskı Kontrol Merkezi**dir.
 
----
-
-## ✨ Temel Özellikler
-
-- 🖨️ **Dinamik TSPL Termal Baskı Motoru:** 40x20 mm, 60x40 mm, 76x40 mm ve 85x45 mm etiket ebatlarına göre 203 DPI (8 dots/mm) üzerinden tam kalibreli çıktı.
-- 📄 **A4 Çoklu Etiket Dizgisi:** Lazer veya mürekkep püskürtmeli standart ofis yazıcıları için yapışkanlı A4 kağıtlarına (24'lü, 40'lı, 65'li) tek tıkla grid PDF/Baskı dizgisi.
-- ⚡ **VegaWin & Excel/CSV Senkronizasyonu:** Excel veya CSV stok dosyalarını sürükle-bırak yöntemiyle yükleyerek değişen fiyatları, zam/indirim oranlarını ve yeni ürünleri anında tespit etme.
-- 📱 **Mobil Barkod Terminali:** Ek uygulama gerektirmeden, telefon kamerasını barkod okuyucuya dönüştürerek raftaki ürünü okutup ana bilgisayardaki yazıcıya saniyede etiket gönderme.
-- 🎨 **Görsel Şablon Stüdyosu (Visual Studio):** Etiket punto boyutlarını, metin alanlarını, yerli üretim rozetini ve barkod görünürlüğünü canlı önizleyerek özelleştirme.
-- ⚖️ **Terazi / Manav Barkod Çözücü:** `27`, `28`, `29` prefixli gramajlı/tutarlı terazi barkodlarını (`27[PLU][Gramaj][C]`) otomatik çözüp birim fiyattan anlık tutar hesaplama.
-- 📈 **Ürün Fiyat Geçmişi:** Her ürünün geçmişteki tüm zam ve indirim hareketlerini, değişim tarihlerini ve oranlarını zaman çizelgesinde inceleme.
-- 💾 **Tek Tıkla Sistem Yedekleme:** SQLite veritabanı, yazıcı kalibrasyonları ve şablonları tek tıkla zaman damgalı `.zip` olarak indirme ve geri yükleme.
-- 🔍 **Türkçe Karakter Zırhı:** SQLite üzerinde katlamalı arama (`fold_tr`) ile `ı/i`, `ş/s`, `ğ/g`, `ü/u`, `ö/o`, `ç/c` harflerini sorunsuz eşleştirme.
+Sistem, dükkan / kasa bilgisayarında çalışan **VegaWin & FasterPOS** veritabanlarındaki fiyat ve ürün değişikliklerini yerel ağ üzerinden otomatik algılar; masaüstü paneli, reyon el terminali (mobil telefon kamerası) veya barkod okuyucu aracılığıyla tek tıkla termal / lazer yazıcılardan kusursuz etiket basılmasını sağlar.
 
 ---
 
-## 🚀 Hızlı Başlangıç
+## ✨ Özellikler & Yetenekler
 
-### 1. Gereksinimler
+### 🔄 VegaWin / FasterPOS Akıllı Senkronizasyon & Karşılaştırma Masası
+- **Otomatik Dizin & Dosya Keşfi:** Bilgisayardaki VegaWin klasör yolunu (`C:\vegawin`, `C:\vegawin\Bin` vb.) otomatik tarar.
+- **İkili Veri & Hareket Ayrıştırma:** Güncel satış hareketlerini (`*SonSatisHareket.txt`), SQLite (`market_sistemi.db`), Excel (`.xlsx`) veya CSV dosyalarını otomatik tespit eder ve panodan yapıştırma (`Ctrl+V`) desteği sunar.
+- **2 Aşamalı Güvenli Aktarım:** Önce ekranda tüm fiyat değişimleri, zam/indirim farkları ve yeni eklenen ürünler listelenir; kullanıcı inceleyip onay verdikten sonra ana sisteme aktarılır.
+- **Toplu Geri Alma (Rollback / Undo):** İstenmeyen veya hatalı yapılan bir aktarımı tek tıkla eski fiyatlarına geri döndürme imkanı.
+
+### 🖨️ TSPL Termal Baskı & A4 Çoklu Dizgi Motoru
+- **Doğrudan Windows RAW Spooler:** Sürücü gecikmesi olmadan TSPL-II komutlarıyla milisaniyeler içinde termal etiket basımı.
+- **Çoklu Etiket Boyutları:** 40x20 mm (Mini), 60x40 mm (Kompakt), 76x40 mm (Standart Market), 85x45 mm (Büyük Boy).
+- **A4 Kağıt Dizgisi:** Lazer / mürekkep püskürtmeli yazıcılar için A4 yapışkanlı kağıtlara (24'lü, 40'lı, 65'li etiket şablonu) grid baskı desteği.
+
+### 📱 Mobil Barkod Terminali (Reyon Asistanı)
+- Herhangi bir ek uygulama indirmeden, aynı Wi-Fi ağına bağlı akıllı telefonun kamerasıyla barkod okutma.
+- Reyonda gezerken raf fiyatı ile kasa fiyatını anında kontrol etme ve tek tuşla kasadaki yazıcıya etiket gönderme.
+
+### ⚖️ Terazi / Manav Barkod Çözücü
+- `27`, `28` ve `29` prefixli terazi barkodlarını (`27[PLU][Gramaj/Tutar][C]`) otomatik çözer.
+- Gramajlı ürünlerin birim fiyatını ve paket tutarını anında hesaplayarak etikete basar.
+
+### 🛡️ Sistem Kararlılığı ve Çökme Önleyici Mimari
+- **SQLite WAL (Write-Ahead Logging):** Eşzamanlı okuma/yazma kilitlenmelerini önler, yüksek işlem hızına sahiptir.
+- **Türkçe Karakter Katlaması (`fold_tr`):** `I/ı`, `İ/i`, `Ş/ş`, `Ğ/ğ`, `Ü/ü`, `Ö/ö`, `Ç/ç` harflerinde %100 arama doğruluğu.
+- **Global Hata Yakalama (Crash Proof):** Beklenmeyen API veya donanım hatalarında sunucu çökmez, güvenli hata döndürür.
+- **Zaman Damgalı Tek Tıkla Yedekleme:** Veritabanı ve yazıcı ayarlarını tek tıkla `.zip` olarak indirme ve yedekten geri yükleme.
+
+---
+
+## 🚀 Kurulum ve Başlatma
+
+### Gereksinimler
 - Python 3.10 veya üzeri
-- Windows 7 / 8 / 10 / 11 (Windows Spooler RAW yazdırma için)
+- Windows 10 / 11 / Server (Windows Spooler RAW yazdırma için)
 
-### 2. Kurulum
+### Adım Adım Başlatma
 ```bash
-# Proje dizinine girin
+# 1. Proje dizinine gidin
 cd "Etiket Yazdırıcı"
 
-# Bağımlılıkları yükleyin
+# 2. Gerekli kütüphaneleri yükleyin
 pip install -r requirements.txt
-```
 
-### 3. Çalıştırma
-```bash
+# 3. Uygulamayı başlatın
 python main.py
 ```
 
-* Sunucu başladığında varsayılan tarayıcınızda kontrol paneli (`http://localhost:8000`) otomatik olarak açılacaktır.
-* Port meşgulse çökmeden bir sonraki boş portu (8001, 8002...) otomatik bulur.
+- Sunucu başladığında varsayılan tarayıcınızda kontrol paneli (`http://localhost:8000`) otomatik olarak açılacaktır.
+- Eğer 8000 portu başka bir program tarafından kullanılıyorsa sistem otomatik olarak bir sonraki boş portu (8001, 8002...) seçer.
 
 ---
 
-## 📱 Cihaz Rotaları ve Kullanım
+## 🌐 Ağ ve Cihaz Erişimi
 
-| Modül | URL | Açıklama |
+| Modül | Adres | Açıklama |
 |---|---|---|
-| 🖥️ **Masaüstü Kontrol Masası** | `http://localhost:8000/` | Ürün arama, A4 dizgi, tekli/toplu etiket basımı, şablon stüdyosu. |
-| 📱 **Mobil Terminal** | `http://[ANA_PC_IP]:8000/mobile` | Telefon kamerasıyla kablosuz barkod okuma ve anında baskı. |
-| 🛒 **VegaWin Veri Aktarımı** | `http://[ANA_PC_IP]:8000/sync` | Diğer bilgisayarlardan VegaWin Excel/CSV dosyasını yükleme istasyonu. |
+| 🖥️ **Ana Yönetim & Etiket Masası** | `http://localhost:8000/` | Stok arama, tekli/toplu etiket basımı, görsel şablon stüdyosu. |
+| 💻 **Dükkan Veri Aktarım Portalı** | `http://[ANA_PC_IP]:8000/sync` | Dükkan bilgisayarından VegaWin klasörünü tarayıp verileri gönderme masası. |
+| 📱 **Reyon Mobil Terminali** | `http://[ANA_PC_IP]:8000/mobile` | Telefon kamerası ile kablosuz reyon etiket denetimi. |
 
 ---
 
-## 🏗️ Klasör Mimarisi
+## 📂 Proje Yapısı
 
 ```
-├── main.py                     # Ana Başlatıcı, Port Çözücü & Live Reload
-├── requirements.txt            # Python Paket Bağımlılıkları
-├── .gitignore                  # Git Hariç Tutma Kuralları
-├── README.md                   # Dokümantasyon
-├── backend/                    # FastAPI Backend Katmanı
-│   ├── app.py                  # FastAPI Sunucusu & F5 Anti-Cache Middleware
-│   ├── config.py               # Dizin ve Yapılandırma Sabitleri
-│   ├── controllers/            # REST API Uç Noktaları (api_controller.py)
-│   ├── models/                 # Pydantic Şemaları (schemas.py)
-│   ├── services/               # DB (SQLite WAL), Yazıcı (TSPL), VegaWin, Şablon Servisleri
-│   └── utils/                  # Ağ IP, QR Kod ve UTF-8 Yardımcıları
-├── frontend/                   # Obsidian Slate Koyu Tema Web UI
-│   ├── css/                    # style.css & components.css
-│   ├── stiller/                # Modüler Masaüstü ve Mobil CSS Kütüphanesi
-│   ├── js/                     # api.js, ui.js, app.js, mobile.js
-│   ├── index.html              # Masaüstü Kontrol Paneli & Şablon Stüdyosu
-│   ├── mobile.html             # Mobil Barkod Terminali
-│   └── sync.html               # Ağ Üzerinden VegaWin Dosya Yükleme Ekranı
-├── data/                       # Veritabanı & Ayarlar
-│   ├── market_sistemi.db       # SQLite WAL Modunda 4.900+ Ürün Veritabanı
-│   ├── ayarlar.json            # Yazıcı ve Kalibrasyon Ayarları
-│   └── etiket_sablonlari.json  # Özel ve Varsayılan Etiket Şablonları
-└── backup/                     # Dışa aktarma ve JSON/CSV yedekleri
+Etiket Yazdırıcı/
+├── main.py                         # Ana Başlatıcı, Dinamik Port Çözücü & Live-Reload
+├── requirements.txt                # Python Bağımlılıkları
+├── README.md                       # Kurumsal Kullanım Kılavuzu
+├── LICENSE                         # MIT Lisans Dosyası
+├── backend/
+│   ├── app.py                      # FastAPI Sunucusu & Anti-Cache Middleware
+│   ├── config.py                   # Uygulama Dizin ve Konfigürasyon Sabitleri
+│   ├── controllers/                # Modüler REST API Denetleyicileri
+│   │   ├── api_controller.py       # Ana Router Birleştirici
+│   │   ├── network_controller.py   # Yerel Ağ & Cihaz Kayıt API
+│   │   ├── print_controller.py     # Termal & Test Baskı API
+│   │   ├── printer_controller.py   # Yazıcı Donanım & Ayar API
+│   │   ├── product_controller.py   # Ürün Listeleme & Arama API
+│   │   ├── system_controller.py    # Yedekleme & Geri Yükleme API
+│   │   ├── template_controller.py  # Etiket Tasarım Şablonları API
+│   │   └── vegawin_controller.py   # VegaWin Senkronizasyon & Karşılaştırma API
+│   ├── models/
+│   │   └── schemas.py              # Pydantic Veri Modelleri
+│   ├── services/
+│   │   ├── db/                     # Veritabanı Katmanı (Connection, Repo, Schema, Sync)
+│   │   ├── db_service.py           # Veritabanı Modüler Facade
+│   │   ├── printer_service.py      # TSPL-II & Windows RAW Spooler Servisi
+│   │   ├── template_service.py     # Etiket Şablon Motoru
+│   │   ├── vegawin/                # VegaWin Ayrıştırıcı & Karşılaştırma Motoru
+│   │   └── vegawin_service.py      # VegaWin Modüler Facade
+│   └── utils/
+│       ├── network_utils.py        # Yerel IP & Dinamik QR Kod Üretici
+│       ├── response_utils.py       # Standart JSON Yanıt & Güvenli Log
+│       └── text_utils.py           # Türkçe Karakter, Fiyat & Barkod Temizleyici
+├── frontend/
+│   ├── css/                        # Kurumsal Tasarım Sistem Stilleri
+│   ├── js/
+│   │   ├── api.js                  # Backend REST API İstemcisi
+│   │   ├── ui.js                   # UI Motoru & Modal/Toast Yardımcıları
+│   │   ├── main.js                 # Frontend Başlatıcı & Sekme Yönetimi
+│   │   ├── mobile.js               # Mobil Terminal & Kamera Okuyucu Mantığı
+│   │   └── modules/                # Parçalanmış JS Modülleri (products, print, studio vb.)
+│   ├── partials/                   # HTML Modülleri (Sekmeler ve Modallar)
+│   ├── index.html                  # Ana Masaüstü Kontrol Masası
+│   ├── sync.html                   # VegaWin Veri Aktarım & Karşılaştırma Portalı
+│   └── mobile.html                 # Mobil Reyon Barkod Terminali
+└── data/
+    ├── ayarlar.json                # Yazıcı ve Kalibrasyon Ayarları
+    ├── etiket_sablonlari.json      # Etiket Tasarım Şablonları
+    ├── kara_liste.json             # Otomatik Temizleme & Kara Liste Kuralları
+    └── uploads/                    # Geçici Dosya Yükleme Alanı (.gitkeep ile korunur)
 ```
 
 ---
@@ -108,6 +149,17 @@ python main.py
 | `F2` | Hızlı test etiketi yazdır |
 | `Enter` | Önizleme modalı açıkken doğrudan yazdır |
 | `Escape` | Modalı kapat veya arama kutusunu temizle |
+
+---
+
+## 💡 Sorun Giderme & İpuçları
+
+1. **Yazıcı Çıktı Vermiyorsa:**
+   - Denetim Masası > Aygıtlar ve Yazıcılar bölümünden termal yazıcınızın adının `ayarlar.json` veya arayüzdeki "Yazıcı Ayarları" sekmesindeki isimle birebir aynı olduğunu kontrol edin.
+2. **Dükkan Bilgisayarından Bağlanılamıyorsa:**
+   - Ana bilgisayarın Windows Güvenlik Duvarında Python için yerel ağ gelen bağlantılarına izin verildiğinden emin olun.
+3. **Fiyat Değişimlerini Göremiyorsanız:**
+   - VegaWin klasör yolunun (`C:\vegawin` veya `C:\vegawin\Bin`) doğru olduğunu kontrol edin ve `/sync` sayfasından **"Ürünleri Getir & Listele"** butonuna basın.
 
 ---
 

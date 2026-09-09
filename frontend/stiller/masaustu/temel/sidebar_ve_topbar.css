@@ -1,10 +1,11 @@
 /* =========================================================
    2. SIDEBAR (YAN MENÜ) VE TOPBAR (ÜST ÇUBUK) STİLLERİ
+   OYMAPOS Midnight Blue Modern Tasarım Sistemi
    ========================================================= */
 
 /* Sol Menü (Sidebar) */
 .app-sidebar {
-  width: 240px;
+  width: 230px;
   height: 100vh;
   background-color: var(--bg-sidebar);
   border-right: 1px solid var(--border-color);
@@ -13,7 +14,7 @@
   flex-shrink: 0;
   z-index: 500;
   position: relative;
-  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sidebar-toggle-btn {
@@ -23,8 +24,8 @@
   transform: translateY(-50%);
   width: 26px;
   height: 26px;
-  background: #0284c7;
-  border: 2px solid #ffffff;
+  background: var(--primary);
+  border: 2px solid var(--bg-sidebar);
   border-radius: 50%;
   color: #ffffff;
   display: flex;
@@ -34,13 +35,13 @@
   font-weight: 900;
   cursor: pointer;
   z-index: 9999;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  transition: background 0.15s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: all 0.15s ease;
 }
 
 .sidebar-toggle-btn:hover {
-  background: #0369a1;
-  color: #ffffff;
+  background: var(--primary-hover);
+  transform: translateY(-50%) scale(1.1);
 }
 
 /* Tam Gizlenen / Daraltılan Sidebar (Tam Ekran Modu) */
@@ -58,7 +59,7 @@
 }
 
 .sidebar-logo {
-  padding: 18px 16px;
+  padding: 16px 16px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -67,30 +68,31 @@
 }
 
 .logo-icon {
-  font-size: 22px;
-  background: #1e293b;
-  padding: 4px 8px;
+  font-size: 20px;
+  background: rgba(2, 132, 199, 0.15);
+  border: 1px solid rgba(2, 132, 199, 0.25);
+  padding: 5px 8px;
   border-radius: 10px;
 }
 
 .logo-text h2 {
-  font-size: 15.5px;
-  font-weight: 900;
+  font-size: 15px;
+  font-weight: 800;
   letter-spacing: -0.2px;
   color: var(--text-main);
 }
 
 .logo-text span {
   font-size: 11px;
-  color: var(--accent);
-  font-weight: 800;
+  color: var(--primary);
+  font-weight: 700;
 }
 
 .sidebar-nav {
   padding: 12px 10px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
@@ -108,66 +110,56 @@
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
   width: 100%;
-  padding: 12px 14px;
+  padding: 10px 12px;
   background: transparent;
-  color: #94a3b8;
-  border: 1.5px solid transparent;
-  border-radius: 10px;
-  font-size: 13.5px;
-  font-weight: 700;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
   text-align: left;
-  transition: all 0.18s ease;
+  transition: all 0.16s ease;
   white-space: nowrap;
 }
 
 .nav-item .nav-icon {
-  font-size: 20px;
+  font-size: 18px;
   flex-shrink: 0;
   line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
 }
 
 .nav-item .nav-label {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  letter-spacing: 0.2px;
 }
 
 .nav-item:hover {
   background: rgba(255, 255, 255, 0.05);
-  color: #f8fafc;
+  color: var(--text-main);
+  transform: translateX(2px);
 }
 
 .nav-item.active {
-  background: #2563eb;
+  background: linear-gradient(135deg, #0284c7, #2563eb);
   color: #ffffff;
-  border-color: #3b82f6;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-  font-weight: 800;
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+  font-weight: 700;
 }
 
 .sidebar-footer {
-  padding: 14px;
+  padding: 12px 14px;
   border-top: 1px solid var(--border-color);
-  background: #0a0f1c;
-}
-
-.device-status-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #131b2e;
-  border: 1px solid var(--border-color);
-  padding: 10px 12px;
-  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .status-dot {
@@ -179,86 +171,49 @@
   flex-shrink: 0;
 }
 
-.status-info strong {
-  display: block;
-  font-size: 11.5px;
-  color: #e2e8f0;
-}
-
-.status-info small {
-  font-size: 10px;
-  color: var(--text-muted);
-}
-
-/* Sağ Ana İçerik & Üst Çubuk (Topbar) */
-.app-content-wrapper {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-  background-color: var(--bg-dark);
-}
-
-.app-main-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  height: calc(100vh - 60px);
-  padding: 16px 20px;
-}
-
-.app-topbar {
+/* Üst Çubuk (Topbar) */
+.topbar {
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border-color);
+  padding: 10px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 24px;
-  background-color: rgba(19, 27, 46, 0.6);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
-}
-
-.topbar-title h1 {
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: -0.3px;
-}
-
-.topbar-title p {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 2px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+  z-index: 100;
 }
 
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
-.btn-theme-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+.status-pill {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: #131b2e;
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  flex-shrink: 0;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 5px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #34d399;
+  font-family: var(--font-mono);
 }
 
-.btn-theme-circle:hover {
-  transform: scale(1.1);
-  border-color: #38bdf8;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+.status-pill .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+@media (max-width: 800px) {
+  .btn-label-responsive {
+    display: none;
+  }
 }
