@@ -9,7 +9,7 @@
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Platform](https://img.shields.io/badge/Windows-7%20%7C%208%20%7C%2010%20%7C%2011%20(32%2F64--bit)-lightgrey?logo=windows)
 
-**VegaWin & FasterPOS Entegreli, Kablosuz Mobil Terminal Destekli, ZPL/TSPL Çift Motorlu Profesyonel Raf Etiketi ve Fiş Otomasyonu**
+**Otomatik Barkod Algılamalı, Kablosuz Mobil Terminal Destekli, ZPL/TSPL Çift Motorlu Profesyonel Raf Etiketi ve Fiş Otomasyonu**
 
 [Özellikler](#-özellikler--yetenekler) • [Hızlı Başlatma](#-hızlı-başlatma-tüm-windows-sürümleri) • [Ağ ve Modüller](#-ağ-ve-cihaz-erişimi) • [Proje Mimarisi](#-proje-mimarisi) • [Kısayollar](#-klavye-kısayolları) • [Sorun Giderme](#-sorun-giderme)
 
@@ -19,38 +19,39 @@
 
 ## 📌 Proje Genel Bakışı
 
-**OYMAPOS**, süpermarketler, şarküteriler, manavlar ve perakende satış noktaları için geliştirilmiş yüksek performanslı, dayanıklı bir **Etiket ve Fiş Baskı Kontrol Merkezi**dir.
+**OYMAPOS**, süpermarketler, şarküteriler, manavlar ve perakende satış noktaları için geliştirilmiş yüksek performanslı, bağımsız ve dayanıklı bir **Etiket ve Fiş Baskı Kontrol Merkezi**dir.
 
-Sistem, dükkan ve kasa bilgisayarlarında çalışan **VegaWin & FasterPOS** veritabanlarındaki fiyat ve ürün güncellemelerini yerel ağ üzerinden otomatik algılar. Masaüstü yönetim paneli, reyon el terminali (mobil telefon kamerası) veya barkod okuyucu aracılığıyla tek tıkla termal / lazer yazıcılardan kusursuz etiket basılmasını sağlar.
+Herhangi bir özel POS veya ERP yazılımına bağımlı kalmadan; panodan kopyalanan listeleri, Excel/CSV dosyalarını veya barkod tarayıcı girişlerini **akıllı barkod algılama motoru** sayesinde otomatik ayrıştırır. Masaüstü yönetim paneli, reyon el terminali (mobil telefon kamerası) veya barkod okuyucu aracılığıyla tek tıkla termal / lazer yazıcılardan standartlara uygun etiket basılmasını sağlar.
 
 ---
 
 ## ✨ Özellikler & Yetenekler
 
+### 🔍 Akıllı Barkod Algılama & Hızlı Veri Aktarımı
+- **Otomatik Barkod ve Fiyat Ayrıştırma:** Panodan yapıştırılan veya yüklenen metinlerde barkod (EAN-13, EAN-8, Code-128) ve fiyat bilgisi format bağımsız olarak anında tespit edilir.
+- **Panodan Doğrudan Aktarım (Ctrl + V):** Herhangi bir programdan veya tablodan kopyalanan ürün listesini ekrana yapıştırarak saniyeler içinde içeri alma.
+- **Esnek Dosya Yükleme:** Excel (`.xlsx`), CSV, metin dosyaları (`.txt`) veya veritabanı yedeklerini sürükle-bırak yöntemiyle sisteme aktarma.
+- **2 Aşamalı Güvenli Karşılaştırma Masası:** Aktarım öncesinde sistemdeki mevcut ürünler ve fiyatlar ile yeni veriler karşılaştırılır; zam, indirim ve yeni eklenen ürünler kullanıcı onayına sunulur.
+- **Tek Tıkla Geri Alma (Rollback / Undo):** Hatalı veya istenmeyen aktarımlarda tek tıkla önceki fiyatlara anında geri dönebilme güvencesi.
+
 ### 🖨️ Hibrit Termal Baskı Motoru (ZPL + TSPL-II & A4 Grid)
 - **Doğrudan Windows RAW Spooler:** Yazıcı sürücüsü gecikmesi olmaksızın milisaniyeler içinde doğrudan termal donanıma ham komut iletimi.
 - **Çift Protokol Desteği (ZPL & TSPL-II):** Zebra, Xprinter, Argox, HPRT, Bixolon vb. piyasadaki tüm termal yazıcılarla tak-çalıştır uyumluluk.
-- **Dinamik Raf Etiketi Standartları:** Birim fiyat kutusu, gramaj/miktar rozeti, resmi Yerli Üretim logosu, reyon kodları ve promosyon alanı.
+- **Dinamik Raf Etiketi Standartları:** Birim fiyat kutusu, gramaj/miktar rozeti, resmi Yerli Üretim logosu, reyon kodları ve kampanya alanları.
 - **Çoklu Boyut Desteği:** 40x20 mm, 60x40 mm, 76x40 mm (Standart Market), 85x45 mm ve özel şablonlar.
-- **A4 Çoklu Çıkartma Dizgisi:** Lazer veya mürekkep püskürtmeli standart ofis yazıcıları için A4 yapışkanlı etiket kağıtlarına (24'lü, 40'lı, 65'li) baskı imkanı.
+- **A4 Çoklu Çıkartma Dizgisi:** Lazer veya mürekkep püskürtmeli ofis yazıcıları için A4 yapışkanlı etiket kağıtlarına (24'lü, 40'lı, 65'li) baskı imkanı.
 - **Canlı Baskı Geçmişi:** Yapılan tüm baskı işlemlerinin anlık loglanması ve arayüzdeki "Baskı Geçmişi" sekmesinden izlenebilmesi.
-
-### 🔄 VegaWin / FasterPOS Akıllı Senkronizasyon & Karşılaştırma Masası
-- **Panodan Doğrudan Yapıştırma (Ctrl + V):** VegaWin veya Excel'den kopyalanan ürün ve fiyat listesini ekrana yapıştırarak saniyeler içinde içeri alma.
-- **Esnek Dosya Yükleme:** Satış hareketleri (`*SonSatisHareket.txt`), Excel (`.xlsx`), CSV veya SQLite yedeklerini sürükle-bırak yöntemiyle içe aktarma.
-- **2 Aşamalı Güvenli Aktarım Masası:** Aktarım öncesinde sistemdeki mevcut fiyatlar ile yeni fiyatlar karşılaştırılır; zam, indirim ve yeni eklenen ürünler listelenerek kullanıcı onayına sunulur.
-- **Tek Tıkla Geri Alma (Rollback / Undo):** Hatalı veya istenmeyen aktarımlarda tek tıkla eski fiyatlara anında geri dönebilme güvencesi.
 
 ### 📱 Mobil Barkod Terminali (Reyon Asistanı)
 - Herhangi bir uygulama yüklemeden, aynı Wi-Fi ağına bağlı akıllı telefon kamerasından barkod okutma.
-- Reyonda gezerken raf fiyatı ile kasa fiyatını denetleme ve tek tıkla kasadaki yazıcıya etiket gönderme.
+- Reyonda gezerken raf fiyatı ile güncel fiyatı denetleme ve tek tıkla kasadaki yazıcıya etiket gönderme.
 
 ### ⚖️ Terazi / Manav Barkod Çözücü
-- `27`, `28` ve `29` prefixli terazi barkodlarını (`27[PLU][Gramaj/Tutar][C]`) anında ayrıştırma.
+- `27`, `28` ve `29` prefixli terazi barkodlarını (`27[PLU][Gramaj/Tutar][C]`) otomatik ayrıştırma.
 - Gramajlı ürünlerin birim fiyatını ve paket tutarını otomatik hesaplama.
 
 ### 🛡️ Kararlı ve Çökme Önleyici Mimari
-- **SQLite WAL (Write-Ahead Logging):** Eşzamanlı okuma/yazma kilitlenmelerini önleyen hızlı veritabanı motoru.
+- **SQLite WAL (Write-Ahead Logging):** Eşzamanlı okuma/yazma kilitlenmelerini önleyen yüksek hızlı veritabanı motoru.
 - **Türkçe Karakter Katlaması (`fold_tr`):** `I/ı`, `İ/i`, `Ş/ş`, `Ğ/ğ`, `Ü/ü`, `Ö/ö`, `Ç/ç` harflerinde %100 arama doğruluğu.
 - **Zaman Damgalı Tek Tıkla Yedekleme:** Veritabanı ve ayarları `.zip` formatında yedekleme ve geri yükleme.
 
@@ -90,7 +91,7 @@ Tarayıcınızda arayüz otomatik olarak `http://localhost:8000` adresinde açı
 | Modül | Yerel Adres | Açıklama |
 |---|---|---|
 | 🖥️ **Ana Yönetim & Etiket Masası** | `http://localhost:8000/` | Stok arama, tekli/toplu etiket basımı, baskı geçmişi. |
-| 💻 **Dükkan Veri Aktarım Portalı** | `http://[IP_ADRESI]:8000/sync` | Dükkan bilgisayarından panodan yapıştırma (Ctrl+V) veya dosya yükleme ile veri aktarım masası. |
+| 💻 **Veri Aktarım & Karşılaştırma Portalı** | `http://[IP_ADRESI]:8000/sync` | Panodan yapıştırma (Ctrl+V) veya dosya yükleme ile hızlı veri aktarım masası. |
 | 📱 **Reyon Mobil Terminali** | `http://[IP_ADRESI]:8000/mobile` | Telefon kamerası ile kablosuz reyon etiket denetimi. |
 
 ---
@@ -115,7 +116,7 @@ Etiket Yazdırıcı/
 │   │   ├── product_controller.py   # Ürün Listeleme & Arama API
 │   │   ├── system_controller.py    # Yedekleme & Geri Yükleme API
 │   │   ├── template_controller.py  # Etiket Tasarım Şablonları API
-│   │   └── vegawin_controller.py   # VegaWin Senkronizasyon & Karşılaştırma API
+│   │   └── vegawin_controller.py   # Veri İçe Aktarım & Karşılaştırma API
 │   ├── models/
 │   │   └── schemas.py              # Pydantic Veri Modelleri
 │   ├── services/
@@ -123,7 +124,7 @@ Etiket Yazdırıcı/
 │   │   ├── printer_service.py      # RAW Spooler, ZPL & TSPL-II Baskı Servisi
 │   │   ├── zpl_etiket_kodlayici.py # Standart ZPL Raf Etiketi Kodlayıcı Motor
 │   │   ├── template_service.py     # Etiket Şablon Motoru
-│   │   └── vegawin/                # VegaWin Ayrıştırıcı & Karşılaştırma Motoru
+│   │   └── vegawin/                # Veri Ayrıştırıcı & Akıllı Karşılaştırma Motoru
 │   └── utils/
 │       ├── network_utils.py        # Yerel IP & Dinamik QR Kod Üretici
 │       ├── response_utils.py       # Standart JSON Yanıt Yardımcıları
@@ -137,7 +138,7 @@ Etiket Yazdırıcı/
 │   │   └── modules/                # JS Modülleri (products, print, sync vb.)
 │   ├── partials/                   # Dinamik Sekmeler ve Modal Şablonları
 │   ├── index.html                  # Ana Masaüstü Kontrol Masası
-│   ├── sync.html                   # VegaWin Veri Aktarım & Karşılaştırma Portalı
+│   ├── sync.html                   # Veri Aktarım & Karşılaştırma Portalı
 │   └── mobile.html                 # Mobil Reyon Barkod Terminali
 └── data/
     ├── ayarlar.json                # Yazıcı ve Kalibrasyon Ayarları
@@ -166,7 +167,7 @@ Etiket Yazdırıcı/
    - Denetim Masası > Aygıtlar ve Yazıcılar bölümünden termal yazıcınızın adının arayüzdeki "Yazıcı Ayarları" sekmesindeki isimle birebir aynı olduğunu kontrol edin.
 2. **Kuyrukta Yazdırma İşi Takılı Kalırsa:**
    - Arayüzdeki Yazıcı Ayarları bölümünden "Kuyruğu Temizle" butonunu kullanarak kilitlenmiş yazdırma işlerini tek tıkla boşaltabilirsiniz.
-3. **Dükkan Bilgisayarından Bağlanılamıyorsa:**
+3. **Diğer Cihazlardan Bağlanılamıyorsa:**
    - Ana bilgisayarın Windows Güvenlik Duvarı ayarlarında Python için yerel ağ bağlantılarına izin verildiğinden emin olun.
 
 ---
