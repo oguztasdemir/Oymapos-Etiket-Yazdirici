@@ -120,6 +120,25 @@ function handleSearchInput(e) {
   }, 180);
 }
 
+function handleSearchKeydown(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    clearTimeout(searchTimeout);
+    const q = (e.target.value || '').trim();
+    if (!q) return;
+
+    searchProducts(q).then(() => {
+      if (cachedProductsList && cachedProductsList.length > 0) {
+        const exact = cachedProductsList.find(p => String(p.barcode) === q);
+        const targetProd = exact || (cachedProductsList.length === 1 ? cachedProductsList[0] : null);
+        if (targetProd && typeof openProductEditModal === 'function') {
+          openProductEditModal(targetProd.barcode);
+        }
+      }
+    });
+  }
+}
+
 async function searchProducts(query) {
   try {
     const res = await API.searchProducts(

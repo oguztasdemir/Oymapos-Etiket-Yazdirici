@@ -183,7 +183,9 @@ def clean_turkish(text: str) -> str:
     res = []
     for ch in str(text):
         res.append(tr_map.get(ch, ch))
-    return "".join(res)
+    cleaned = "".join(res)
+    # TSPL çift tırnak komut kırılmasını önle
+    return cleaned.replace('"', "'")
 
 def format_price_display(val) -> str:
     if val is None:
@@ -380,11 +382,15 @@ def send_raw_to_printer(printer_name: str, raw_data: bytes) -> tuple:
         import win32print
         handle = win32print.OpenPrinter(printer_name)
         try:
-            job = win32print.StartDocPrinter(handle, 1, ("Etiket_Baskisi", None, "RAW"))
-            win32print.StartPagePrinter(handle)
-            win32print.WritePrinter(handle, raw_data)
-            win32print.EndPagePrinter(handle)
-            win32print.EndDocPrinter(handle)
+            win32print.StartDocPrinter(handle, 1, ("Etiket_Baskisi", None, "RAW"))
+            try:
+                win32print.StartPagePrinter(handle)
+                try:
+                    win32print.WritePrinter(handle, raw_data)
+                finally:
+                    win32print.EndPagePrinter(handle)
+            finally:
+                win32print.EndDocPrinter(handle)
             return True, "Yazıcıya başarıyla iletildi."
         finally:
             win32print.ClosePrinter(handle)

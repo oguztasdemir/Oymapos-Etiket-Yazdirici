@@ -17,7 +17,8 @@ from backend.models.schemas import VegaWinConfirmRequest
 from backend.services.db_service import (
     get_new_products_list, mark_new_products_as_printed,
     get_sync_history_list, rollback_sync_batch,
-    preview_from_source_db, import_all_from_source_db
+    preview_from_source_db, import_all_from_source_db,
+    db_session, update_product_printed_time
 )
 from backend.services.vegawin_service import (
     parse_vegawin_file, sync_vegawin_items, get_price_changes_list, mark_changes_as_printed,
@@ -391,6 +392,8 @@ async def print_vegawin_changes():
         success, _ = print_single_label(prod)
         if success:
             printed += 1
+            if c.get("barcode"):
+                update_product_printed_time(c["barcode"], printed_price=c["new_price"])
 
     mark_changes_as_printed([c['id'] for c in changes])
     return success_response(
@@ -415,6 +418,8 @@ async def print_vegawin_new_products():
         success, _ = print_single_label(prod)
         if success:
             printed += 1
+            if np.get("barcode"):
+                update_product_printed_time(np["barcode"], printed_price=np["price"])
 
     mark_new_products_as_printed([np['id'] for np in new_prods])
     return success_response(

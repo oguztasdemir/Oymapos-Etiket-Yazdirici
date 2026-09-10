@@ -13,7 +13,7 @@ from backend.models.schemas import ProductUpdateRequest
 from backend.services.db_service import (
     get_all_products, search_products, get_product_by_barcode, get_products_count,
     sync_all_label_prices_to_pos_price, get_full_product_history, revert_product_history,
-    update_product_details, update_products_by_clipboard_data
+    update_product_details, update_products_by_clipboard_data, update_product_printed_time
 )
 from backend.services.vegawin_service import parse_raw_text_products
 from backend.utils.response_utils import success_response, error_response

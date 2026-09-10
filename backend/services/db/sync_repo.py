@@ -66,13 +66,31 @@ def rollback_sync_batch(sync_id: int) -> dict:
                 timestamp=now_str
             )
 
+        cursor.execute("SELECT barcode FROM vegawin_new_products WHERE sync_id = ?;", (sync_id,))
+        new_items = [r["barcode"] for r in cursor.fetchall()]
+        deleted_new_count = 0
+        for nb in new_items:
+            cursor.execute("DELETE FROM urunler WHERE barcode = ?;", (nb,))
+            deleted_new_count += 1
+            record_product_history(
+                conn,
+                barcode=nb,
+                event_type="deleted",
+                source="Toplu Geri Alma (Rollback)",
+                device_name="Ana PC",
+                details=f"#{sync_id} numaralı senkronizasyon geri alındığından yeni eklenen ürün kaldırıldı.",
+                sync_id=sync_id,
+                timestamp=now_str
+            )
+
         cursor.execute("UPDATE vegawin_sync_history SET status = 'rolled_back' WHERE id = ?;", (sync_id,))
 
         return {
             "success": True,
             "sync_id": sync_id,
             "reverted_count": reverted_count,
-            "message": f"#{sync_id} numaralı aktarım başarıyla geri alındı ({reverted_count} ürün eski fiyatına döndürüldü)."
+            "deleted_new_count": deleted_new_count,
+            "message": f"#{sync_id} numaralı aktarım başarıyla geri alındı ({reverted_count} ürün eski fiyatına döndürüldü, {deleted_new_count} yeni ürün kaldırıldı)."
         }
 
 def preview_from_source_db(source_db_path: str = None, device_name: str = "Dükkan Bilgisayarı") -> dict:
@@ -372,7 +390,7 @@ def import_all_from_source_db(source_db_path: str = None, device_name: str = "D�
                 """, (b, sc, t, p, brand, unit, now_str, now_str, now_str))
 
                 # Tekrarlayan barkodların aynı batch içinde çökmesini engelle
-                existing_products[b] = {
+                existing_map[b] = {
                     "barcode": b,
                     "title": t,
                     "price": p,

@@ -770,6 +770,60 @@ async function printCurrentProductNow() {
 }
 
 /**
+ * 💾 Barkod Okuma Sonrası Fiyatı ve İsmi Güncelle (Kayıt / Audit Geçmişi)
+ */
+async function updatePriceFromMobile() {
+  if (!currentBarcode) {
+    showToast("Lütfen önce bir barkod okutun!", "error");
+    return;
+  }
+  const title = (document.getElementById('inp-title')?.value || '').trim();
+  const price = parseFloat(document.getElementById('inp-price')?.value);
+
+  if (!title) {
+    showToast("Ürün adı boş olamaz!", "error");
+    return;
+  }
+  if (isNaN(price) || price < 0) {
+    showToast("Geçerli bir fiyat girin!", "error");
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/products/${encodeURIComponent(currentBarcode)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: title,
+        price: price,
+        brand: currentProduct?.brand || "",
+        unit: currentProduct?.unit || "ADET",
+        device_name: "Mobil Reyon Terminali"
+      })
+    });
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      showToast(`✓ "${title}" fiyatı (₺ ${price.toFixed(2)}) başarıyla güncellendi!`, 'success');
+      document.getElementById('val-pos-price').textContent = `₺ ${price.toFixed(2)}`;
+      if (currentProduct) {
+        currentProduct.price = price;
+        currentProduct.title = title;
+      }
+      const badge = document.getElementById('badge-status');
+      if (badge) {
+        badge.className = "product-status-pill diff";
+        badge.innerText = "⚠️ Baskı Bekliyor";
+      }
+    } else {
+      showToast('Güncelleme hatası: ' + data.message, 'error');
+    }
+  } catch(e) {
+    showToast('Bağlantı hatası: ' + e.message, 'error');
+  }
+}
+
+/**
  * ✓ Etiket Basıldı Onayla (Fiziki değişim onayı)
  */
 async function confirmPrintedOnly() {

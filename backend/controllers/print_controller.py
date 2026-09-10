@@ -7,7 +7,7 @@ import time
 from fastapi import APIRouter
 
 from backend.models.schemas import PrintSingleRequest, PrintBatchRequest, MobileScanRequest
-from backend.services.db_service import get_product_by_barcode, update_product_printed_time
+from backend.services.db_service import get_product_by_barcode, update_product_printed_time, update_product_details
 from backend.services.printer_service import print_single_label, load_settings
 from backend.utils.response_utils import success_response, error_response
 
@@ -18,7 +18,30 @@ async def print_single(req: PrintSingleRequest):
     prod = None
     if req.barcode:
         prod = get_product_by_barcode(req.barcode)
-    if not prod and req.title and req.price is not None:
+    
+    if prod and req.barcode:
+        has_price_change = (req.price is not None and abs(float(req.price) - float(prod.get("price") or 0)) > 0.001)
+        has_title_change = (bool(req.title) and req.title.strip() != str(prod.get("title") or "").strip())
+        
+        if req.price is not None:
+            prod["price"] = float(req.price)
+        if req.title:
+            prod["title"] = req.title.strip()
+        if req.brand:
+            prod["brand"] = req.brand.strip()
+            
+        if has_price_change or has_title_change:
+            try:
+                update_product_details(
+                    barcode=req.barcode,
+                    title=prod["title"],
+                    price=prod["price"],
+                    brand=prod.get("brand"),
+                    device_name="Etiket Baskı Masası"
+                )
+            except Exception:
+                pass
+    elif not prod and req.title and req.price is not None:
         prod = {
             "title": req.title,
             "price": req.price,
@@ -58,7 +81,7 @@ async def print_batch(req: PrintBatchRequest):
         if success:
             printed_count += 1
             if item.barcode:
-                update_product_printed_time(item.barcode)
+                update_product_printed_time(item.barcode, printed_price=item.price)
         else:
             errors.append(f"{item.title}: {msg}")
             

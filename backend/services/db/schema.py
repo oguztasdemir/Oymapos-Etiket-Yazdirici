@@ -161,12 +161,10 @@ def init_db():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_prod_history_barcode ON product_history(barcode);")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_prod_history_sync_id ON product_history(sync_id);")
 
-        # 8. Otomatik Keşif
+        # 8. Otomatik Keşif (Sadece veritabanı tamamen boşken ilk kurulumda)
         cursor.execute("SELECT COUNT(*) as total FROM urunler;")
         if cursor.fetchone()["total"] == 0:
             auto_discover_and_import(conn)
-        else:
-            cleanup_all_existing_titles_in_db(conn)
 
 def cleanup_all_existing_titles_in_db(conn):
     """

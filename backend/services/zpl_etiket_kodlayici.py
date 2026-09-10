@@ -27,6 +27,8 @@ def clean_tr(text):
     res = str(text)
     for k, v in replacements.items():
         res = res.replace(k, v)
+    # ZPL komut karakterlerini temizle (yazıcı komut akışının bozulmasını önler)
+    res = res.replace('^', '-').replace('~', '-')
     return res
 
 def split_title_lines(title1, title2="", max_chars_per_line=30):

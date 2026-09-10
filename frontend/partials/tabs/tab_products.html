@@ -36,7 +36,7 @@
     </div>
 
     <div class="search-bar-wrap" style="margin-bottom: 12px;">
-      <input type="text" class="search-input" id="productSearchInput" placeholder="Barkod numarası veya ürün adı ile anında ara..." oninput="handleSearchInput(event)" autofocus style="padding: 10px 16px; font-size: 13px; border-radius: 8px;">
+      <input type="text" class="search-input" id="productSearchInput" placeholder="Barkod numarası veya ürün adı ile anında ara (Barkod okutunca Enter'a basar)..." oninput="handleSearchInput(event)" onkeydown="handleSearchKeydown(event)" autofocus style="padding: 10px 16px; font-size: 13px; border-radius: 8px;">
       <div class="search-shortcut-badge" style="right: 12px;">
         <kbd style="font-size: 11px; padding: 2px 6px;">Ctrl+K</kbd>
       </div>

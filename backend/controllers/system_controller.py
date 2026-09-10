@@ -123,9 +123,20 @@ async def restore_system(file: UploadFile = File(...)):
     ext = os.path.splitext(file.filename)[1].lower()
     content = await file.read()
 
+    def _clean_wal_files():
+        for suffix in ["-wal", "-shm"]:
+            fpath = DB_PATH + suffix
+            if os.path.exists(fpath):
+                try:
+                    os.remove(fpath)
+                except Exception:
+                    pass
+
     if ext == ".db":
+        _clean_wal_files()
         with open(DB_PATH, "wb") as f:
             f.write(content)
+        _clean_wal_files()
         init_db()
         return success_response(message="SQLite veritabanı başarıyla geri yüklendi.")
 
@@ -139,8 +150,10 @@ async def restore_system(file: UploadFile = File(...)):
                 for member in zf.namelist():
                     basename = os.path.basename(member)
                     if basename == "market_sistemi.db":
+                        _clean_wal_files()
                         with open(DB_PATH, "wb") as f:
                             f.write(zf.read(member))
+                        _clean_wal_files()
                     elif basename == "ayarlar.json":
                         with open(SETTINGS_FILE, "wb") as f:
                             f.write(zf.read(member))

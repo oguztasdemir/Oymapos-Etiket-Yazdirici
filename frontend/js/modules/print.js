@@ -4,7 +4,11 @@
 
 async function printBarcode(barcode, btnElement, currentPrice) {
   try {
-    const res = await API.printSingle({ barcode: barcode }, 1);
+    const payload = { barcode: barcode };
+    if (currentPrice !== undefined && currentPrice !== null && !isNaN(currentPrice)) {
+      payload.price = Number(currentPrice);
+    }
+    const res = await API.printSingle(payload, 1);
     if (res.status === 'success') {
       showToast(`${barcode} etiket yazıcıya gönderildi!`, 'success');
       

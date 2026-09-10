@@ -866,17 +866,23 @@
       </div>
 
       <!-- Aksiyon Butonları -->
-      <button id="btn-print-direct" class="btn-print-now" onclick="printCurrentProductNow()">
-        <span>🖨️</span>
-        <span>Hemen Etiket Yazdır</span>
-      </button>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <button id="btn-update-price" class="btn-action-gallery" style="background: rgba(245, 158, 11, 0.18); color: #fbbf24; border-color: rgba(245, 158, 11, 0.4); font-weight: 800; padding: 12px 8px; font-size: 13px;" onclick="updatePriceFromMobile()">
+          <span>💾</span>
+          <span>Fiyatı Güncelle</span>
+        </button>
+        <button id="btn-print-direct" class="btn-print-now" style="padding: 12px 8px; font-size: 13px;" onclick="printCurrentProductNow()">
+          <span>🖨️</span>
+          <span>Etiket Yazdır</span>
+        </button>
+      </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
         <button id="btn-confirm-printed" class="btn-action-gallery" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3); font-weight: 700; padding: 10px;" onclick="confirmPrintedOnly()">
           <span>✓</span>
           <span>Basıldı Onayla</span>
         </button>
-        <button id="btn-add-queue" class="btn-add-queue" style="padding: 10px; font-size: 13.5px;" onclick="addItemToQueue()">
+        <button id="btn-add-queue" class="btn-add-queue" style="padding: 10px; font-size: 13px;" onclick="addItemToQueue()">
           <span>➕</span>
           <span>Listeye Ekle</span>
         </button>
