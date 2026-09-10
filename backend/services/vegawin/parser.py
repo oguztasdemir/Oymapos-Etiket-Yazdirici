@@ -230,14 +230,14 @@ def parse_vegawin_file(file_path: str) -> list:
 
     return []
 
-def parse_raw_text_products(raw_text: str) -> list:
+def parse_raw_text_products(raw_text: str, collect_blacklisted: bool = False):
     """Panodan kopyalanmış tab / noktalı virgül / virgül ayrılmış metin satırlarını çözer."""
     if not raw_text or not raw_text.strip():
-        return []
+        return ([], []) if collect_blacklisted else []
 
     lines = [l.strip() for l in raw_text.strip().splitlines() if l.strip()]
     if not lines:
-        return []
+        return ([], []) if collect_blacklisted else []
 
     sample = "\n".join(lines[:10])
     delimiter = '\t'
@@ -254,53 +254,97 @@ def parse_raw_text_products(raw_text: str) -> list:
     if not reader:
         return []
 
+    import re
+    from backend.utils.text_utils import fold_turkish_text
+
+    def clean_header_name(s: str) -> str:
+        folded = fold_turkish_text(str(s or "")).lower()
+        return re.sub(r'[^a-z0-9]', '', folded)
+
     col_map = {}
     header_idx = -1
     for idx, r in enumerate(reader[:5]):
-        r_lower = [str(c).lower().strip() for c in r]
-        b_found = any(x in r_lower for x in ['barkod', 'barcode', 'ean', 'stok_kodu', 'stokkodu', 'kod', 'code'])
-        t_found = any(x in r_lower for x in ['malincinsi', 'malin_cinsi', 'urun_adi', 'stokadi', 'title', 'name', 'aciklama', 'stok_adi'])
-        if b_found and t_found:
+        cleaned_headers = [clean_header_name(c) for c in r]
+        b_found = any(any(k in h for k in ['barkod', 'barcode', 'ean', 'stokkodu', 'kod']) for h in cleaned_headers)
+        t_found = any(any(k in h for k in ['urun', 'malin', 'cinsi', 'title', 'name', 'aciklama', 'stokadi']) for h in cleaned_headers)
+        p_found = any(any(k in h for k in ['fiyat', 'price', 'satis', 'tutar']) for h in cleaned_headers)
+
+        if (b_found and t_found) or (b_found and p_found) or (t_found and p_found):
             header_idx = idx
-            for col_i, col_name in enumerate(r_lower):
-                col_map[col_name] = col_i
+            for col_i, h in enumerate(cleaned_headers):
+                col_map[h] = col_i
             break
 
     b_idx, t_idx, p_idx, sc_idx, br_idx, u_idx = None, None, None, None, None, None
 
     if header_idx != -1:
-        for cand in ['barkod', 'barcode', 'ean', 'stok_kodu', 'stokkodu', 'kod', 'code']:
-            if cand in col_map: b_idx = col_map[cand]; break
-        for cand in ['malincinsi', 'malin_cinsi', 'urun_adi', 'stokadi', 'title', 'name', 'aciklama', 'stok_adi']:
-            if cand in col_map: t_idx = col_map[cand]; break
-        for cand in ['satisfiyati', 'satisfiyati1', 'satis_fiyati', 'price', 'fiyat', 'fiyat1', 'sfiyat', 'tutari', 'tutar']:
-            if cand in col_map: p_idx = col_map[cand]; break
-        for cand in ['stokkodu', 'stok_kodu', 'kod', 'code']:
-            if cand in col_map and col_map[cand] != b_idx: sc_idx = col_map[cand]; break
-        for cand in ['marka', 'brand', 'ureticisi']:
-            if cand in col_map: br_idx = col_map[cand]; break
-        for cand in ['birim', 'unit', 'olcubirimi']:
-            if cand in col_map: u_idx = col_map[cand]; break
+        for h, col_i in col_map.items():
+            if b_idx is None and any(k in h for k in ['barkod', 'barcode', 'ean']):
+                b_idx = col_i
+            elif t_idx is None and any(k in h for k in ['urun', 'malin', 'cinsi', 'title', 'name', 'aciklama', 'stokadi']):
+                t_idx = col_i
+            elif p_idx is None and any(k in h for k in ['fiyat', 'price', 'satis', 'tutar']):
+                p_idx = col_i
+            elif sc_idx is None and any(k in h for k in ['stokkodu', 'kod', 'stokkod']):
+                sc_idx = col_i
+            elif br_idx is None and any(k in h for k in ['marka', 'brand']):
+                br_idx = col_i
+            elif u_idx is None and any(k in h for k in ['birim', 'unit']):
+                u_idx = col_i
+
+        # Eğer barkod bulunamadıysa ama stok kodu varsa barkod yerine kullan
+        if b_idx is None and sc_idx is not None:
+            b_idx = sc_idx
+            sc_idx = None
+
         start_idx = header_idx + 1
     else:
         start_idx = 0
-        first_row = reader[0]
-        for col_i, val in enumerate(first_row):
-            v_clean = clean_barcode_text(val)
-            if (len(v_clean) in (8, 12, 13, 14) and v_clean.isdigit()) or (b_idx is None and len(v_clean) >= 6 and v_clean.isdigit()):
-                b_idx = col_i
-            elif any(curr in val for curr in ['₺', 'TL', 'tl', ',']) or (val.replace('.', '').replace(',', '').isdigit() and p_idx is None and b_idx != col_i):
-                p_idx = col_i
-            elif len(val) > 3 and t_idx is None and b_idx != col_i:
-                t_idx = col_i
+        # İlk 10 satırı inceleyerek sütun tiplerini oyla (voting)
+        inspect_rows = reader[:min(10, len(reader))]
+        col_counts = len(reader[0]) if reader else 0
 
-        if b_idx is None and len(first_row) > 0: b_idx = 0
-        if t_idx is None and len(first_row) > 1: t_idx = 1
-        if p_idx is None and len(first_row) > 2: p_idx = 2
+        barcode_scores = [0] * col_counts
+        price_scores = [0] * col_counts
+        title_scores = [0] * col_counts
+
+        for r in inspect_rows:
+            for col_i, val in enumerate(r):
+                if col_i >= col_counts:
+                    break
+                v_clean = clean_barcode_text(val)
+                if v_clean.isdigit() and len(v_clean) in (8, 12, 13, 14):
+                    barcode_scores[col_i] += 4
+                elif v_clean.isdigit() and len(v_clean) >= 4:
+                    barcode_scores[col_i] += 2
+                
+                if any(curr in val for curr in ['₺', 'TL', 'tl', ',']) or (val.replace('.', '').replace(',', '').isdigit() and len(val) <= 8):
+                    price_scores[col_i] += 2
+                
+                if len(val.strip()) > 3 and not val.strip().replace('.', '').replace(',', '').isdigit():
+                    title_scores[col_i] += 2
+
+        if any(barcode_scores):
+            b_idx = barcode_scores.index(max(barcode_scores))
+        if any(price_scores):
+            # b_idx ile aynı olmayan en yüksek fiyat sütununu seç
+            valid_p_scores = [s if i != b_idx else -1 for i, s in enumerate(price_scores)]
+            if any(s > 0 for s in valid_p_scores):
+                p_idx = valid_p_scores.index(max(valid_p_scores))
+        if any(title_scores):
+            valid_t_scores = [s if i not in (b_idx, p_idx) else -1 for i, s in enumerate(title_scores)]
+            if any(s > 0 for s in valid_t_scores):
+                t_idx = valid_t_scores.index(max(valid_t_scores))
+
+        if b_idx is None and col_counts > 0: b_idx = 0
+        if t_idx is None and col_counts > 1: t_idx = 1
+        if p_idx is None and col_counts > 2: p_idx = 2
 
     items = []
+    blacklisted_items = []
     for r in reader[start_idx:]:
-        if not r: continue
+        if not r:
+            continue
         b = clean_barcode_text(r[b_idx]) if b_idx is not None and b_idx < len(r) else ""
         if not b:
             continue
@@ -311,7 +355,18 @@ def parse_raw_text_products(raw_text: str) -> list:
         unit = normalize_text(r[u_idx]) if u_idx is not None and u_idx < len(r) else "ADET"
 
         clean_t = clean_product_title(t_raw)
-        if is_invalid_or_blacklisted_product(b, clean_t, p):
+        from backend.utils.text_utils import check_blacklist_with_reason
+        is_blocked, block_reason = check_blacklist_with_reason(b, clean_t, p)
+        if not is_blocked and t_raw != clean_t:
+            is_blocked, block_reason = check_blacklist_with_reason(b, t_raw, p)
+
+        if is_blocked:
+            blacklisted_items.append({
+                "barcode": b,
+                "title": clean_t or t_raw,
+                "price": p,
+                "reason": block_reason or "Kara Liste / Test Kaydı"
+            })
             continue
 
         items.append({
@@ -324,6 +379,8 @@ def parse_raw_text_products(raw_text: str) -> list:
             "unit": unit
         })
 
+    if collect_blacklisted:
+        return items, blacklisted_items
     return items
 
 def parse_sonsatishareket_file(file_path: str) -> list:

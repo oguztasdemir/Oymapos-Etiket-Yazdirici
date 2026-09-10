@@ -2,15 +2,16 @@
 
 <div align="center">
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.95%2B-009688?logo=fastapi&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite3-WAL_Mode-003B57?logo=sqlite&logoColor=white)
-![TSPL](https://img.shields.io/badge/Printer-TSPL--II_RAW-orange)
+![Printer](https://img.shields.io/badge/Printer-ZPL_%26_TSPL--II_RAW-orange)
 ![License](https://img.shields.io/badge/License-MIT-green)
+![Platform](https://img.shields.io/badge/Windows-7%20%7C%208%20%7C%2010%20%7C%2011%20(32%2F64--bit)-lightgrey?logo=windows)
 
-**VegaWin & FasterPOS Entegreli, Kablosuz Mobil Terminal Destekli ve Yerel Ağ Senkronizasyonlu Profesyonel Raf Etiketi Çözümü**
+**VegaWin & FasterPOS Entegreli, Kablosuz Mobil Terminal Destekli, ZPL/TSPL Çift Motorlu Profesyonel Raf Etiketi ve Fiş Otomasyonu**
 
-[Özellikler](#-özellikler--yetenekler) • [Kurulum](#-kurulum-ve-başlatma) • [Ağ ve Modüller](#-ağ-ve-cihaz-erişimi) • [Proje Yapısı](#-proje-yapısı) • [Sorun Giderme](#-sorun-giderme)
+[Özellikler](#-özellikler--yetenekler) • [Hızlı Başlatma](#-hızlı-başlatma-tüm-windows-sürümleri) • [Ağ ve Modüller](#-ağ-ve-cihaz-erişimi) • [Proje Mimarisi](#-proje-mimarisi) • [Kısayollar](#-klavye-kısayolları) • [Sorun Giderme](#-sorun-giderme)
 
 </div>
 
@@ -18,89 +19,98 @@
 
 ## 📌 Proje Genel Bakışı
 
-**OYMAPOS**, süpermarketler, şarküteriler, manavlar ve perakende işletmeleri için tasarlanmış yüksek performanslı bir **Etiket ve Fiş Baskı Kontrol Merkezi**dir.
+**OYMAPOS**, süpermarketler, şarküteriler, manavlar ve perakende satış noktaları için geliştirilmiş yüksek performanslı, dayanıklı bir **Etiket ve Fiş Baskı Kontrol Merkezi**dir.
 
-Sistem, dükkan / kasa bilgisayarında çalışan **VegaWin & FasterPOS** veritabanlarındaki fiyat ve ürün değişikliklerini yerel ağ üzerinden otomatik algılar; masaüstü paneli, reyon el terminali (mobil telefon kamerası) veya barkod okuyucu aracılığıyla tek tıkla termal / lazer yazıcılardan kusursuz etiket basılmasını sağlar.
+Sistem, dükkan ve kasa bilgisayarlarında çalışan **VegaWin & FasterPOS** veritabanlarındaki fiyat ve ürün güncellemelerini yerel ağ üzerinden otomatik algılar. Masaüstü yönetim paneli, reyon el terminali (mobil telefon kamerası) veya barkod okuyucu aracılığıyla tek tıkla termal / lazer yazıcılardan kusursuz etiket basılmasını sağlar.
 
 ---
 
 ## ✨ Özellikler & Yetenekler
 
-### 🔄 VegaWin / FasterPOS Akıllı Senkronizasyon & Karşılaştırma Masası
-- **Otomatik Dizin & Dosya Keşfi:** Bilgisayardaki VegaWin klasör yolunu (`C:\vegawin`, `C:\vegawin\Bin` vb.) otomatik tarar.
-- **İkili Veri & Hareket Ayrıştırma:** Güncel satış hareketlerini (`*SonSatisHareket.txt`), SQLite (`market_sistemi.db`), Excel (`.xlsx`) veya CSV dosyalarını otomatik tespit eder ve panodan yapıştırma (`Ctrl+V`) desteği sunar.
-- **2 Aşamalı Güvenli Aktarım:** Önce ekranda tüm fiyat değişimleri, zam/indirim farkları ve yeni eklenen ürünler listelenir; kullanıcı inceleyip onay verdikten sonra ana sisteme aktarılır.
-- **Toplu Geri Alma (Rollback / Undo):** İstenmeyen veya hatalı yapılan bir aktarımı tek tıkla eski fiyatlarına geri döndürme imkanı.
+### 🖨️ Hibrit Termal Baskı Motoru (ZPL + TSPL-II & A4 Grid)
+- **Doğrudan Windows RAW Spooler:** Yazıcı sürücüsü gecikmesi olmaksızın milisaniyeler içinde doğrudan termal donanıma ham komut iletimi.
+- **Çift Protokol Desteği (ZPL & TSPL-II):** Zebra, Xprinter, Argox, HPRT, Bixolon vb. piyasadaki tüm termal yazıcılarla tak-çalıştır uyumluluk.
+- **Dinamik Raf Etiketi Standartları:** Birim fiyat kutusu, gramaj/miktar rozeti, resmi Yerli Üretim logosu, reyon kodları ve promosyon alanı.
+- **Çoklu Boyut Desteği:** 40x20 mm, 60x40 mm, 76x40 mm (Standart Market), 85x45 mm ve özel şablonlar.
+- **A4 Çoklu Çıkartma Dizgisi:** Lazer veya mürekkep püskürtmeli standart ofis yazıcıları için A4 yapışkanlı etiket kağıtlarına (24'lü, 40'lı, 65'li) baskı imkanı.
+- **Canlı Baskı Geçmişi:** Yapılan tüm baskı işlemlerinin anlık loglanması ve arayüzdeki "Baskı Geçmişi" sekmesinden izlenebilmesi.
 
-### 🖨️ TSPL Termal Baskı & A4 Çoklu Dizgi Motoru
-- **Doğrudan Windows RAW Spooler:** Sürücü gecikmesi olmadan TSPL-II komutlarıyla milisaniyeler içinde termal etiket basımı.
-- **Çoklu Etiket Boyutları:** 40x20 mm (Mini), 60x40 mm (Kompakt), 76x40 mm (Standart Market), 85x45 mm (Büyük Boy).
-- **A4 Kağıt Dizgisi:** Lazer / mürekkep püskürtmeli yazıcılar için A4 yapışkanlı kağıtlara (24'lü, 40'lı, 65'li etiket şablonu) grid baskı desteği.
+### 🔄 VegaWin / FasterPOS Akıllı Senkronizasyon & Karşılaştırma Masası
+- **Otomatik Dizin & Dosya Keşfi:** Bilgisayardaki VegaWin klasör yolunu (`C:\vegawin`, `C:\vegawin\Bin` vb.) otomatik tarama.
+- **Çok Formatlı Aktarım:** Güncel satış hareketleri (`*SonSatisHareket.txt`), SQLite (`market_sistemi.db`), Excel (`.xlsx`), CSV veya panodan yapıştırma (`Ctrl+V`) desteği.
+- **2 Aşamalı Güvenli Aktarım Masası:** Aktarım öncesinde fiyat farkları, zam/indirim değişimleri ve yeni ürünler önizleme tablosunda onaylatılır.
+- **Geri Alma (Rollback / Undo):** Hatalı aktarımlarda tek tıkla eski fiyatlara geri dönebilme güvencesi.
 
 ### 📱 Mobil Barkod Terminali (Reyon Asistanı)
-- Herhangi bir ek uygulama indirmeden, aynı Wi-Fi ağına bağlı akıllı telefonun kamerasıyla barkod okutma.
-- Reyonda gezerken raf fiyatı ile kasa fiyatını anında kontrol etme ve tek tuşla kasadaki yazıcıya etiket gönderme.
+- Herhangi bir uygulama yüklemeden, aynı Wi-Fi ağına bağlı akıllı telefon kamerasından barkod okutma.
+- Reyonda gezerken raf fiyatı ile kasa fiyatını denetleme ve tek tıkla kasadaki yazıcıya etiket gönderme.
 
 ### ⚖️ Terazi / Manav Barkod Çözücü
-- `27`, `28` ve `29` prefixli terazi barkodlarını (`27[PLU][Gramaj/Tutar][C]`) otomatik çözer.
-- Gramajlı ürünlerin birim fiyatını ve paket tutarını anında hesaplayarak etikete basar.
+- `27`, `28` ve `29` prefixli terazi barkodlarını (`27[PLU][Gramaj/Tutar][C]`) anında ayrıştırma.
+- Gramajlı ürünlerin birim fiyatını ve paket tutarını otomatik hesaplama.
 
-### 🛡️ Sistem Kararlılığı ve Çökme Önleyici Mimari
-- **SQLite WAL (Write-Ahead Logging):** Eşzamanlı okuma/yazma kilitlenmelerini önler, yüksek işlem hızına sahiptir.
+### 🛡️ Kararlı ve Çökme Önleyici Mimari
+- **SQLite WAL (Write-Ahead Logging):** Eşzamanlı okuma/yazma kilitlenmelerini önleyen hızlı veritabanı motoru.
 - **Türkçe Karakter Katlaması (`fold_tr`):** `I/ı`, `İ/i`, `Ş/ş`, `Ğ/ğ`, `Ü/ü`, `Ö/ö`, `Ç/ç` harflerinde %100 arama doğruluğu.
-- **Global Hata Yakalama (Crash Proof):** Beklenmeyen API veya donanım hatalarında sunucu çökmez, güvenli hata döndürür.
-- **Zaman Damgalı Tek Tıkla Yedekleme:** Veritabanı ve yazıcı ayarlarını tek tıkla `.zip` olarak indirme ve yedekten geri yükleme.
+- **Zaman Damgalı Tek Tıkla Yedekleme:** Veritabanı ve ayarları `.zip` formatında yedekleme ve geri yükleme.
 
 ---
 
-## 🚀 Kurulum ve Başlatma
+## 🚀 Hızlı Başlatma (Tüm Windows Sürümleri)
 
-### Gereksinimler
-- Python 3.10 veya üzeri
-- Windows 10 / 11 / Server (Windows Spooler RAW yazdırma için)
+Windows 7, 8, 10 veya 11 (32-bit / 64-bit) fark etmeksizin sistemi çalıştırmak için:
 
-### Adım Adım Başlatma
+### 1. Tek Tıkla Başlatma (Tavsiye Edilen)
+Proje ana dizinindeki **`BASLAT.bat`** dosyasına çift tıklayın.
+
+> **Ne Yapar?**
+> * Bilgisayarınızda Python olup olmadığını otomatik kontrol eder.
+> * Eğer Python yoksa; Windows sürümünüze ve mimarinize (32/64-bit) uygun Python motorunu resmi kaynaktan arka planda sessizce kurar.
+> * Gerekli kütüphaneleri [requirements.txt](requirements.txt) üzerinden otomatik tamamlar.
+> * Web sunucusunu başlatır ve tarayıcınızı otomatik olarak açar.
+
+### 2. Geliştirici Modu (Manuel Kurulum)
 ```bash
-# 1. Proje dizinine gidin
-cd "Etiket Yazdırıcı"
+# 1. Proje dizinine girin
+cd "Etiket Yazdirici"
 
-# 2. Gerekli kütüphaneleri yükleyin
+# 2. Gereksinimleri yukleyin
 pip install -r requirements.txt
 
-# 3. Uygulamayı başlatın
+# 3. Sunucuyu calistirin
 python main.py
 ```
 
-- Sunucu başladığında varsayılan tarayıcınızda kontrol paneli (`http://localhost:8000`) otomatik olarak açılacaktır.
-- Eğer 8000 portu başka bir program tarafından kullanılıyorsa sistem otomatik olarak bir sonraki boş portu (8001, 8002...) seçer.
+Tarayıcınızda arayüz otomatik olarak `http://localhost:8000` adresinde açılacaktır.
 
 ---
 
 ## 🌐 Ağ ve Cihaz Erişimi
 
-| Modül | Adres | Açıklama |
+| Modül | Yerel Adres | Açıklama |
 |---|---|---|
-| 🖥️ **Ana Yönetim & Etiket Masası** | `http://localhost:8000/` | Stok arama, tekli/toplu etiket basımı, görsel şablon stüdyosu. |
-| 💻 **Dükkan Veri Aktarım Portalı** | `http://[ANA_PC_IP]:8000/sync` | Dükkan bilgisayarından VegaWin klasörünü tarayıp verileri gönderme masası. |
-| 📱 **Reyon Mobil Terminali** | `http://[ANA_PC_IP]:8000/mobile` | Telefon kamerası ile kablosuz reyon etiket denetimi. |
+| 🖥️ **Ana Yönetim & Etiket Masası** | `http://localhost:8000/` | Stok arama, tekli/toplu etiket basımı, baskı geçmişi. |
+| 💻 **Dükkan Veri Aktarım Portalı** | `http://[IP_ADRESI]:8000/sync` | Dükkan bilgisayarından VegaWin klasörünü tarayıp verileri gönderme masası. |
+| 📱 **Reyon Mobil Terminali** | `http://[IP_ADRESI]:8000/mobile` | Telefon kamerası ile kablosuz reyon etiket denetimi. |
 
 ---
 
-## 📂 Proje Yapısı
+## 📂 Proje Mimarisi
 
 ```
 Etiket Yazdırıcı/
-├── main.py                         # Ana Başlatıcı, Dinamik Port Çözücü & Live-Reload
+├── BASLAT.bat                      # Tüm Windows'lar için Otomatik Kurulum ve Başlatıcı
+├── main.py                         # Ana Başlatıcı & Dinamik Port Yönetimi
 ├── requirements.txt                # Python Bağımlılıkları
-├── README.md                       # Kurumsal Kullanım Kılavuzu
-├── LICENSE                         # MIT Lisans Dosyası
+├── README.md                       # Proje Dokümantasyonu
+├── LICENSE                         # MIT Lisansı
 ├── backend/
 │   ├── app.py                      # FastAPI Sunucusu & Anti-Cache Middleware
 │   ├── config.py                   # Uygulama Dizin ve Konfigürasyon Sabitleri
-│   ├── controllers/                # Modüler REST API Denetleyicileri
-│   │   ├── api_controller.py       # Ana Router Birleştirici
-│   │   ├── network_controller.py   # Yerel Ağ & Cihaz Kayıt API
-│   │   ├── print_controller.py     # Termal & Test Baskı API
+│   ├── controllers/                # REST API Denetleyicileri
+│   │   ├── api_controller.py       # Router Birleştirici
+│   │   ├── network_controller.py   # Ağ Bilgisi & IP API
+│   │   ├── print_controller.py     # Tekli, Toplu ve Mobil Baskı API
 │   │   ├── printer_controller.py   # Yazıcı Donanım & Ayar API
 │   │   ├── product_controller.py   # Ürün Listeleme & Arama API
 │   │   ├── system_controller.py    # Yedekleme & Geri Yükleme API
@@ -109,33 +119,31 @@ Etiket Yazdırıcı/
 │   ├── models/
 │   │   └── schemas.py              # Pydantic Veri Modelleri
 │   ├── services/
-│   │   ├── db/                     # Veritabanı Katmanı (Connection, Repo, Schema, Sync)
-│   │   ├── db_service.py           # Veritabanı Modüler Facade
-│   │   ├── printer_service.py      # TSPL-II & Windows RAW Spooler Servisi
+│   │   ├── db/                     # SQLite Veritabanı ve Repository Katmanı
+│   │   ├── printer_service.py      # RAW Spooler, ZPL & TSPL-II Baskı Servisi
+│   │   ├── zpl_etiket_kodlayici.py # Standart ZPL Raf Etiketi Kodlayıcı Motor
 │   │   ├── template_service.py     # Etiket Şablon Motoru
-│   │   ├── vegawin/                # VegaWin Ayrıştırıcı & Karşılaştırma Motoru
-│   │   └── vegawin_service.py      # VegaWin Modüler Facade
+│   │   └── vegawin/                # VegaWin Ayrıştırıcı & Karşılaştırma Motoru
 │   └── utils/
 │       ├── network_utils.py        # Yerel IP & Dinamik QR Kod Üretici
-│       ├── response_utils.py       # Standart JSON Yanıt & Güvenli Log
-│       └── text_utils.py           # Türkçe Karakter, Fiyat & Barkod Temizleyici
+│       ├── response_utils.py       # Standart JSON Yanıt Yardımcıları
+│       └── text_utils.py           # Türkçe Karakter ve Metin Temizleyici
 ├── frontend/
-│   ├── css/                        # Kurumsal Tasarım Sistem Stilleri
+│   ├── css/                        # Responsive Arayüz Tasarım Stilleri
 │   ├── js/
 │   │   ├── api.js                  # Backend REST API İstemcisi
-│   │   ├── ui.js                   # UI Motoru & Modal/Toast Yardımcıları
 │   │   ├── main.js                 # Frontend Başlatıcı & Sekme Yönetimi
-│   │   ├── mobile.js               # Mobil Terminal & Kamera Okuyucu Mantığı
-│   │   └── modules/                # Parçalanmış JS Modülleri (products, print, studio vb.)
-│   ├── partials/                   # HTML Modülleri (Sekmeler ve Modallar)
+│   │   ├── mobile.js               # Mobil Terminal Kamera Okuyucu
+│   │   └── modules/                # JS Modülleri (products, print, sync vb.)
+│   ├── partials/                   # Dinamik Sekmeler ve Modal Şablonları
 │   ├── index.html                  # Ana Masaüstü Kontrol Masası
 │   ├── sync.html                   # VegaWin Veri Aktarım & Karşılaştırma Portalı
 │   └── mobile.html                 # Mobil Reyon Barkod Terminali
 └── data/
     ├── ayarlar.json                # Yazıcı ve Kalibrasyon Ayarları
     ├── etiket_sablonlari.json      # Etiket Tasarım Şablonları
-    ├── kara_liste.json             # Otomatik Temizleme & Kara Liste Kuralları
-    └── uploads/                    # Geçici Dosya Yükleme Alanı (.gitkeep ile korunur)
+    ├── kara_liste.json             # Otomatik Temizleme Kuralları
+    └── uploads/                    # Geçici Yükleme Klasörü (.gitkeep ile korunur)
 ```
 
 ---
@@ -152,14 +160,14 @@ Etiket Yazdırıcı/
 
 ---
 
-## 💡 Sorun Giderme & İpuçları
+## 💡 Sorun Giderme
 
 1. **Yazıcı Çıktı Vermiyorsa:**
-   - Denetim Masası > Aygıtlar ve Yazıcılar bölümünden termal yazıcınızın adının `ayarlar.json` veya arayüzdeki "Yazıcı Ayarları" sekmesindeki isimle birebir aynı olduğunu kontrol edin.
-2. **Dükkan Bilgisayarından Bağlanılamıyorsa:**
-   - Ana bilgisayarın Windows Güvenlik Duvarında Python için yerel ağ gelen bağlantılarına izin verildiğinden emin olun.
-3. **Fiyat Değişimlerini Göremiyorsanız:**
-   - VegaWin klasör yolunun (`C:\vegawin` veya `C:\vegawin\Bin`) doğru olduğunu kontrol edin ve `/sync` sayfasından **"Ürünleri Getir & Listele"** butonuna basın.
+   - Denetim Masası > Aygıtlar ve Yazıcılar bölümünden termal yazıcınızın adının arayüzdeki "Yazıcı Ayarları" sekmesindeki isimle birebir aynı olduğunu kontrol edin.
+2. **Kuyrukta Yazdırma İşi Takılı Kalırsa:**
+   - Arayüzdeki Yazıcı Ayarları bölümünden "Kuyruğu Temizle" butonunu kullanarak kilitlenmiş yazdırma işlerini tek tıkla boşaltabilirsiniz.
+3. **Dükkan Bilgisayarından Bağlanılamıyorsa:**
+   - Ana bilgisayarın Windows Güvenlik Duvarı ayarlarında Python için yerel ağ bağlantılarına izin verildiğinden emin olun.
 
 ---
 

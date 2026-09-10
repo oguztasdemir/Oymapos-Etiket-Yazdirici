@@ -18,7 +18,7 @@ def get_all_products(limit=None, offset=0, only_new=False, only_diff=False):
         if only_new:
             clauses.append("is_new = 1")
         if only_diff:
-            clauses.append("((label_price IS NOT NULL AND ABS(price - label_price) > 0.001) OR (last_printed_at IS NULL OR last_printed_at = ''))")
+            clauses.append("(label_price IS NOT NULL AND ABS(parse_price(price) - parse_price(label_price)) > 0.001)")
         
         where_clause = ("WHERE " + " AND ".join(clauses)) if clauses else ""
         if limit is not None and limit > 0:
@@ -42,7 +42,7 @@ def search_products(query: str, limit=None, only_new=False, only_diff=False):
         if only_new:
             clauses.append("is_new = 1")
         if only_diff:
-            clauses.append("((label_price IS NOT NULL AND ABS(price - label_price) > 0.001) OR (last_printed_at IS NULL OR last_printed_at = ''))")
+            clauses.append("(label_price IS NOT NULL AND ABS(parse_price(price) - parse_price(label_price)) > 0.001)")
             
         # Her bir arama kelimesi için şart ekle (AND mantığı)
         for token in tokens:
@@ -131,7 +131,7 @@ def get_products_count(only_new=False, only_diff=False):
         if only_new:
             clauses.append("is_new = 1")
         if only_diff:
-            clauses.append("((label_price IS NOT NULL AND ABS(price - label_price) > 0.001) OR (last_printed_at IS NULL OR last_printed_at = ''))")
+            clauses.append("(label_price IS NOT NULL AND ABS(parse_price(price) - parse_price(label_price)) > 0.001)")
         where_clause = ("WHERE " + " AND ".join(clauses)) if clauses else ""
         cursor.execute(f"SELECT COUNT(*) as total FROM urunler {where_clause};")
         row = cursor.fetchone()

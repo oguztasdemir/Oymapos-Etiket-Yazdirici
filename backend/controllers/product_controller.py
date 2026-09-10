@@ -18,6 +18,9 @@ from backend.services.db_service import (
 from backend.services.vegawin_service import parse_raw_text_products
 from backend.utils.response_utils import success_response, error_response
 
+from backend.services.db.connection import db_session
+from backend.utils.text_utils import get_blacklist_data, save_blacklist_data, clean_barcode_text
+
 router = APIRouter(prefix="/api", tags=["Products"])
 
 @router.get("/products")
@@ -27,12 +30,71 @@ async def get_products(q: str = "", only_new: bool = False, only_diff: bool = Fa
         items = search_products(q.strip(), limit=effective_limit, only_new=only_new, only_diff=only_diff)
     else:
         items = get_all_products(limit=effective_limit, only_new=only_new, only_diff=only_diff)
+    
+    bl_data = get_blacklist_data()
+    blacklist_barcodes = set(str(b).strip() for b in bl_data.get("barcodes", []) if str(b).strip())
+    
+    # Her ürüne kara listede olup olmadığını ekle
+    for item in items:
+        b_code = str(item.get("barcode", "")).strip()
+        item["is_blacklisted"] = (b_code in blacklist_barcodes)
+
+    # İlgili tüm sayaçları hesapla
+    counts = {
+        "total": get_products_count(),
+        "diff": get_products_count(only_diff=True),
+        "new": get_products_count(only_new=True),
+        "blacklist": len(blacklist_barcodes)
+    }
+
     return success_response(
         data={
             "products": items,
-            "total": get_products_count(only_new=only_new, only_diff=only_diff)
+            "total": get_products_count(only_new=only_new, only_diff=only_diff),
+            "counts": counts,
+            "blacklist_barcodes": list(blacklist_barcodes)
         },
         message="Ürünler listelendi"
+    )
+
+@router.post("/products/{barcode}/toggle-blacklist")
+async def toggle_product_blacklist(barcode: str):
+    """Ürünü kara listeye ekler veya kara listeden çıkarır."""
+    b = clean_barcode_text(barcode)
+    if not b:
+        return error_response(message="Geçersiz barkod.", status_code=400)
+        
+    bl_data = get_blacklist_data()
+    barcodes = [str(x).strip() for x in bl_data.get("barcodes", []) if str(x).strip()]
+    
+    is_now_blacklisted = False
+    if b in barcodes:
+        barcodes = [x for x in barcodes if x != b]
+        bl_data["barcodes"] = barcodes
+        save_blacklist_data(bl_data)
+        is_now_blacklisted = False
+        msg = f"'{b}' barkodlu ürün kara listeden kaldırıldı."
+    else:
+        barcodes.append(b)
+        bl_data["barcodes"] = barcodes
+        save_blacklist_data(bl_data)
+        is_now_blacklisted = True
+        msg = f"'{b}' barkodlu ürün kara listeye eklendi."
+
+    counts = {
+        "total": get_products_count(),
+        "diff": get_products_count(only_diff=True),
+        "new": get_products_count(only_new=True),
+        "blacklist": len(barcodes)
+    }
+
+    return success_response(
+        data={
+            "barcode": b,
+            "is_blacklisted": is_now_blacklisted,
+            "counts": counts
+        },
+        message=msg
     )
 
 @router.get("/products/{barcode}")

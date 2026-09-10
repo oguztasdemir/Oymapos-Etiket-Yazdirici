@@ -22,8 +22,9 @@ if sys.platform.startswith('win'):
     except Exception:
         pass
 
-# Proje dizinini PYTHONPATH'e ekle
+# Proje dizinini PYTHONPATH ve çalışma dizinine ekle
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+os.chdir(BASE_DIR)
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
@@ -51,12 +52,21 @@ def find_available_port(start_port: int = 8000, max_attempts: int = 20) -> int:
                 continue
     raise RuntimeError(f"{start_port} ile {start_port + max_attempts} arasında boş port bulunamadı.")
 
-# 3. Otomatik Tarayıcı Açıcı
-def open_browser_delayed(url: str, delay: float = 1.0):
+# 3. Otomatik Tarayıcı Açıcı (Sunucu tamamen hazır olana kadar bekler)
+def open_browser_delayed(host: str, port: int, max_wait: float = 15.0):
     def _open():
-        time.sleep(delay)
+        start_time = time.time()
+        # Sunucu portu yanıt verene kadar bekle (ERR_CONNECTION_REFUSED engellenir)
+        while time.time() - start_time < max_wait:
+            try:
+                with socket.create_connection(("127.0.0.1", port), timeout=0.5):
+                    break
+            except (OSError, ConnectionRefusedError):
+                time.sleep(0.3)
+        # Port açıldıktan sonra ekstra 0.2 sn bekle ve tarayıcıyı aç
+        time.sleep(0.2)
         try:
-            webbrowser.open(url)
+            webbrowser.open(f"http://127.0.0.1:{port}")
         except Exception:
             pass
     threading.Thread(target=_open, daemon=True).start()
@@ -80,29 +90,18 @@ if __name__ == "__main__":
     except Exception:
         pass
 
-    open_browser_delayed(f"http://127.0.0.1:{port}")
+    open_browser_delayed("127.0.0.1", port)
 
     try:
         is_frozen = getattr(sys, 'frozen', False)
-        if is_frozen:
-            from backend.app import app
-            uvicorn.run(
-                app,
-                host="0.0.0.0",
-                port=port,
-                log_level="warning",
-                access_log=False
-            )
-        else:
-            uvicorn.run(
-                "backend.app:app",
-                host="0.0.0.0",
-                port=port,
-                reload=True,
-                reload_dirs=[os.path.join(BASE_DIR, "backend"), os.path.join(BASE_DIR, "frontend")],
-                log_level="warning",
-                access_log=False
-            )
+        from backend.app import app
+        uvicorn.run(
+            app,
+            host="0.0.0.0",
+            port=port,
+            log_level="warning",
+            access_log=False
+        )
     except (KeyboardInterrupt, SystemExit):
         pass
     except Exception as e:

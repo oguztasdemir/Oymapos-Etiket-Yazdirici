@@ -61,9 +61,11 @@ def strip_supplier_stock_codes(title: str) -> str:
         rest = first_token_match.group(2).strip()
         
         # Eğer ilk kelime PROTECTED_WORDS listesinde değilse ve kod formatındaysa
-        if token not in PROTECTED_WORDS:
+        # (Ancak 50'Lİ, 100'LÜ, 2'Lİ, 3'LÜ gibi adet/miktar belirten ifadeleri koru)
+        is_pack_count = bool(re.match(r'^[0-9]+[\'"]?[A-Za-zÇŞĞÜÖİçşğüöı]+$', token))
+        if token not in PROTECTED_WORDS and not is_pack_count:
             # Örn: 010203, A12-34, STK99, 0012, 123456
-            if re.match(r'^(?:[0-9]{2,8}[A-Za-z0-9\-_.]*|[A-Za-z]{2,5}[0-9]+[A-Za-z0-9\-_.]*)$', token):
+            if re.match(r'^(?:[0-9]{3,8}[A-Za-z0-9\-_.]*|[A-Za-z]{2,5}[0-9]+[A-Za-z0-9\-_.]*)$', token):
                 s = rest
             # Örn: ABC-DEF-12
             elif '-' in token and re.search(r'[0-9]', token):
@@ -517,17 +519,14 @@ GROCERY_DICTIONARY = {
 }
 
 SORTED_GROCERY_KEYS = sorted(GROCERY_DICTIONARY.keys(), key=lambda x: len(x), reverse=True)
+_GROCERY_PATTERN = re.compile(r'\b(' + '|'.join(re.escape(k) for k in SORTED_GROCERY_KEYS) + r')\b', re.IGNORECASE)
+_GROCERY_UPPER_MAP = {k.upper(): v for k, v in GROCERY_DICTIONARY.items()}
 
 def apply_grocery_dictionary(text: str) -> str:
-    """Metindeki tüm kelimeleri Türkçe market sözlüğüne göre standartlaştırır."""
+    """Metindeki tüm kelimeleri Türkçe market sözlüğüne göre standartlaştırır (hızlı tek geçişli regex)."""
     if not text:
         return ""
-    s = str(text)
-    for k in SORTED_GROCERY_KEYS:
-        correct_val = GROCERY_DICTIONARY[k]
-        pattern = r'\b' + re.escape(k) + r'\b'
-        s = re.sub(pattern, correct_val, s, flags=re.IGNORECASE)
-    return s
+    return _GROCERY_PATTERN.sub(lambda m: _GROCERY_UPPER_MAP.get(m.group(0).upper(), m.group(0)), str(text))
 
 def clean_product_title(title: str) -> str:
     """Bozuk karakterleri ve stok kodlarını temizleyip standartlaştırır."""
@@ -718,9 +717,10 @@ def format_product_dict(row: dict) -> dict:
     d['barcode'] = clean_barcode_text(d.get('barcode', ''))
     raw_title = str(d.get('title') or d.get('title1') or '').strip()
     raw_sys = str(d.get('raw_system_title') or raw_title).strip()
-    brand_val = fix_turkish_corrupted_chars(str(d.get('brand') or '').strip())
+    brand_val = str(d.get('brand') or '').strip()
     
-    d['title'] = unify_product_title(raw_title, raw_sys, brand_val)
+    # Veritabanında zaten temizlenip kaydedilmiş title varsa doğrudan kullan
+    d['title'] = raw_title if raw_title else unify_product_title(raw_title, raw_sys, brand_val)
     d['raw_system_title'] = raw_sys
     d['brand'] = brand_val
     d['stock_code'] = str(d.get('stock_code') or '').strip()
@@ -782,11 +782,8 @@ def save_blacklist_data(data: dict) -> bool:
     except Exception:
         return False
 
-def is_invalid_or_blacklisted_product(barcode: str, title: str = "", price: float = 0.0) -> bool:
-    """
-    Kasa testleri, mantıksız/çöp barkodlar, negatif/sıfır fiyatlar, sigaralar, terazi/manav
-    ürünleri veya 12li su / 19luk su gibi koli/paket test girdilerini kara listeye alır.
-    """
+def check_blacklist_with_reason(barcode: str, title: str = "", price: float = 0.0) -> tuple:
+    """Ürünün kara listede olup olmadığını ve engellenme nedenini döndürür: (is_blocked, reason)"""
     b = str(barcode or "").strip()
     t = str(title or "").strip().upper()
     t_folded = fold_turkish_text(t)
@@ -796,24 +793,23 @@ def is_invalid_or_blacklisted_product(barcode: str, title: str = "", price: floa
     # 1. Barkod kontrolleri
     min_len = cfg.get("min_barcode_length", 3)
     if not b or len(b) < min_len:
-        return True
+        return True, "Geçersiz veya Çok Kısa Barkod"
 
-    # 12li su, 19luksu, 10luk su gibi barkod yerine yazılmış kalıplar
+    # 12li su, 19luksu gibi
     if re.search(r'^(?:10|12|19|24|50)[\s\-_]*(?:LU|LI|Lİ|LUK|LÜK)?[\s\-_]*(?:SU|BARDAK)$', b, re.IGNORECASE):
-        return True
+        return True, "Koli/Paket Test Barkodu"
     
-    # 00, 000, 01000 gibi sadece ardışık sıfırlar veya 01001, 01002 gibi test serileri
     if re.match(r'^0+[0-9]{1,4}$', b) and len(b) <= 5:
-        return True
+        return True, "Test/Sıfır Serisi Barkod"
 
-    # Terazi / Manav / Şarküteri barkodları (27, 28, 29 ile başlayanlar)
+    # Terazi / Manav
     if cfg.get("block_scale_products", True):
         if (len(b) == 13 or len(b) == 7) and b.startswith(('27', '28', '29')) and b.isdigit():
-            return True
+            return True, "Terazi/Gramaj Barkodu (27-29)"
         if t.startswith('MNV ') or 'MANAV' in t or 'GRAMAJ' in t:
-            return True
+            return True, "Manav/Gramajlı Ürün"
 
-    # Sigara Engelleme Kontrolü
+    # Sigara
     if cfg.get("block_cigarettes", True):
         sigara_keywords = [
             'sigara', 'marlboro', 'parliament', 'winston', 'camel', 'kent', 'chesterfield', 
@@ -822,46 +818,51 @@ def is_invalid_or_blacklisted_product(barcode: str, title: str = "", price: floa
         ]
         for kw in sigara_keywords:
             if kw in t_folded:
-                return True
+                return True, "Sigara Ürünü (Yazdırılmaz)"
 
-    # Özel tanımlı kara liste barkodları
+    # Özel tanımlı kara liste
     for blocked_b in cfg.get("barcodes", []):
         if str(blocked_b).strip().upper() == b.upper():
-            return True
+            return True, "Kara Listede Tanımlı Barkod"
 
-    # 2. Başlık Kara Liste Kelimeleri
     blacklist_patterns = [
         r'DENEME', r'TEST', r'^0+$', r'^0+[0-9]+$',
-        r'^[0-9]+(?:\.[0-9]+)?\s*(?:TL|₺)$',  # 1TL, 2TL, 2.5 TL gibi
+        r'^[0-9]+(?:\.[0-9]+)?\s*(?:TL|₺)$',
         r'^F[İI]YAT\s*FARKI', r'^KASA\s*ARTI', r'^KASA\s*EKSI', r'^IPTAL', r'^S[İI]L[İI]ND[İI]',
         r'^DUMMY', r'^ORNEK', r'^ÖRNEK', r'^TEMP', r'^GEÇİCİ', r'^GECICI',
         r'^(?:10|12|19|24)[\s\-_]*(?:LU|LI|Lİ|LUK|LÜK)?[\s\-_]*SU'
     ]
     for pat in blacklist_patterns:
         if re.search(pat, t, re.IGNORECASE):
-            return True
+            return True, "Test / Kasa İptal / Deneme Kaydı"
 
     for w in cfg.get("words", []):
         w_clean = str(w).strip().upper()
         if w_clean and w_clean in t:
-            return True
+            return True, f"Kara Liste Kelimesi ({w_clean})"
 
-    # 3. Sadece rakamdan oluşan veya barkoduyla tamamen aynı olan anlamsız başlıklar
     clean_t = clean_product_title(t)
     if clean_t == b or re.match(r'^[0-9\.\-_]+$', clean_t):
-        if len(clean_t) >= 6:  # Sadece barkod numarası yazılmış başlıklar
-            return True
+        if len(clean_t) >= 6:
+            return True, "Ürün Adı Yok (Sadece Barkod Yazılmış)"
 
-    # 4. Fiyat kontrolü: Negatif fiyatlar veya 0 TL olan test ürünleri
     try:
         p_val = float(price)
         if cfg.get("block_negative_prices", True) and p_val < 0:
-            return True
+            return True, "Negatif Fiyat (< 0 TL)"
         if cfg.get("block_zero_prices", True) and p_val == 0.0 and (len(b) < 6 or re.search(r'DENEME|TEST|000|SU|BARDAK', t)):
-            return True
+            return True, "Sıfır Fiyatlı Test Ürünü (0 TL)"
     except Exception:
         pass
 
-    return False
+    return False, ""
+
+def is_invalid_or_blacklisted_product(barcode: str, title: str = "", price: float = 0.0) -> bool:
+    """
+    Kasa testleri, mantıksız/çöp barkodlar, negatif/sıfır fiyatlar, sigaralar, terazi/manav
+    ürünleri veya 12li su / 19luk su gibi koli/paket test girdilerini kara listeye alır.
+    """
+    blocked, _ = check_blacklist_with_reason(barcode, title, price)
+    return blocked
 
 

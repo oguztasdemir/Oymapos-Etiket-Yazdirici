@@ -232,3 +232,190 @@ async function generateAndPrintA4Sheet() {
     showToast('A4 dizgi hatası: ' + err.message, 'error');
   }
 }
+
+// -----------------------------------------------------------------------------
+// CANLI YAZICI DURUMU & GEÇMİŞ TABLOSU YÖNETİMİ
+// -----------------------------------------------------------------------------
+
+async function updateTopbarPrinterStatus() {
+  const pill = document.getElementById('topbarPrinterPill');
+  const dot = document.getElementById('topbarPrinterDot');
+  const text = document.getElementById('topbarPrinterText');
+  const topbarSel = document.getElementById('topbarPrinterSelect');
+  if (!pill || !text) return;
+
+  try {
+    const res = await API.getPrinters();
+    const data = (res && res.data) || {};
+    const printers = data.printers || [];
+    const printerDetails = data.printer_details || [];
+    const activeFromBackend = data.active_printer || (printers[0] || 'Termal Etiket Yazici');
+    
+    // Kullanıcının localStorage veya seçimindeki aktif yazıcı
+    let chosenPrinter = localStorage.getItem('selected_printer') || (topbarSel ? topbarSel.value : null) || activeFromBackend;
+
+    // Topbar açılır menüyü doldur
+    if (topbarSel && printers.length > 0) {
+      // Sadece liste değiştiğinde veya boşsa yeniden render et
+      const currentValues = Array.from(topbarSel.options).map(o => o.value).join(',');
+      const newValues = printers.join(',');
+      if (currentValues !== newValues) {
+        topbarSel.innerHTML = '';
+        printers.forEach(p => {
+          const detail = printerDetails.find(d => d.name === p);
+          const isConn = detail ? detail.connected : false;
+          const opt = document.createElement('option');
+          opt.value = p;
+          opt.textContent = `${isConn ? '🟢' : '🔴'} ${p}`;
+          opt.style.background = '#0f172a';
+          opt.style.color = '#f8fafc';
+          if (p === chosenPrinter) opt.selected = true;
+          topbarSel.appendChild(opt);
+        });
+      } else {
+        topbarSel.value = chosenPrinter;
+      }
+    }
+
+    // Seçili yazıcının anlık bağlantı durumunu al
+    const statusRes = await API.getPrinterStatus(chosenPrinter);
+    const stData = (statusRes && statusRes.data) || {};
+    const isConnected = !!stData.connected;
+    const statusText = stData.status_text || (isConnected ? 'Aktif' : 'Bağlı Değil');
+
+    if (isConnected) {
+      pill.style.background = 'rgba(16, 185, 129, 0.12)';
+      pill.style.borderColor = 'rgba(16, 185, 129, 0.35)';
+      pill.style.color = '#34d399';
+      if (dot) {
+        dot.style.background = '#34d399';
+        dot.style.boxShadow = '0 0 8px #34d399';
+      }
+      text.innerHTML = `<span style="color:#34d399; font-weight:800;">✓ Aktif</span>`;
+      pill.title = `Yazıcı Aktif ve Hazır\nModel: ${chosenPrinter}\nPort: ${stData.port || 'USB'}\nKuyruk: ${stData.jobs_in_queue || 0} iş`;
+    } else {
+      pill.style.background = 'rgba(239, 68, 68, 0.12)';
+      pill.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+      pill.style.color = '#f87171';
+      if (dot) {
+        dot.style.background = '#f87171';
+        dot.style.boxShadow = '0 0 8px #f87171';
+      }
+      text.innerHTML = `<span style="color:#f87171; font-weight:800;">⚠️ ${escapeHtml(statusText)}</span>`;
+      pill.title = `Yazıcı Bağlantı Sorunu!\nModel: ${chosenPrinter}\nDurum: ${statusText}`;
+    }
+
+    // Eğer Yazıcı Geçmişi sekmesi açıksa oradaki istatistikleri de güncelle
+    const histNameEl = document.getElementById('histPrinterName');
+    const histStatusEl = document.getElementById('histPrinterStatus');
+    const histQueueEl = document.getElementById('histPrinterQueue');
+    if (histNameEl) histNameEl.textContent = chosenPrinter;
+    if (histStatusEl) {
+      histStatusEl.innerHTML = isConnected 
+        ? `<span style="width:8px; height:8px; border-radius:50%; background:#34d399; display:inline-block;"></span> <span style="color:#34d399;">${escapeHtml(stData.port || 'USB001')} (${escapeHtml(statusText)})</span>`
+        : `<span style="width:8px; height:8px; border-radius:50%; background:#f87171; display:inline-block;"></span> <span style="color:#f87171;">${escapeHtml(statusText)}</span>`;
+    }
+    if (histQueueEl) {
+      histQueueEl.textContent = stData.jobs_in_queue || 0;
+    }
+  } catch (err) {
+    if (text) {
+      text.innerHTML = `<span style="color:#f87171;">Yazıcı Durumu Alınamadı</span>`;
+    }
+  }
+}
+
+function handleTopbarPrinterChange(newPrinter) {
+  if (!newPrinter) return;
+  localStorage.setItem('selected_printer', newPrinter);
+  const settingsSelect = document.getElementById('printerSelect');
+  if (settingsSelect) settingsSelect.value = newPrinter;
+  // Arka planda sunucuya aktif varsayılan yazıcı ayarını da kaydet
+  API.savePrinterSettings({ printer: newPrinter }).catch(() => {});
+  updateTopbarPrinterStatus();
+  showToast(`Aktif Yazıcı: "${newPrinter}" olarak seçildi.`, 'info');
+}
+
+async function loadPrintHistoryTable() {
+  const tbody = document.getElementById('printHistoryTableBody');
+  if (!tbody) return;
+
+  try {
+    const res = await API.getPrintHistory(60);
+    const history = (res && res.data && res.data.history) || [];
+
+    if (history.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
+            🖨️ Henüz kayıtlı bir etiket baskısı bulunmuyor. Herhangi bir ürün için "Yazdır" butonuna bastığınızda burada listelenecektir.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    let html = '';
+    history.forEach((item, idx) => {
+      const isSuccess = item.status === 'success';
+      const statusBadge = isSuccess
+        ? `<span class="badge" style="background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.3); font-size:11px; padding:3px 8px; border-radius:6px; font-weight:700;">✅ Başarılı</span>`
+        : `<span class="badge" style="background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); font-size:11px; padding:3px 8px; border-radius:6px; font-weight:700;" title="${escapeHtml(item.message)}">❌ Hata</span>`;
+
+      const priceStr = (item.price !== null && item.price !== undefined) ? `${Number(item.price).toFixed(2)} TL` : '-';
+
+      html += `
+        <tr>
+          <td style="text-align: center; color: var(--text-muted); font-size: 11.5px;">${idx + 1}</td>
+          <td style="font-size: 12px; color: #38bdf8; font-family: var(--font-mono); font-weight: 700;">${escapeHtml(item.printed_at)}</td>
+          <td style="font-family: var(--font-mono); font-weight: 700; color: #818cf8; font-size: 12.5px;">${escapeHtml(item.barcode)}</td>
+          <td style="font-weight: 700; color: #fff; font-size: 12.5px;">${escapeHtml(item.title)}</td>
+          <td style="text-align: right; font-weight: 800; color: #fbbf24; font-family: var(--font-mono);">${escapeHtml(priceStr)}</td>
+          <td style="text-align: center; font-weight: 700; color: #cbd5e1;">${item.copies || 1} Adet</td>
+          <td style="text-align: center;">${statusBadge}</td>
+          <td style="text-align: center;">
+            <button class="btn btn-secondary btn-sm" onclick="reprintFromHistory('${escapeHtml(item.barcode)}', this)" style="padding: 3px 10px; font-size: 11.5px; border-color: rgba(56,189,248,0.4); color: #38bdf8;" title="Bu etiketi tekrar yazdır">
+              🖨️ Tekrar Bas
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+
+    tbody.innerHTML = html;
+  } catch (err) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align: center; padding: 30px; color: #f87171;">
+          ⚠️ Baskı geçmişi yüklenirken hata oluştu: ${escapeHtml(err.message)}
+        </td>
+      </tr>
+    `;
+  }
+}
+
+async function reprintFromHistory(barcode, btnElement) {
+  if (!barcode || barcode === '-') {
+    showToast('Geçerli bir barkod numarası bulunamadı.', 'error');
+    return;
+  }
+  await printBarcode(barcode, btnElement);
+  setTimeout(loadPrintHistoryTable, 500);
+}
+
+async function purgePrinterQueueAction() {
+  if (!confirm("Yazıcı kuyruğundaki tüm bekleyen işleri temizlemek istediğinize emin misiniz?")) {
+    return;
+  }
+  try {
+    const res = await API.purgePrinterQueue();
+    if (res.status === 'success') {
+      showToast(res.message || 'Yazıcı kuyruğu temizlendi.', 'success');
+      updateTopbarPrinterStatus();
+    } else {
+      showToast('Kuyruk temizlenemedi: ' + res.message, 'error');
+    }
+  } catch (err) {
+    showToast('Hata: ' + err.message, 'error');
+  }
+}

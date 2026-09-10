@@ -8,13 +8,13 @@
       <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
         <div style="display:inline-flex; border:1px solid var(--border-subtle); border-radius:6px; overflow:hidden;">
           <button id="filterAllBtn" class="btn btn-secondary btn-sm active" style="border-radius:0; border:none; padding:6px 12px; font-size:12px;" onclick="toggleFilter('all')">
-            Tüm Stok (<span id="totalProductsCount">0</span>)
+            Tüm Stok ( <span id="totalProductsCount">0</span> )
           </button>
           <button id="filterDiffBtn" class="btn btn-secondary btn-sm" style="border-radius:0; border:none; border-left:1px solid var(--border-subtle); padding:6px 12px; font-size:12px;" onclick="toggleFilter('diff')">
-            ⚠️ Fiyat Farkı Olanlar
+            ⚠️ Fiyat Farkı Olanlar ( <span id="diffProductsCount">0</span> )
           </button>
           <button id="filterNewBtn" class="btn btn-secondary btn-sm" style="border-radius:0; border:none; border-left:1px solid var(--border-subtle); padding:6px 12px; font-size:12px;" onclick="toggleFilter('new')">
-            ✨ Yeni Eklenenler
+            ✨ Yeni Eklenenler ( <span id="newProductsCount">0</span> )
           </button>
         </div>
         <button class="btn btn-secondary btn-sm" onclick="copyTableToClipboard('productsTable')" style="padding:6px 12px; font-size:12px;">
@@ -30,7 +30,7 @@
           🏷️ Tüm Etiketleri Eşitle
         </button>
         <button class="btn btn-secondary btn-sm" onclick="openBlacklistModal()" style="font-weight:700; color:#f87171; border-color:rgba(248,113,113,0.35); background:rgba(248,113,113,0.08); padding:6px 12px; font-size:12px;" title="Engellenen test barkodları, kelimeler ve mantıksız ürün filtreleri">
-          🚫 Kara Liste
+          🚫 Kara Liste ( <span id="blacklistProductsCount">0</span> )
         </button>
       </div>
     </div>
@@ -46,14 +46,14 @@
       <table id="productsTable" class="table-excel">
         <colgroup>
           <col style="width: 32px;">
-          <col style="width: 105px;">
+          <col style="width: 110px;">
           <col style="width: auto;">
           <col style="width: 90px;">
           <col style="width: 90px;">
           <col style="width: 85px;">
           <col style="width: 95px;">
           <col style="width: 105px;">
-          <col style="width: 135px;">
+          <col style="width: 110px;">
         </colgroup>
         <thead>
           <tr>

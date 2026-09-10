@@ -5,8 +5,10 @@
 import platform
 import json
 import os
+import re
+import time
 import datetime
-from backend.config import SETTINGS_FILE, DEFAULT_SETTINGS
+from backend.config import SETTINGS_FILE, DEFAULT_SETTINGS, DATA_DIR
 
 def load_settings() -> dict:
     if os.path.exists(SETTINGS_FILE):
@@ -37,6 +39,134 @@ def get_installed_printers() -> list:
     if not printers:
         printers = ["Termal Etiket Yazici", "Xprinter XP-365B", "Zebra ZD220", "Argox OS-214plus", "Microsoft Print to PDF"]
     return printers
+
+def check_printer_connection(printer_name: str = None) -> dict:
+    """Yazıcının sisteme bağlı ve hazır olup olmadığını denetler."""
+    if not printer_name:
+        settings = load_settings()
+        printer_name = settings.get("printer", "Termal Etiket Yazici")
+
+    if platform.system() != "Windows":
+        return {
+            "connected": True,
+            "status_text": "Aktif (Simülasyon)",
+            "printer_name": printer_name,
+            "port": "VIRTUAL",
+            "driver": "Virtual Driver",
+            "jobs_in_queue": 0
+        }
+
+    try:
+        import win32print
+        handle = win32print.OpenPrinter(printer_name)
+        try:
+            info = win32print.GetPrinter(handle, 2)
+            jobs = win32print.EnumJobs(handle, 0, -1, 1)
+            port_name = info.get("pPortName", "")
+            driver_name = info.get("pDriverName", "")
+            status_flags = info.get("Status", 0)
+            attr_flags = info.get("Attributes", 0)
+
+            # Windows Yazıcı Spooler Bayrakları
+            PRINTER_ATTRIBUTE_WORK_OFFLINE = 0x00000400
+            PRINTER_STATUS_OFFLINE = 0x00000080
+            PRINTER_STATUS_ERROR = 0x00000002
+            PRINTER_STATUS_PAUSED = 0x00000001
+            PRINTER_STATUS_NOT_AVAILABLE = 0x00001000
+            PRINTER_STATUS_NO_TONER = 0x00040000
+            PRINTER_STATUS_OUT_OF_MEMORY = 0x00200000
+            PRINTER_STATUS_OUTPUT_BIN_FULL = 0x00000800
+            PRINTER_STATUS_PAGE_PUNT = 0x00080000
+            PRINTER_STATUS_PAPER_JAM = 0x00000008
+            PRINTER_STATUS_PAPER_OUT = 0x00000010
+            PRINTER_STATUS_PAPER_PROBLEM = 0x00000040
+
+            # Gerçek Çevrimdışı ve Bağlantı Kontrolü
+            is_work_offline = bool(attr_flags & PRINTER_ATTRIBUTE_WORK_OFFLINE)
+            is_status_offline = bool(status_flags & (PRINTER_STATUS_OFFLINE | PRINTER_STATUS_NOT_AVAILABLE))
+            is_offline = is_work_offline or is_status_offline
+            is_error = bool(status_flags & PRINTER_STATUS_ERROR)
+            is_paused = bool(status_flags & PRINTER_STATUS_PAUSED)
+            is_paper_out = bool(status_flags & (PRINTER_STATUS_PAPER_OUT | PRINTER_STATUS_PAPER_PROBLEM))
+            is_paper_jam = bool(status_flags & PRINTER_STATUS_PAPER_JAM)
+            
+            connected = not (is_offline or is_error)
+            
+            if is_offline:
+                status_text = "Çevrimdışı / Bağlı Değil"
+            elif is_error:
+                status_text = "Yazıcı Hatası"
+            elif is_paper_out:
+                status_text = "Kağıt / Etiket Bitti"
+            elif is_paper_jam:
+                status_text = "Kağıt Sıkışması"
+            elif is_paused:
+                status_text = "Duraklatıldı"
+            else:
+                status_text = "Aktif & Hazır"
+
+            return {
+                "connected": connected,
+                "status_text": status_text,
+                "printer_name": printer_name,
+                "port": port_name,
+                "driver": driver_name,
+                "jobs_in_queue": len(jobs)
+            }
+        finally:
+            win32print.ClosePrinter(handle)
+    except Exception as e:
+        return {
+            "connected": False,
+            "status_text": f"Bağlı Değil ({str(e)})",
+            "printer_name": printer_name,
+            "port": "",
+            "driver": "",
+            "jobs_in_queue": 0
+        }
+
+PRINT_HISTORY_FILE = os.path.join(DATA_DIR, "baski_gecmisi.json")
+
+def get_print_history(limit: int = 50) -> list:
+    """Son etiket baskı geçmişini döner."""
+    if os.path.exists(PRINT_HISTORY_FILE):
+        try:
+            with open(PRINT_HISTORY_FILE, 'r', encoding='utf-8') as f:
+                history = json.load(f)
+                return history[:limit]
+        except Exception:
+            return []
+    return []
+
+def log_print_job(barcode: str, title: str, price, copies: int = 1, status: str = "success", message: str = ""):
+    """Yapılan baskıyı geçmişe kaydeder."""
+    try:
+        history = []
+        if os.path.exists(PRINT_HISTORY_FILE):
+            try:
+                with open(PRINT_HISTORY_FILE, 'r', encoding='utf-8') as f:
+                    history = json.load(f)
+            except Exception:
+                history = []
+
+        now_str = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
+        record = {
+            "id": int(time.time() * 1000) if 'time' in globals() else int(datetime.datetime.now().timestamp() * 1000),
+            "barcode": barcode or "-",
+            "title": title or "-",
+            "price": price,
+            "copies": copies,
+            "status": status,
+            "message": message,
+            "printed_at": now_str
+        }
+        history.insert(0, record)
+        history = history[:200] # Maksimum son 200 baskıyı sakla
+
+        with open(PRINT_HISTORY_FILE, 'w', encoding='utf-8') as f:
+            json.dump(history, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
 
 def clean_turkish(text: str) -> str:
     if not text:
@@ -109,13 +239,27 @@ def generate_tspl_command(data: dict, width_mm=None, height_mm=None, darkness=No
                 cur_len += len(w) + 1
             else:
                 t2_words.append(w)
+
+        # Eğer 2. satırda tek başına birim kalmışsa (örn: ["GR"]) ve 1. satırın sonu sayıysa (örn: "600"),
+        # veya 2. satır 3 karakterden kısaysa, 1. satırın son kelimesini 2. satırın başına al
+        unit_words = {'GR', 'GRAM', 'KG', 'LT', 'LITRE', 'LİTRE', 'ML', 'CL', 'ADET', 'LI', 'LU', 'LÜ', 'PK', 'PAKET'}
+        if t2_words and len(t1_words) > 1:
+            first_t2_clean = re.sub(r'[^A-ZÇĞİÖŞÜ]', '', t2_words[0])
+            last_t1 = t1_words[-1]
+            is_unit_orphan = (first_t2_clean in unit_words) or (len(" ".join(t2_words)) <= 3)
+            is_prev_number = bool(re.search(r'\d+', last_t1))
+            if is_unit_orphan or is_prev_number:
+                moved = t1_words.pop()
+                t2_words.insert(0, moved)
+
         title1 = " ".join(t1_words) if t1_words else full_title[:max_char_per_line]
         title2 = " ".join(t2_words) if t2_words else full_title[max_char_per_line:]
 
     default_market = clean_turkish(str(settings.get("market_name", "YARENLER")).strip().upper())
-    brand = clean_turkish(str(data.get("brand") or default_market).strip().upper())
+    brand = default_market
     origin = clean_turkish((data.get('origin') or 'TURKIYE').strip().upper())
-    date_str = str(data.get('date') or datetime.datetime.now().strftime("%d.%m.%Y")).strip()
+    raw_d = str(data.get('date') or datetime.datetime.now().strftime("%d.%m.%Y")).strip()
+    date_str = raw_d.split()[0] if raw_d else datetime.datetime.now().strftime("%d.%m.%Y")
     barcode = str(data.get('barcode') or '').strip()
     price_str = format_price_display(data.get('price'))
 
@@ -224,6 +368,7 @@ def generate_tspl_command(data: dict, width_mm=None, height_mm=None, darkness=No
             lines.append(f'BOX {l_x},{l_y},{l_x + l_w},{l_y + l_h},2')
 
     lines.append(f"PRINT {copies},1")
+    lines.append("") # Boş satır ile sonlandır
     cmd_str = "\r\n".join(lines) + "\r\n"
     return cmd_str.encode('latin1', errors='replace')
 
@@ -264,18 +409,123 @@ def purge_printer_queue(printer_name: str = None) -> tuple:
     except Exception as e:
         return False, f"Kuyruk temizleme hatası: {str(e)}"
 
-def print_single_label(product: dict, copies=1, template_data=None) -> tuple:
+def print_raw_zpl(printer_name: str, zpl_code: str, doc_name="Market Raf Etiketi") -> tuple:
+    """Belirtilen Windows yazıcı kuyruğuna ham ZPL baytlarını UTF-8 olarak iletir."""
+    if platform.system() != "Windows":
+        return True, "Simülasyon modu (Windows dışı)"
+    try:
+        import win32print
+        hPrinter = win32print.OpenPrinter(printer_name)
+        try:
+            hJob = win32print.StartDocPrinter(hPrinter, 1, (doc_name, None, "RAW"))
+            try:
+                win32print.StartPagePrinter(hPrinter)
+                raw_bytes = zpl_code.encode("utf-8", errors="ignore")
+                win32print.WritePrinter(hPrinter, raw_bytes)
+                win32print.EndPagePrinter(hPrinter)
+            finally:
+                win32print.EndDocPrinter(hPrinter)
+        finally:
+            win32print.ClosePrinter(hPrinter)
+        return True, f"'{printer_name}' yazıcısına baskı gönderildi."
+    except Exception as e:
+        return False, f"ZPL baskı hatası: {str(e)}"
+
+def print_single_label(product: dict, copies=1, template_data=None, target_printer: str = None) -> tuple:
     if not product:
         return False, "Yazdırılacak ürün verisi boş olamaz."
     settings = load_settings()
-    printer_name = settings.get("printer", "Termal Etiket Yazici")
+    printer_name = target_printer or settings.get("printer", "Termal Etiket Yazici")
+    
+    # Yazıcı bağlantı / çevrimdışı kontrolü
+    conn_info = check_printer_connection(printer_name)
+    if not conn_info.get("connected", False):
+        status_desc = conn_info.get("status_text") or "Bağlı Değil / Çevrimdışı"
+        return False, f"'{printer_name}' yazıcısına ulaşılamıyor: {status_desc}. Lütfen yazıcının açık ve bağlı olduğunu kontrol edin."
+    
+    # OYMAPOS Barkod Sistemi Standardı: Önce ZPL motoru, ardından TSPL desteği
+    from backend.services.template_service import get_default_template
+    tpl = template_data or get_default_template() or {}
+    w_mm = float(tpl.get("width_mm", settings.get("width_mm", 76)))
+    h_mm = float(tpl.get("height_mm", settings.get("height_mm", 40)))
+    x_off = int(settings.get("x_offset", 0))
+    y_off = int(settings.get("y_offset", 0))
+
     try:
-        raw_tspl = generate_tspl_command(
-            product,
-            copies=copies,
-            template_data=template_data
+        from backend.services.zpl_etiket_kodlayici import generate_market_shelf_zpl
+        full_title = str(product.get("title") or product.get("title1") or "").strip()
+        parts = full_title.split()
+        if len(full_title) > 25 and len(parts) > 1:
+            import math
+            mid = math.ceil(len(parts) / 2)
+            t1 = " ".join(parts[:mid])
+            t2 = " ".join(parts[mid:])
+        else:
+            t1 = full_title
+            t2 = str(product.get("title2") or "").strip()
+
+        zpl_data = {
+            "title1": t1,
+            "title2": t2,
+            "brand": product.get("brand") or settings.get("market_name", "YARENLER"),
+            "origin": str(product.get("origin") or "TÜRKİYE"),
+            "date": str(product.get("date") or datetime.datetime.now().strftime("%d.%m.%Y")),
+            "unit_price": str(product.get("unit_price") or ""),
+            "barcode": str(product.get("barcode") or ""),
+            "price": format_price_display(product.get("price")),
+            "top_right_mode": tpl.get("top_right_mode", "empty"),
+            "top_right_text": tpl.get("top_right_text", "")
+        }
+
+        zpl_code = generate_market_shelf_zpl(
+            zpl_data,
+            orientation=settings.get("orientation", "POR"),
+            x_offset=x_off,
+            y_offset=y_off,
+            width_mm=w_mm,
+            height_mm=h_mm,
+            copies=copies
         )
-        return send_raw_to_printer(printer_name, raw_tspl)
+
+        success, msg = print_raw_zpl(printer_name, zpl_code, f"Etiket: {t1[:20]}")
+        if not success:
+            # Fallback to TSPL
+            raw_tspl = generate_tspl_command(product, copies=copies, template_data=template_data)
+            success, msg = send_raw_to_printer(printer_name, raw_tspl)
+
+        log_print_job(
+            barcode=product.get("barcode", ""),
+            title=full_title,
+            price=product.get("price"),
+            copies=copies,
+            status="success" if success else "error",
+            message=msg
+        )
+        return success, msg
     except Exception as e:
-        return False, f"Baskı komutu oluşturulamadı: {str(e)}"
+        # Hata durumunda TSPL ile dene
+        try:
+            raw_tspl = generate_tspl_command(product, copies=copies, template_data=template_data)
+            success, msg = send_raw_to_printer(printer_name, raw_tspl)
+            log_print_job(
+                barcode=product.get("barcode", ""),
+                title=product.get("title") or product.get("title1", ""),
+                price=product.get("price"),
+                copies=copies,
+                status="success" if success else "error",
+                message=msg
+            )
+            return success, msg
+        except Exception as ex:
+            err_msg = f"Baskı komutu oluşturulamadı: {str(ex)}"
+            log_print_job(
+                barcode=product.get("barcode", ""),
+                title=product.get("title") or product.get("title1", ""),
+                price=product.get("price"),
+                copies=copies,
+                status="error",
+                message=err_msg
+            )
+            return False, err_msg
+
 

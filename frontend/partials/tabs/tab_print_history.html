@@ -1,0 +1,72 @@
+<!-- SEKME: YAZICI GEÇMİŞİ VE İŞ KUYRUĞU -->
+<section id="tab-print-history" class="tab-pane">
+  <div class="card" style="padding: 20px 24px;">
+    
+    <!-- Başlık ve Üst Butonlar -->
+    <div class="card-header" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px;">
+      <div class="card-title" style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 24px;">🖨️</span>
+        <div>
+          <h3 style="font-size: 16px; font-weight: 800; color: #fff; margin: 0;">Yazıcı Baskı Geçmişi</h3>
+          <span style="font-size: 12px; color: var(--text-muted);">Yazıcıya gönderilen son etiket baskıları ve donanım logları</span>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button class="btn btn-secondary btn-sm" onclick="loadPrintHistoryTable()" title="Listeyi Yenile">
+          🔄 Yenile
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="testPrint()" title="1 Adet Test Etiketi Gönder">
+          🧪 Test Baskısı Al
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="purgePrinterQueueAction()" style="color: #f87171; border-color: rgba(248,113,113,0.3);" title="Yazıcı kuyruğunda takılı kalan işleri temizle">
+          🗑️ Kuyruğu Temizle
+        </button>
+      </div>
+    </div>
+
+    <!-- Yazıcı Canlı Bağlantı Kartı -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;">
+      <div class="stat-tile" style="background: rgba(15,23,42,0.6); padding: 14px 18px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+        <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Bağlı Yazıcı</div>
+        <div id="histPrinterName" style="font-size: 15px; font-weight: 800; color: #38bdf8; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">-</div>
+      </div>
+      <div class="stat-tile" style="background: rgba(15,23,42,0.6); padding: 14px 18px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+        <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Bağlantı Portu / Durum</div>
+        <div id="histPrinterStatus" style="font-size: 14px; font-weight: 800; color: #34d399; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #34d399; display: inline-block;"></span>
+          <span>Kontrol ediliyor...</span>
+        </div>
+      </div>
+      <div class="stat-tile" style="background: rgba(15,23,42,0.6); padding: 14px 18px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+        <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Kuyrukta Bekleyen İş</div>
+        <div id="histPrinterQueue" style="font-size: 18px; font-weight: 800; color: #fff; margin-top: 2px;">0</div>
+      </div>
+    </div>
+
+    <!-- Geçmiş Baskılar Tablosu -->
+    <div class="table-container" style="max-height: calc(100vh - 340px); overflow-y: auto;">
+      <table class="table-excel" id="printHistoryTable">
+        <thead>
+          <tr>
+            <th style="width: 40px; text-align: center;">#</th>
+            <th style="width: 140px;">Baskı Saati</th>
+            <th style="width: 140px;">Barkod</th>
+            <th>Ürün Adı</th>
+            <th style="width: 110px; text-align: right;">Fiyat</th>
+            <th style="width: 80px; text-align: center;">Adet</th>
+            <th style="width: 130px; text-align: center;">Durum</th>
+            <th style="width: 120px; text-align: center;">Yeniden Bas</th>
+          </tr>
+        </thead>
+        <tbody id="printHistoryTableBody">
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">
+              ⏳ Baskı geçmişi yükleniyor...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>

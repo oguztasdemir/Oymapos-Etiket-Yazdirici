@@ -15,6 +15,60 @@ function cleanProductTitle(title) {
   return s || String(title).trim();
 }
 
+/**
+ * Akıllı Başlık Satır Bölücü:
+ * "600 GR", "1 LT", "250 ML" gibi miktar/gramaj ifadelerinin bölünmesini (örn: 600 üstte, GR altta) engeller.
+ * Eğer ikinci satıra sadece 1-3 karakter veya yalnız bir birim kalıyorsa, önceki sayıyı da aşağı alır.
+ */
+function formatSmartTitleLines(fullTitle, maxLine1Chars = 28) {
+  if (!fullTitle) return { line1: '', line2: '' };
+  const text = cleanProductTitle(fullTitle).trim().toUpperCase();
+
+  // Tek satıra sığıyorsa bölme
+  if (text.length <= maxLine1Chars) {
+    return { line1: text, line2: '' };
+  }
+
+  const words = text.split(/\s+/);
+  if (words.length <= 1) {
+    return { line1: text, line2: '' };
+  }
+
+  const unitWords = ['GR', 'GRAM', 'KG', 'LT', 'LITRE', 'LİTRE', 'ML', 'CL', 'ADET', 'LI', 'LU', 'LÜ', 'PAKET', 'PK'];
+
+  let t1Words = [];
+  let t2Words = [];
+  let currentLen = 0;
+
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i];
+    if (t2Words.length === 0 && (currentLen === 0 || currentLen + 1 + w.length <= maxLine1Chars)) {
+      t1Words.push(w);
+      currentLen += (currentLen === 0 ? w.length : 1 + w.length);
+    } else {
+      t2Words.push(w);
+    }
+  }
+
+  // Eğer 2. satır yalnız bir birimle başlıyorsa (örn: ["GR"] veya ["LT"]) ve 1. satırın sonunda sayı varsa (örn: "600")
+  // veya 2. satır çok kısaysa (1-3 karakter), 1. satırdaki son kelimeyi (sayıyı) 2. satırın başına al!
+  if (t2Words.length > 0 && t1Words.length > 1) {
+    const firstT2 = t2Words[0].replace(/[^A-ZÇĞİÖŞÜ]/g, '');
+    const lastT1 = t1Words[t1Words.length - 1];
+    const isFirstT2Unit = unitWords.includes(firstT2) || t2Words.join(' ').length <= 3;
+    const isLastT1Number = /^\d+([.,]\d+)?('?(L[İIÜU]|Lİ|LI|LU|LÜ))?$/.test(lastT1) || /^\d+$/.test(lastT1);
+
+    if (isFirstT2Unit || isLastT1Number) {
+      const moved = t1Words.pop();
+      t2Words.unshift(moved);
+    }
+  }
+
+  const line1 = t1Words.join(' ');
+  const line2 = t2Words.join(' ');
+  return { line1, line2 };
+}
+
 function renderBarcodeSvg(target, barcode) {
   try {
     if (!barcode) return;
@@ -78,10 +132,42 @@ async function searchProducts(query) {
     if (res.status === 'success' || data.products) {
       cachedProductsList = data.products || [];
       renderProductsTable(cachedProductsList);
+      
+      const counts = data.counts || {};
       const countEl = document.getElementById('totalProductsCount');
       if (countEl && typeof animateCount === 'function') {
-        animateCount(countEl, data.total || (data.products ? data.products.length : 0));
+        animateCount(countEl, counts.total !== undefined ? counts.total : (data.total || cachedProductsList.length));
+      } else if (countEl) {
+        countEl.textContent = (counts.total !== undefined ? counts.total : (data.total || cachedProductsList.length)).toLocaleString('tr-TR');
       }
+
+      const diffCountEl = document.getElementById('diffProductsCount');
+      if (diffCountEl) {
+        if (typeof animateCount === 'function' && counts.diff !== undefined) {
+          animateCount(diffCountEl, counts.diff);
+        } else {
+          diffCountEl.textContent = (counts.diff !== undefined ? counts.diff : 0).toLocaleString('tr-TR');
+        }
+      }
+
+      const newCountEl = document.getElementById('newProductsCount');
+      if (newCountEl) {
+        if (typeof animateCount === 'function' && counts.new !== undefined) {
+          animateCount(newCountEl, counts.new);
+        } else {
+          newCountEl.textContent = (counts.new !== undefined ? counts.new : 0).toLocaleString('tr-TR');
+        }
+      }
+
+      const blCountEl = document.getElementById('blacklistProductsCount');
+      if (blCountEl) {
+        if (typeof animateCount === 'function' && counts.blacklist !== undefined) {
+          animateCount(blCountEl, counts.blacklist);
+        } else {
+          blCountEl.textContent = (counts.blacklist !== undefined ? counts.blacklist : 0).toLocaleString('tr-TR');
+        }
+      }
+
       if (typeof updateHomeDashboardInfo === 'function') {
         updateHomeDashboardInfo();
       }
@@ -147,6 +233,54 @@ async function markProductAsPrintedManual(barcode, btnElement) {
       }
     } else {
       showToast('Onaylanamadı: ' + res.message, 'error');
+    }
+  } catch (err) {
+    showToast('Bağlantı hatası: ' + err.message, 'error');
+  }
+}
+
+async function toggleProductBlacklist(barcode, btnElement, event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  try {
+    const res = await API.toggleBlacklist(barcode);
+    if (res.status === 'success') {
+      const isBlacklisted = res.data && res.data.is_blacklisted;
+      showToast(res.message || (isBlacklisted ? 'Ürün kara listeye eklendi.' : 'Ürün kara listeden çıkarıldı.'), isBlacklisted ? 'warning' : 'success');
+      
+      // Buton görünümünü güncelle
+      if (btnElement) {
+        if (isBlacklisted) {
+          btnElement.innerHTML = '🛡️';
+          btnElement.title = 'Kara Listeden Çıkar';
+          btnElement.style.background = 'rgba(239, 68, 68, 0.25)';
+          btnElement.style.color = '#f87171';
+          btnElement.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+        } else {
+          btnElement.innerHTML = '🚫';
+          btnElement.title = 'Kara Listeye Ekle (Etiketi ve Ürünü Engelle)';
+          btnElement.style.background = '';
+          btnElement.style.color = '';
+          btnElement.style.borderColor = '';
+        }
+      }
+
+      // Sayaçları güncelle
+      if (res.data && res.data.counts) {
+        const blCountEl = document.getElementById('blacklistProductsCount');
+        if (blCountEl) {
+          blCountEl.textContent = res.data.counts.blacklist.toLocaleString('tr-TR');
+        }
+      }
+
+      // Cached listede de güncelle
+      const prod = cachedProductsList.find(p => String(p.barcode) === String(barcode));
+      if (prod) {
+        prod.is_blacklisted = isBlacklisted;
+      }
+    } else {
+      showToast('Hata: ' + (res.message || 'İşlem gerçekleştirilemedi.'), 'error');
     }
   } catch (err) {
     showToast('Bağlantı hatası: ' + err.message, 'error');
@@ -257,7 +391,10 @@ function sortTable(column) {
   renderProductsTable(cachedProductsList);
 }
 
-function renderProductsTable(products) {
+let currentProductPage = 1;
+const PRODUCTS_PER_PAGE = 100;
+
+function renderProductsTable(products, page = 1) {
   const tbody = document.getElementById('productsTableBody');
   if (!tbody) return;
 
@@ -272,14 +409,19 @@ function renderProductsTable(products) {
           </div>
         </td>
       </tr>`;
-    renderProductsStatusBar(0);
+    renderProductsStatusBar(0, 0, 0);
     return;
   }
 
+  currentProductPage = page;
   const totalItems = products.length;
+  const totalPages = Math.ceil(totalItems / PRODUCTS_PER_PAGE);
+  const startIndex = (page - 1) * PRODUCTS_PER_PAGE;
+  const endIndex = Math.min(startIndex + PRODUCTS_PER_PAGE, totalItems);
+  const pageProducts = products.slice(startIndex, endIndex);
 
-  const rowsHtml = products.map((p, idx) => {
-    const globalIdx = idx + 1;
+  const rowsHtml = pageProducts.map((p, idx) => {
+    const globalIdx = startIndex + idx + 1;
     const newBadge = p.is_new ? '<span class="badge badge-success" style="font-size:10px; margin-left:8px;">✨ YENİ</span>' : '';
     const posPrice = (typeof p.price === 'number') ? p.price : Number(p.price || 0);
     const posPriceStr = posPrice.toFixed(2);
@@ -330,8 +472,13 @@ function renderProductsTable(products) {
     // Yazıcıda çıkacak temizlenmiş ürün ismi
     const printTitle = cleanProductTitle(p.title || p.raw_system_title || '').trim() || (p.title || '');
 
+    const isBl = !!p.is_blacklisted;
+    const blBtnIcon = isBl ? '🛡️' : '🚫';
+    const blBtnTitle = isBl ? 'Kara Listeden Çıkar' : 'Kara Listeye Ekle';
+    const blBtnStyle = isBl ? 'background: rgba(239, 68, 68, 0.25); color: #f87171; border-color: rgba(239, 68, 68, 0.5);' : '';
+
     return `
-      <tr id="row-${barcodeEscaped}" class="${rowClass}">
+      <tr id="row-${barcodeEscaped}" class="${rowClass}" onclick="openProductEditModal('${barcodeEscaped}')" style="cursor: pointer;" title="Düzenlemek için tıklayın">
         <td class="col-idx">${globalIdx}</td>
         <td class="col-barcode" style="font-family:'JetBrains Mono', monospace; font-weight:700; color:#818cf8;" title="${p.barcode || ''}">${p.barcode || ''}</td>
         <td class="col-title" style="font-weight:700; color:#fff;" title="Sistem Kaydı: ${escapeHtml(p.raw_system_title || p.title || '')}">${escapeHtml(printTitle)}${newBadge}</td>
@@ -344,34 +491,20 @@ function renderProductsTable(products) {
         </td>
         <td class="col-print-date" id="print-date-cell-${barcodeEscaped}">${printDateHtml}</td>
         <td class="col-status" id="status-cell-${barcodeEscaped}">${statusHtml}</td>
-        <td class="col-action" style="text-align:center;">
-          <div style="display:inline-flex; gap:5px; align-items:center; justify-content:center; flex-wrap:nowrap;">
-            <button class="btn-excel-print" onclick="printBarcode('${barcodeEscaped}', this, ${posPrice})" title="Hızlı Etiket Bas">
-              🖨️ Yazdır
-            </button>
-            <button class="table-action-btn" onclick="markProductAsPrintedManual('${barcodeEscaped}', this)" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);" title="Etiket Basıldı Olarak Onayla & Raf Fiyatını Eşitle">
-              ✓
-            </button>
-            <button class="table-action-btn btn-preview" onclick="openLabelPreviewModal('${barcodeEscaped}')" title="Etiketi Önizle">
-              👁️
-            </button>
-            <button class="table-action-btn btn-edit" onclick="openProductEditModal('${barcodeEscaped}')" title="Ürün Adı ve Fiyatını Düzenle">
-              ✏️
-            </button>
-            <button class="table-action-btn btn-history" onclick="openProductHistoryModal('${barcodeEscaped}')" title="Değişiklik ve Fiyat Geçmişi">
-              🕒
-            </button>
-          </div>
+        <td class="col-action" style="text-align:center;" onclick="event.stopPropagation()">
+          <button class="btn-excel-print" onclick="event.stopPropagation(); printBarcode('${barcodeEscaped}', this, ${posPrice})" title="Hızlı Etiket Bas" style="padding: 5px 14px; font-size: 12px;">
+            🖨️ Yazdır
+          </button>
         </td>
       </tr>
     `;
   }).join('');
 
   tbody.innerHTML = rowsHtml;
-  renderProductsStatusBar(totalItems);
+  renderProductsStatusBar(totalItems, page, totalPages);
 }
 
-function renderProductsStatusBar(totalItems) {
+function renderProductsStatusBar(totalItems, page = 1, totalPages = 1) {
   let paginationEl = document.getElementById('productsTablePagination');
   if (!paginationEl) {
     const tableContainer = document.querySelector('#tab-search .table-container');
@@ -391,14 +524,32 @@ function renderProductsStatusBar(totalItems) {
     return;
   }
 
+  const startNum = (page - 1) * PRODUCTS_PER_PAGE + 1;
+  const endNum = Math.min(page * PRODUCTS_PER_PAGE, totalItems);
+
   paginationEl.innerHTML = `
     <div style="display:flex; align-items:center; gap:8px;">
-      <span>Toplam Yüklenen: <strong style="color:var(--primary); font-size:13px;">${totalItems.toLocaleString('tr-TR')} Ürün</strong> (Tümü listelendi, kaydırarak inceleyebilirsiniz)</span>
+      <span>Toplam: <strong style="color:var(--primary); font-size:13px;">${totalItems.toLocaleString('tr-TR')} Ürün</strong></span>
+      <span style="color:#64748b;">|</span>
+      <span>Gösterilen: <strong style="color:#38bdf8;">${startNum} - ${endNum}</strong> (Sayfa ${page} / ${totalPages})</span>
     </div>
-    <div style="display:flex; align-items:center; gap:6px;">
-      <button class="btn btn-secondary btn-sm" onclick="scrollToTableTop()" style="padding:4px 10px; font-weight:700;">⬆️ Başa Dön</button>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button class="btn btn-secondary btn-sm" onclick="goToProductPage(1)" ${page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : 'style="cursor:pointer;"'} title="İlk Sayfa">⏮️ İlk</button>
+      <button class="btn btn-secondary btn-sm" onclick="goToProductPage(${page - 1})" ${page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : 'style="cursor:pointer;"'} title="Önceki Sayfa">◀ Önceki</button>
+      <span style="font-weight:700; color:#f8fafc; padding:0 4px;">${page} / ${totalPages}</span>
+      <button class="btn btn-secondary btn-sm" onclick="goToProductPage(${page + 1})" ${page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : 'style="cursor:pointer;"'} title="Sonraki Sayfa">Sonraki ▶</button>
+      <button class="btn btn-secondary btn-sm" onclick="goToProductPage(${totalPages})" ${page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : 'style="cursor:pointer;"'} title="Son Sayfa">Son ⏭️</button>
+      <button class="btn btn-secondary btn-sm" onclick="scrollToTableTop()" style="padding:4px 10px; font-weight:700; margin-left:6px;">⬆️ Başa Dön</button>
     </div>
   `;
+}
+
+function goToProductPage(page) {
+  const totalPages = Math.ceil(cachedProductsList.length / PRODUCTS_PER_PAGE);
+  if (page < 1) page = 1;
+  if (page > totalPages) page = totalPages;
+  renderProductsTable(cachedProductsList, page);
+  scrollToTableTop();
 }
 
 function scrollToTableTop() {

@@ -253,18 +253,20 @@ async def preview_clipboard_endpoint(
     if not raw_text or not raw_text.strip():
         return error_response(message="Lütfen kopyaladığınız ürün tablosunu yapıştırın.", status_code=400)
 
-    items = parse_raw_text_products(raw_text)
-    if not items:
+    items, blacklisted_items = parse_raw_text_products(raw_text, collect_blacklisted=True)
+    if not items and not blacklisted_items:
         return error_response(message="Yapıştırılan metinden geçerli ürün veya fiyat sütunu tespit edilemedi.", status_code=400)
 
     comparison_data = preview_vegawin_comparison(items)
     comparison_data["source_filename"] = f"Panodan Yapıştırılan Liste ({len(items)} Ürün)"
     comparison_data["device_name"] = dev_name
     comparison_data["parsed_items"] = items
+    comparison_data["blacklisted_items"] = blacklisted_items
+    comparison_data["blacklisted_count"] = len(blacklisted_items)
 
     return success_response(
         data=comparison_data,
-        message=f"Panodan {comparison_data['total_incoming']} ürün başarıyla çözümlendi ve karşılaştırıldı."
+        message=f"Panodan {comparison_data['total_incoming']} ürün başarıyla çözümlendi ve karşılaştırıldı. ({len(blacklisted_items)} kara liste kaydı ayrıldı)"
     )
 
 @router.post("/preview-direct-db")

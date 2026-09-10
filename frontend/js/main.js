@@ -19,6 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
   initVegaWinDropzone();
   initStudioDragAndDrop();
 
+  // Canlı Yazıcı Durumunu Kontrol Et ve Periyodik Yenile
+  if (typeof updateTopbarPrinterStatus === 'function') {
+    updateTopbarPrinterStatus();
+    setInterval(updateTopbarPrinterStatus, 6000);
+  }
+
   const toggleBtn = document.getElementById('sidebarToggleBtn');
   if (toggleBtn) {
     toggleBtn.addEventListener('click', () => {
@@ -30,8 +36,35 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     renderBarcodeSvg("#editor-barcode-svg", "8690504114925");
     updateHomeDashboardInfo();
+    initDeviceRoleBadge();
   }, 200);
 });
+
+function initDeviceRoleBadge() {
+  const badge = document.getElementById('deviceRoleBadge');
+  const btnShutdown = document.getElementById('btnTopShutdown');
+  const isGuest = document.body.dataset.isGuest === 'true';
+  const clientIp = document.body.dataset.clientIp || '';
+
+  if (badge) {
+    if (isGuest) {
+      badge.style.display = 'inline-flex';
+      badge.style.background = 'rgba(56, 189, 248, 0.15)';
+      badge.style.border = '1.5px solid rgba(56, 189, 248, 0.4)';
+      badge.style.color = '#38bdf8';
+      badge.innerHTML = `💻 Misafir Terminal (${clientIp})`;
+      badge.title = 'Bu bilgisayar yerel ağ üzerinden Ana Bilgisayara bağlı bir istemci / misafir terminaldir. Tüm etiket ve ürün işlemlerini yapabilirsiniz.';
+      
+      // Misafir terminalde ana sunucuyu kapat butonunu gizle
+      if (btnShutdown) {
+        btnShutdown.style.display = 'none';
+      }
+    } else {
+      // Ana bilgisayarda zaten sağda IP göstergesi olduğu için bu rozeti gizle
+      badge.style.display = 'none';
+    }
+  }
+}
 
 // 1. KLAVYE KISAYOLLARI
 function initShortcuts() {
@@ -129,6 +162,10 @@ function switchTab(target) {
   if (target === 'tab-devices') {
     loadNetworkInfo();
     loadConnectedDevicesTable();
+  }
+  if (target === 'tab-print-history') {
+    if (typeof loadPrintHistoryTable === 'function') loadPrintHistoryTable();
+    if (typeof updateTopbarPrinterStatus === 'function') updateTopbarPrinterStatus();
   }
 }
 

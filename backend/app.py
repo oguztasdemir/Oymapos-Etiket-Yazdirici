@@ -47,6 +47,8 @@ app = FastAPI(
 )
 
 # 4. CORS Middleware
+from fastapi.middleware.gzip import GZipMiddleware
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -54,6 +56,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # 5. F5 Anti-Caching Middleware
 class AntiCacheMiddleware(BaseHTTPMiddleware):
@@ -77,7 +80,7 @@ app.add_middleware(AntiCacheMiddleware)
 # 6. API Router Kaydı
 app.include_router(api_router)
 
-def render_html_page(filename: str) -> HTMLResponse:
+def render_html_page(filename: str, is_guest: bool = False, client_ip: str = "127.0.0.1") -> HTMLResponse:
     """HTML sayfalarını arar (frontend/) ve dinamik değerleri ve partial bileşenleri enjekte eder."""
     path = os.path.join(FRONTEND_DIR, filename)
     if os.path.exists(path):
@@ -108,30 +111,31 @@ def render_html_page(filename: str) -> HTMLResponse:
         local_ip = get_local_ip()
         content = content.replace("{{ cache_bust }}", cache_bust)
         content = content.replace("{{ local_ip }}", local_ip)
+        content = content.replace("{{ is_guest }}", "true" if is_guest else "false")
+        content = content.replace("{{ client_ip }}", client_ip)
         return HTMLResponse(content=content)
     return HTMLResponse(f"<h1>Sayfa Bulunamadı: {filename}</h1>", status_code=404)
 
 # 7. HTML Sayfa Rotaları
 @app.get("/", response_class=HTMLResponse)
-async def serve_root(request: Request):
-    client_ip = request.client.host if request.client else "127.0.0.1"
-    # Eğer istek Ana Bilgisayarın kendisinden (localhost / 127.0.0.1) geliyorsa Ana Yönetim Paneli açılır
-    if client_ip in ["127.0.0.1", "localhost", "::1"]:
-        safe_log("\n[🖥️ Ana Bilgisayar]\nYönetim ve etiket yazdırma paneli yüklendi.\n")
-        return render_html_page("index.html")
-    else:
-        # Eğer istek diğer katılan dükkan / kasa bilgisayarından geliyorsa doğrudan Veri Gönderme Portalı açılır
-        safe_log(f"\n[💻 Katılan Bilgisayar ({client_ip})]\nVeri gönderme ve aktarım portalı açıldı.\n")
-        return render_html_page("sync.html")
-
-@app.get("/admin", response_class=HTMLResponse)
-async def serve_admin():
-    return render_html_page("index.html")
-
 @app.get("/sync", response_class=HTMLResponse)
 @app.get("/vegawin", response_class=HTMLResponse)
 @app.get("/gonder", response_class=HTMLResponse)
-async def serve_sync():
+@app.get("/admin", response_class=HTMLResponse)
+async def serve_root(request: Request):
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    is_host = client_ip in ["127.0.0.1", "localhost", "::1"]
+    if is_host:
+        safe_log("\n[🖥️ Ana Bilgisayar]\nYönetim ve etiket yazdırma paneli yüklendi.\n")
+    else:
+        safe_log(f"\n[💻 Misafir / İstemci PC ({client_ip})]\nTam sistem etiket kontrol paneli yüklendi.\n")
+    
+    # Misafir PC için is_guest bayrağı geçirilir
+    return render_html_page("index.html", is_guest=(not is_host), client_ip=client_ip)
+
+@app.get("/sync-portal", response_class=HTMLResponse)
+async def serve_sync_portal():
+    """Özel sadece tablo aktarımı yapmak isteyenler için alternatif portal"""
     return render_html_page("sync.html")
 
 @app.get("/mobile", response_class=HTMLResponse)

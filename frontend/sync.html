@@ -42,6 +42,11 @@
           <span>Sistem Bağlantısı Aktif</span>
         </div>
 
+        <!-- BU BİLGİSAYARA PROGRAMI YÜKLE BUTONU -->
+        <a href="/api/system/download-installer" download="OYMAPOS_Etiket_Kurulum.zip" class="btn btn-secondary btn-sm" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #34d399; font-weight: 700; text-decoration: none; padding: 8px 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;" title="Bu bilgisayara hazır bağımsız program paketini indir">
+          <span>📥</span> Programı İndir (.ZIP / BAT)
+        </a>
+
         <!-- SAĞ ÜSTTE: VERİ GÖNDER BUTONU -->
         <button id="btnProcessClipboard" type="button" onclick="processClipboardData()" class="btn-send-main">
           <span>🚀</span> Veri Gönder & Karşılaştır
@@ -68,22 +73,13 @@
           </div>
         </div>
 
-        <!-- Hızlı Tablo Düzenleme Butonları -->
+        <!-- Tablo Eylemleri -->
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-          <button type="button" onclick="gridAddRow()" class="btn-grid-action btn-add-row" title="Tablonun altına yeni boş satır ekle">
-            <span>➕</span> Satır Ekle
+          <button type="button" onclick="gridClearAndPaste()" class="btn-grid-action" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #38bdf8; border: 1.5px solid #38bdf8; font-weight: 800; box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);" title="Excel'den kopyaladığınız veriyi doğrudan yapıştırın">
+            <span>📋</span> Excel'den Yapıştır (Ctrl + V)
           </button>
-          <button type="button" onclick="gridAddColumn()" class="btn-grid-action btn-add-col" title="Tabloya yeni sütun ekle">
-            <span>📐</span> Sütun Ekle
-          </button>
-          <button type="button" onclick="gridInsertSample()" class="btn-grid-action btn-sample" title="Örnek ürün verileri yükle">
-            <span>📝</span> Örnek Veri Yükle
-          </button>
-          <button type="button" onclick="gridClearAndPaste()" class="btn-grid-action" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #38bdf8; border: 1.5px solid #38bdf8; font-weight: 800; box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);" title="Panoyu temizle ve kopyalanan veriyi doğrudan yapıştır">
-            <span>📋</span> Panoyu Temizle ve Yapıştır
-          </button>
-          <button type="button" onclick="gridClearAll()" class="btn-grid-action btn-clear" title="Tüm tabloyu temizle">
-            <span>🗑️</span> Temizle
+          <button type="button" onclick="gridClearAll()" class="btn-grid-action btn-clear" title="Tüm tabloyu temizle ve sıfırla">
+            <span>🗑️</span> Tabloyu Temizle
           </button>
         </div>
       </div>
@@ -101,9 +97,16 @@
         <div style="font-size: 13px; color: #94a3b8; font-weight: 600;" id="clipboardStatsText">
           <span>ℹ️</span> Herhangi bir hücreye tıklayıp doğrudan düzenleyebilir veya klavyeden <strong>Ctrl + V</strong> ile Excel verinizi yapıştırabilirsiniz.
         </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <div id="gridPaginationBar" style="display: none; align-items: center; gap: 6px;">
+            <button class="btn btn-secondary btn-sm" onclick="changeGridPage(1)" title="İlk Sayfa" style="padding: 4px 8px; font-size: 11px; background: #1e293b; color: #cbd5e1; border: 1px solid #334155; border-radius: 4px; cursor: pointer;">⏮</button>
+            <button class="btn btn-secondary btn-sm" onclick="changeGridPage(gridCurrentPage - 1)" title="Önceki Sayfa" style="padding: 4px 10px; font-size: 11px; background: #1e293b; color: #cbd5e1; border: 1px solid #334155; border-radius: 4px; cursor: pointer;">◀</button>
+            <span id="gridPageInfoText" style="font-size: 12px; font-weight: 700; color: #38bdf8; padding: 0 6px;">Sayfa 1 / 1</span>
+            <button class="btn btn-secondary btn-sm" onclick="changeGridPage(gridCurrentPage + 1)" title="Sonraki Sayfa" style="padding: 4px 10px; font-size: 11px; background: #1e293b; color: #cbd5e1; border: 1px solid #334155; border-radius: 4px; cursor: pointer;">▶</button>
+            <button class="btn btn-secondary btn-sm" onclick="changeGridPage(999999)" title="Son Sayfa" style="padding: 4px 8px; font-size: 11px; background: #1e293b; color: #cbd5e1; border: 1px solid #334155; border-radius: 4px; cursor: pointer;">⏭</button>
+          </div>
           <span id="clipboardCountBadge" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-size: 12.5px; font-weight: 800; padding: 4px 12px; border-radius: 6px;">0 Satır (4 Sütun)</span>
-          <button type="button" onclick="processClipboardData()" class="btn-send-main" style="padding: 8px 20px; font-size: 13px;">
+          <button id="btnProcessClipboardBottom" type="button" onclick="processClipboardData()" class="btn-send-main" style="padding: 8px 20px; font-size: 13px;">
             <span>🚀</span> Veri Gönder & Karşılaştır
           </button>
         </div>
@@ -137,23 +140,31 @@
         </div>
       </div>
 
-      <!-- 4'lü İstatistik Kutuları -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px;">
+      <!-- İstatistik Kutuları (Toplam, Artan, Düşen, Yeni, Aynı) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 16px;">
         <div class="stat-tile" onclick="setFilter('all')">
-          <div style="font-size: 24px; font-weight: 800; color: #ffffff;" id="statTotalPreview">0</div>
-          <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Toplam Aktarılan</div>
+          <div style="font-size: 22px; font-weight: 800; color: #ffffff;" id="statTotalPreview">0</div>
+          <div style="font-size: 11.5px; color: #94a3b8; margin-top: 4px;">Toplam Aktarılan</div>
         </div>
-        <div class="stat-tile" onclick="setFilter('price_change')" style="border-color: rgba(245, 158, 11, 0.3);">
-          <div style="font-size: 24px; font-weight: 800; color: #fbbf24;" id="statPriceChangePreview">0</div>
-          <div style="font-size: 12px; color: #f59e0b; margin-top: 4px;">⚡ Fiyatı Değişen</div>
+        <div class="stat-tile" onclick="setFilter('price_increase')" style="border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.04);">
+          <div style="font-size: 22px; font-weight: 800; color: #f87171;" id="statPriceIncreasePreview">0</div>
+          <div style="font-size: 11.5px; color: #f87171; margin-top: 4px;">📈 Fiyatı Artan</div>
+        </div>
+        <div class="stat-tile" onclick="setFilter('price_decrease')" style="border-color: rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.04);">
+          <div style="font-size: 22px; font-weight: 800; color: #38bdf8;" id="statPriceDecreasePreview">0</div>
+          <div style="font-size: 11.5px; color: #38bdf8; margin-top: 4px;">📉 Fiyatı Düşen (İndirim)</div>
         </div>
         <div class="stat-tile" onclick="setFilter('new_product')" style="border-color: rgba(16, 185, 129, 0.3);">
-          <div style="font-size: 24px; font-weight: 800; color: #34d399;" id="statNewProductPreview">0</div>
-          <div style="font-size: 12px; color: #10b981; margin-top: 4px;">✨ Yeni Ürün (Ana PC'de Yok)</div>
+          <div style="font-size: 22px; font-weight: 800; color: #34d399;" id="statNewProductPreview">0</div>
+          <div style="font-size: 11.5px; color: #10b981; margin-top: 4px;">✨ Yeni Ürün</div>
         </div>
         <div class="stat-tile" onclick="setFilter('identical')">
-          <div style="font-size: 24px; font-weight: 800; color: #94a3b8;" id="statIdenticalPreview">0</div>
-          <div style="font-size: 12px; color: #64748b; margin-top: 4px;">✅ Fiyatı & Adı Aynı</div>
+          <div style="font-size: 22px; font-weight: 800; color: #94a3b8;" id="statIdenticalPreview">0</div>
+          <div style="font-size: 11.5px; color: #64748b; margin-top: 4px;">✅ Fiyatı & Adı Aynı</div>
+        </div>
+        <div class="stat-tile" onclick="setFilter('blacklisted')" style="border-color: rgba(234, 179, 8, 0.4); background: rgba(234, 179, 8, 0.04);" title="Test, sigara, sıfır fiyat veya hatalı barkod nedeniyle aktarılmayanlar">
+          <div style="font-size: 22px; font-weight: 800; color: #eab308;" id="statBlacklistedPreview">0</div>
+          <div style="font-size: 11.5px; color: #ca8a04; margin-top: 4px;">🛡️ Kara Liste / Elenen</div>
         </div>
       </div>
 
@@ -163,14 +174,20 @@
           <button class="filter-btn active" id="filter-btn-all" onclick="setFilter('all')">
             <span>Tümü</span> <span id="chipCountAll" style="opacity: 0.7;">(0)</span>
           </button>
-          <button class="filter-btn" id="filter-btn-price_change" onclick="setFilter('price_change')">
-            <span>⚡ Fiyatı Değişenler</span> <span id="chipCountChanges" style="opacity: 0.7;">(0)</span>
+          <button class="filter-btn" id="filter-btn-price_increase" onclick="setFilter('price_increase')">
+            <span>📈 Fiyatı Artanlar</span> <span id="chipCountIncrease" style="opacity: 0.8; color: #f87171; font-weight: 800;">(0)</span>
+          </button>
+          <button class="filter-btn" id="filter-btn-price_decrease" onclick="setFilter('price_decrease')">
+            <span>📉 Fiyatı Düşenler</span> <span id="chipCountDecrease" style="opacity: 0.8; color: #38bdf8; font-weight: 800;">(0)</span>
           </button>
           <button class="filter-btn" id="filter-btn-new_product" onclick="setFilter('new_product')">
             <span>✨ Yeni Ürünler</span> <span id="chipCountNew" style="opacity: 0.7;">(0)</span>
           </button>
           <button class="filter-btn" id="filter-btn-identical" onclick="setFilter('identical')">
             <span>Değişmeyenler</span> <span id="chipCountIdentical" style="opacity: 0.7;">(0)</span>
+          </button>
+          <button class="filter-btn" id="filter-btn-blacklisted" onclick="setFilter('blacklisted')" style="border-color: rgba(234, 179, 8, 0.4); color: #facc15;">
+            <span>🛡️ Kara Liste (Elenenler)</span> <span id="chipCountBlacklisted" style="opacity: 0.9; font-weight: 800;">(0)</span>
           </button>
         </div>
 

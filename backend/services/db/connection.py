@@ -7,7 +7,7 @@ import sqlite3
 import threading
 from contextlib import contextmanager
 from backend.config import DB_PATH
-from backend.utils.text_utils import fold_turkish_text
+from backend.utils.text_utils import fold_turkish_text, parse_price
 
 _DB_LOCK = threading.RLock()
 
@@ -16,6 +16,7 @@ def get_connection():
     conn = sqlite3.connect(DB_PATH, timeout=30.0, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.create_function("fold_tr", 1, fold_turkish_text)
+    conn.create_function("parse_price", 1, parse_price)
     
     conn.execute("PRAGMA journal_mode = WAL;")
     conn.execute("PRAGMA synchronous = NORMAL;")

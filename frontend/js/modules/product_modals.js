@@ -14,7 +14,9 @@ function openLabelPreviewModal(barcode) {
 
   currentModalProduct = prod;
 
-  const fullTitle = cleanProductTitle(prod.title || 'ÜRÜN ADI').trim().toUpperCase();
+  const smartLines = (typeof formatSmartTitleLines === 'function')
+    ? formatSmartTitleLines(prod.title || 'ÜRÜN ADI', 26)
+    : { line1: fullTitle, line2: '' };
 
   const title1El = document.getElementById('modal-lbl-title-1');
   const title2El = document.getElementById('modal-lbl-title-2');
@@ -25,18 +27,23 @@ function openLabelPreviewModal(barcode) {
   const modal = document.getElementById('modal-label-preview');
 
   if (title1El) {
-    title1El.textContent = fullTitle;
+    title1El.textContent = smartLines.line1;
     title1El.style.width = '100%';
     title1El.style.display = 'block';
-    if (fullTitle.length <= 22) {
+    if (!smartLines.line2 && smartLines.line1.length <= 22) {
       title1El.style.fontSize = '14px';
     } else {
       title1El.style.fontSize = '12.5px';
     }
   }
   if (title2El) {
-    title2El.textContent = '';
-    title2El.style.display = 'none';
+    if (smartLines.line2) {
+      title2El.textContent = smartLines.line2;
+      title2El.style.display = 'block';
+    } else {
+      title2El.textContent = '';
+      title2El.style.display = 'none';
+    }
   }
   const marketName = localStorage.getItem('market_name') || document.getElementById('marketName')?.value || 'YARENLER';
   if (brandEl) brandEl.textContent = marketName.toUpperCase();
@@ -297,11 +304,142 @@ function openProductEditModal(barcode) {
   document.getElementById('editModalBarcode').value = barcode;
   const rawTitleEl = document.getElementById('editModalRawTitle');
   if (rawTitleEl) rawTitleEl.value = prod ? (prod.raw_system_title || prod.title || '') : '';
-  document.getElementById('editModalTitle').value = prod ? prod.title : '';
-  document.getElementById('editModalPrice').value = prod ? Number(prod.price || 0).toFixed(2) : '0.00';
-  document.getElementById('editModalBrand').value = prod ? (prod.brand || 'YARENLER') : 'YARENLER';
+  
+  const titleVal = prod ? (prod.title || '') : '';
+  const priceVal = prod ? Number(prod.price || 0).toFixed(2) : '0.00';
+  const brandVal = prod ? (prod.brand || 'YARENLER') : (localStorage.getItem('market_name') || 'YARENLER');
+  
+  document.getElementById('editModalTitle').value = titleVal;
+  document.getElementById('editModalPrice').value = priceVal;
+  document.getElementById('editModalBrand').value = brandVal;
+
+  // Kara liste buton durumunu güncelle
+  updateEditModalBlacklistBtnState(prod ? !!prod.is_blacklisted : false);
+
+  // Canlı Önizlemeyi Güncelle
+  updateEditModalPreview(prod);
 
   if (modal) modal.style.display = 'flex';
+}
+
+function updateEditModalBlacklistBtnState(isBlacklisted) {
+  const btn = document.getElementById('editModalBlacklistBtn');
+  const icon = document.getElementById('editModalBlacklistIcon');
+  const text = document.getElementById('editModalBlacklistText');
+  if (!btn) return;
+
+  if (isBlacklisted) {
+    if (icon) icon.textContent = '🛡️';
+    if (text) text.textContent = 'Kara Listeden Çıkar';
+    btn.style.background = 'rgba(239, 68, 68, 0.25)';
+    btn.style.color = '#f87171';
+    btn.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+  } else {
+    if (icon) icon.textContent = '🚫';
+    if (text) text.textContent = 'Kara Listeye Ekle';
+    btn.style.background = '';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+  }
+}
+
+function updateEditModalPreview(prodOverride = null) {
+  const barcode = activeEditBarcode;
+  if (!barcode) return;
+
+  const prod = prodOverride || cachedProductsList.find(p => p.barcode === barcode) || {};
+
+  const inputTitle = document.getElementById('editModalTitle')?.value || prod.title || 'ÜRÜN ADI';
+  const inputPrice = parseFloat(document.getElementById('editModalPrice')?.value);
+  const inputBrand = document.getElementById('editModalBrand')?.value || prod.brand || 'YARENLER';
+
+  const cleanTitle = (typeof cleanProductTitle === 'function') 
+    ? cleanProductTitle(inputTitle).trim().toUpperCase() 
+    : inputTitle.trim().toUpperCase();
+
+  const smartLines = (typeof formatSmartTitleLines === 'function')
+    ? formatSmartTitleLines(inputTitle, 26)
+    : { line1: cleanTitle, line2: '' };
+
+  const title1El = document.getElementById('edit-lbl-title-1');
+  const title2El = document.getElementById('edit-lbl-title-2');
+  if (title1El) {
+    title1El.textContent = smartLines.line1;
+    if (!smartLines.line2 && smartLines.line1.length <= 22) {
+      title1El.style.fontSize = '13.5px';
+    } else {
+      title1El.style.fontSize = '12px';
+    }
+  }
+  if (title2El) {
+    if (smartLines.line2) {
+      title2El.textContent = smartLines.line2;
+      title2El.style.display = 'block';
+    } else {
+      title2El.textContent = '';
+      title2El.style.display = 'none';
+    }
+  }
+
+  const marketName = (localStorage.getItem('market_name') || document.getElementById('marketName')?.value || 'YARENLER').toUpperCase();
+  const brandEl = document.getElementById('edit-lbl-brand');
+  if (brandEl) brandEl.textContent = marketName;
+
+  const originEl = document.getElementById('edit-lbl-origin');
+  if (originEl) originEl.textContent = (prod.origin || 'TÜRKİYE').toUpperCase();
+
+  const dateEl = document.getElementById('edit-lbl-date');
+  if (dateEl) dateEl.textContent = (typeof formatTrDate === 'function') 
+    ? formatTrDate(prod.price_updated_at || prod.updated_at || prod.created_at || new Date().toISOString())
+    : (new Date().toLocaleDateString('tr-TR'));
+
+  const priceEl = document.getElementById('edit-lbl-price');
+  if (priceEl) {
+    const num = isNaN(inputPrice) ? 0 : inputPrice;
+    priceEl.textContent = `${num.toFixed(2)} TL`.replace('.', ',');
+  }
+
+  // Barkod SVG çizimi
+  if (typeof renderBarcodeSvg === 'function') {
+    renderBarcodeSvg('#edit-modal-barcode-svg', barcode);
+  }
+}
+
+function openHistoryFromEditModal() {
+  if (!activeEditBarcode) return;
+  openProductHistoryModal(activeEditBarcode);
+}
+
+async function toggleBlacklistFromEditModal(btnElement) {
+  if (!activeEditBarcode) return;
+  const barcode = activeEditBarcode;
+  await toggleProductBlacklist(barcode, null, null);
+  const prod = cachedProductsList.find(p => p.barcode === barcode);
+  if (prod) {
+    updateEditModalBlacklistBtnState(!!prod.is_blacklisted);
+  }
+}
+
+async function printFromEditModal() {
+  if (!activeEditBarcode) return;
+  const barcode = activeEditBarcode;
+  const prod = cachedProductsList.find(p => p.barcode === barcode);
+  const price = parseFloat(document.getElementById('editModalPrice')?.value) || (prod ? prod.price : 0);
+  
+  if (typeof printBarcode === 'function') {
+    printBarcode(barcode, null, price);
+  } else if (typeof API !== 'undefined' && API.printSingle) {
+    try {
+      const res = await API.printSingle({ barcode }, 1);
+      if (res.status === 'success') {
+        showToast('Etiket yazıcıya gönderildi!', 'success');
+      } else {
+        showToast('Yazdırma hatası: ' + res.message, 'error');
+      }
+    } catch (e) {
+      showToast('Yazıcı hatası: ' + e.message, 'error');
+    }
+  }
 }
 
 function closeProductEditModal() {

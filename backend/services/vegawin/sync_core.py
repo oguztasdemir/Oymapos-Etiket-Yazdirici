@@ -25,6 +25,8 @@ def preview_vegawin_comparison(items: list) -> dict:
 
     comparison_list = []
     price_change_count = 0
+    price_increase_count = 0
+    price_decrease_count = 0
     new_product_count = 0
     identical_count = 0
 
@@ -52,8 +54,13 @@ def preview_vegawin_comparison(items: list) -> dict:
             if has_diff:
                 diff_amt = round(p - main_price, 2)
                 diff_pct = round((diff_amt / main_price * 100) if main_price > 0 else 0, 1)
-                status = "price_change"
                 price_change_count += 1
+                if diff_amt > 0:
+                    status = "price_increase"
+                    price_increase_count += 1
+                else:
+                    status = "price_decrease"
+                    price_decrease_count += 1
             else:
                 diff_amt = 0.0
                 diff_pct = 0.0
@@ -90,15 +97,20 @@ def preview_vegawin_comparison(items: list) -> dict:
                 "unit": unit
             })
 
-    priority = {"price_change": 0, "new_product": 1, "identical": 2}
+    priority = {"price_increase": 0, "price_decrease": 1, "price_change": 2, "new_product": 3, "identical": 4}
     comparison_list.sort(key=lambda x: (priority.get(x["status"], 99), x["incoming_title"]))
 
+    total_valid = len(comparison_list)
     return {
         "success": True,
-        "total_incoming": len(items),
-        "total_items": len(items),
+        "total_incoming": total_valid,
+        "total_items": total_valid,
         "price_changes": price_change_count,
         "price_change_count": price_change_count,
+        "price_increases": price_increase_count,
+        "price_increase_count": price_increase_count,
+        "price_decreases": price_decrease_count,
+        "price_decrease_count": price_decrease_count,
         "new_products": new_product_count,
         "new_product_count": new_product_count,
         "identical": identical_count,

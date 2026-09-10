@@ -82,20 +82,19 @@ async def update_system_blacklist(req: BlacklistUpdateRequest):
 
 @router.get("/download-installer")
 async def download_installer():
+    from fastapi.responses import FileResponse
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    installer_path = os.path.join(base_dir, "dist", "OYMAPOS_Etiket_Kurulum.zip")
+    standalone_zip = os.path.join(base_dir, "dist", "OYMAPOS_Etiket_Kurulum.zip")
+    source_zip = os.path.join(base_dir, "dist", "OYMAPOS_Etiket_Sistemi.zip")
     
-    if not os.path.exists(installer_path):
-        return error_response(message="Kurulum paketi henüz oluşturulmadı.", status_code=404)
-        
-    def iterfile():
-        with open(installer_path, mode="rb") as f:
-            yield from f
-            
-    return StreamingResponse(
-        iterfile(),
-        media_type="application/zip",
-        headers={"Content-Disposition": "attachment; filename=OYMAPOS_Etiket_Merkezi_Kurulum.zip"}
+    target_path = standalone_zip if os.path.exists(standalone_zip) else source_zip
+    if not os.path.exists(target_path):
+        return error_response(message="Kurulum paketi bulunamadı.", status_code=404)
+
+    return FileResponse(
+        path=target_path,
+        media_type="application/x-zip-compressed",
+        filename="OYMAPOS_Etiket_Kurulum.zip"
     )
 
 @router.get("/backup")

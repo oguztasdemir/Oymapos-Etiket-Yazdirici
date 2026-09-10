@@ -24,16 +24,19 @@ class PrintSingleRequest(BaseModel):
     price: Optional[float] = Field(None, description="Satış fiyatı")
     brand: Optional[str] = Field(None, description="Marka")
     copies: Optional[int] = Field(1, description="Kopya sayısı")
+    printer: Optional[str] = Field(None, description="Hedef Yazıcı Adı")
     source_device: Optional[str] = Field(None, description="Kaynak Cihaz / PC Adı")
 
 class PrintBatchRequest(BaseModel):
     products: List[PrintSingleRequest] = Field(default_factory=list, description="Yazdırılacak ürün listesi")
     copies: Optional[int] = Field(1, description="Her ürün için kopya sayısı")
+    printer: Optional[str] = Field(None, description="Hedef Yazıcı Adı")
 
 class MobileScanRequest(BaseModel):
     barcode: str = Field(..., description="Taranan barkod")
     auto_print: Optional[bool] = Field(True, description="Bulunduğunda otomatik yazdırılsın mı")
     copies: Optional[int] = Field(1, description="Kopya sayısı")
+    printer: Optional[str] = Field(None, description="Hedef Yazıcı Adı")
     device_name: Optional[str] = Field("Mobil Terminal", description="İsteği yapan mobil cihaz adı")
 
 class ProductResponse(BaseModel):

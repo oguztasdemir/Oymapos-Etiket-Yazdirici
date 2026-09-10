@@ -7,7 +7,8 @@ import time
 from fastapi import APIRouter
 from backend.models.schemas import PrinterSettingsRequest
 from backend.services.printer_service import (
-    get_installed_printers, load_settings, save_settings, print_single_label, purge_printer_queue
+    get_installed_printers, load_settings, save_settings, print_single_label, purge_printer_queue,
+    check_printer_connection, get_print_history
 )
 from backend.utils.response_utils import success_response, error_response
 
@@ -17,13 +18,48 @@ router = APIRouter(prefix="/api", tags=["Printer"])
 async def list_printers():
     printers = get_installed_printers()
     settings = load_settings()
+    active = settings.get("printer")
+    
+    # Her yazıcının durumunu ayrı ayrı analiz et
+    printer_details = []
+    for p in printers:
+        st = check_printer_connection(p)
+        printer_details.append({
+            "name": p,
+            "connected": st.get("connected", False),
+            "status_text": st.get("status_text", ""),
+            "port": st.get("port", ""),
+            "is_active": (p == active)
+        })
+
+    status_info = check_printer_connection(active)
     return success_response(
         data={
             "printers": printers,
-            "active_printer": settings.get("printer"),
+            "printer_details": printer_details,
+            "active_printer": active,
+            "status": status_info,
             "settings": settings
         },
         message="Yazıcılar listelendi"
+    )
+
+@router.get("/printer/status")
+async def get_printer_status(printer: str = None):
+    settings = load_settings()
+    active = printer or settings.get("printer")
+    status_info = check_printer_connection(active)
+    return success_response(
+        data=status_info,
+        message="Yazıcı durumu sorgulandı"
+    )
+
+@router.get("/printer/history")
+async def get_printer_history_endpoint(limit: int = 50):
+    history = get_print_history(limit)
+    return success_response(
+        data={"history": history, "count": len(history)},
+        message="Baskı geçmişi listelendi"
     )
 
 @router.post("/printer/settings")

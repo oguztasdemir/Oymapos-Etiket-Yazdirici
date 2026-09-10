@@ -7,32 +7,52 @@ let currentFilter = 'all';
 let searchQuery = '';
 
 // İNTERAKTİF EXCEL TABLO VERİ MODELİ
-let gridColumns = [
-  { id: 'barcode', title: 'BARKOD', width: '170px', type: 'barcode' },
+// İNTERAKTİF EXCEL TABLO VERİ MODELİ
+const DEFAULT_COLUMNS = [
+  { id: 'barcode', title: 'BARKOD', width: '180px', type: 'barcode' },
   { id: 'title', title: 'ÜRÜN ADI (MALINCINSI)', width: 'auto', type: 'title' },
   { id: 'price', title: 'SATIŞ FİYATI', width: '140px', type: 'price' },
-  { id: 'stock_code', title: 'STOK KODU', width: '130px', type: 'text' }
+  { id: 'stock_code', title: 'STOK KODU', width: '140px', type: 'text' },
+  { id: 'col_5', title: 'KDV / EK BİLGİ', width: '130px', type: 'text' }
 ];
 
-let gridRows = [
-  { barcode: '8690577018120', title: 'SOKE UN 1 KG GELENEKSEL', price: '48,50 TL', stock_code: 'UN001' },
-  { barcode: '8691375640100', title: 'BIZIM CORBA EZOGELIN 80 GR', price: '32,00 TL', stock_code: 'CRB002' },
-  { barcode: '8690504034016', title: 'ULKER COKOKREM 400 GR', price: '75,00 TL', stock_code: 'KRM003' },
-  { barcode: '8690637012345', title: 'DOGUS CAY FILIZ 1000 GR', price: '165,00 TL', stock_code: 'CY004' },
-  { barcode: '8690555112233', title: 'PINAR SUT 1 LT TAM YAGLI', price: '42,50 TL', stock_code: 'ST005' },
-  { barcode: '8690777889900', title: 'YUDUM AYCICEK YAGI 1 LT', price: '95,00 TL', stock_code: 'YG006' }
-];
+let gridColumns = [...DEFAULT_COLUMNS];
+let gridRows = [];
+
+// En az 40 satırlık Excel ızgarası garanti edilir
+const MIN_EMPTY_ROWS = 40;
+
+function ensureExcelGridRows() {
+  while (gridRows.length < MIN_EMPTY_ROWS) {
+    const emptyRow = {};
+    gridColumns.forEach(c => emptyRow[c.id] = '');
+    gridRows.push(emptyRow);
+  }
+}
+
+let gridCurrentPage = 1;
+const GRID_PAGE_SIZE = 100;
+let saveStorageTimeout = null;
 
 function saveSyncPortalStorage() {
-  try {
-    localStorage.setItem('sync_portal_columns', JSON.stringify(gridColumns));
-    localStorage.setItem('sync_portal_rows', JSON.stringify(gridRows));
-    if (comparisonData) {
-      localStorage.setItem('sync_portal_comparison', JSON.stringify(comparisonData));
-    } else {
-      localStorage.removeItem('sync_portal_comparison');
-    }
-  } catch (e) {}
+  if (saveStorageTimeout) clearTimeout(saveStorageTimeout);
+  saveStorageTimeout = setTimeout(() => {
+    try {
+      localStorage.setItem('sync_portal_columns', JSON.stringify(gridColumns));
+      // Performans ve kota aşımını önlemek için localStorage'a en fazla ilk 300 dolu satırı kaydet
+      const filledRows = gridRows.filter(row => Object.values(row).some(v => v && String(v).trim()));
+      const rowsToSave = filledRows.slice(0, 300);
+      localStorage.setItem('sync_portal_rows', JSON.stringify(rowsToSave));
+      if (comparisonData) {
+        // Karşılaştırma verisini de kota aşılmasını önleyerek sakla
+        try {
+          localStorage.setItem('sync_portal_comparison', JSON.stringify(comparisonData));
+        } catch (err) {}
+      } else {
+        localStorage.removeItem('sync_portal_comparison');
+      }
+    } catch (e) {}
+  }, 400);
 }
 
 function loadSyncPortalStorage() {
@@ -47,8 +67,12 @@ function loadSyncPortalStorage() {
     }
     if (savedRows) {
       const parsedRows = JSON.parse(savedRows);
-      if (Array.isArray(parsedRows)) gridRows = parsedRows;
+      if (Array.isArray(parsedRows) && parsedRows.length > 0) {
+        gridRows = parsedRows;
+      }
     }
+    ensureExcelGridRows();
+
     if (savedComp) {
       const parsedComp = JSON.parse(savedComp);
       if (parsedComp && parsedComp.items) {
@@ -58,7 +82,9 @@ function loadSyncPortalStorage() {
         }, 50);
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    ensureExcelGridRows();
+  }
 }
 
 function showToast(msg, type = 'info') {
@@ -75,34 +101,63 @@ function showToast(msg, type = 'info') {
   }, 3500);
 }
 
-// TABLOYU EKRANA ÇİZ (RENDER)
+// SAYFA DEĞİŞTİRME (1. ADIM EXCEL TABLOSU)
+function changeGridPage(newPage) {
+  const totalPages = Math.max(1, Math.ceil(gridRows.length / GRID_PAGE_SIZE));
+  const targetPage = Math.max(1, Math.min(newPage, totalPages));
+  if (targetPage !== gridCurrentPage) {
+    gridCurrentPage = targetPage;
+    renderExcelGrid();
+    const wrapper = document.getElementById('excelSheetWrapper');
+    if (wrapper) wrapper.scrollTop = 0;
+  }
+}
+
+// TABLOYU EKRANA ÇİZ (SAYFALANMIŞ ULTRA HIZLI RENDER)
 function renderExcelGrid() {
   const thead = document.getElementById('gridThead');
   const tbody = document.getElementById('gridTbody');
   if (!thead || !tbody) return;
 
-  // Başlıkları çiz
+  ensureExcelGridRows();
+
+  // Excel Sütun Harfleri (A, B, C, D...) ile birlikte başlıklar
+  const colLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'];
+
   let thHtml = `<tr>
-    <th style="width: 44px; text-align: center;">#</th>`;
+    <th style="width: 50px; text-align: center;">#</th>`;
   
   gridColumns.forEach((col, cIdx) => {
+    const letter = colLetters[cIdx] || `C${cIdx + 1}`;
     thHtml += `
-      <th style="min-width: ${col.width || '120px'};">
+      <th style="min-width: ${col.width || '130px'};">
         <div class="th-content">
-          <span style="color: #38bdf8; font-weight: 800;">${col.title}</span>
-          ${gridColumns.length > 2 ? `<span class="btn-del-col" onclick="gridDeleteColumn(${cIdx})" title="Bu sütunu sil">✕</span>` : ''}
+          <div>
+            <span style="display: block; font-size: 10px; color: #64748b; font-weight: 800;">${letter}</span>
+            <span style="color: #38bdf8; font-weight: 800; font-size: 12.5px;">${col.title}</span>
+          </div>
         </div>
       </th>
     `;
   });
-  thHtml += `<th style="width: 40px; text-align:center;">İşlem</th></tr>`;
+  thHtml += `</tr>`;
   thead.innerHTML = thHtml;
 
-  // Satırları çiz
+  // Sayfalama Hesabı
+  const totalRows = gridRows.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / GRID_PAGE_SIZE));
+  if (gridCurrentPage > totalPages) gridCurrentPage = totalPages;
+
+  const startIdx = (gridCurrentPage - 1) * GRID_PAGE_SIZE;
+  const endIdx = Math.min(startIdx + GRID_PAGE_SIZE, totalRows);
+  const visibleRows = gridRows.slice(startIdx, endIdx);
+
+  // Sadece aktif sayfadaki satırları DOM'a bas (Maksimum 100 satır = Anında 0ms çizim!)
   let tbHtml = '';
-  gridRows.forEach((row, rIdx) => {
+  visibleRows.forEach((row, relIdx) => {
+    const absIdx = startIdx + relIdx;
     tbHtml += `<tr>
-      <td class="row-num-cell">${rIdx + 1}</td>`;
+      <td class="row-num-cell">${absIdx + 1}</td>`;
 
     gridColumns.forEach((col) => {
       const val = row[col.id] !== undefined ? row[col.id] : '';
@@ -114,20 +169,32 @@ function renderExcelGrid() {
       tbHtml += `
         <td>
           <input type="text" class="${inputClass}" value="${escapeHtml(val)}" 
-            oninput="onCellInput(${rIdx}, '${col.id}', this.value)"
-            data-row="${rIdx}" data-col="${col.id}">
+            oninput="onCellInput(${absIdx}, '${col.id}', this.value)"
+            onkeydown="onCellKeydown(event, ${absIdx}, '${col.id}')"
+            data-row="${absIdx}" data-col="${col.id}">
         </td>
       `;
     });
 
-    tbHtml += `
-      <td class="row-action-cell">
-        <button type="button" onclick="gridDeleteRow(${rIdx})" title="Bu satırı sil">🗑️</button>
-      </td>
-    </tr>`;
+    tbHtml += `</tr>`;
   });
 
   tbody.innerHTML = tbHtml;
+
+  // Sayfalama Çubuğunu Güncelle
+  const pBar = document.getElementById('gridPaginationBar');
+  const pText = document.getElementById('gridPageInfoText');
+  if (pBar) {
+    if (totalRows > GRID_PAGE_SIZE) {
+      pBar.style.display = 'inline-flex';
+      if (pText) {
+        pText.textContent = `Sayfa ${gridCurrentPage} / ${totalPages} (${startIdx + 1} - ${endIdx} / Toplam ${totalRows.toLocaleString('tr-TR')})`;
+      }
+    } else {
+      pBar.style.display = 'none';
+    }
+  }
+
   updateGridStats();
 }
 
@@ -140,116 +207,111 @@ function onCellInput(rowIdx, colId, value) {
   if (gridRows[rowIdx]) {
     gridRows[rowIdx][colId] = value;
   }
+  // Excel gibi son satırlara yaklaşıldığında otomatik sınırsız satır ekle
+  if (rowIdx >= gridRows.length - 2) {
+    for (let i = 0; i < 20; i++) {
+      const emptyRow = {};
+      gridColumns.forEach(c => emptyRow[c.id] = '');
+      gridRows.push(emptyRow);
+    }
+  }
+  updateGridStatsOnly();
+}
+
+// Ok tuşları veya Enter ile hücreler arası Excel gibi gezinme
+function onCellKeydown(e, rowIdx, colId) {
+  const colIndex = gridColumns.findIndex(c => c.id === colId);
+  if (e.key === 'Enter' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    const nextRow = rowIdx + 1;
+    if (nextRow >= gridRows.length) {
+      const emptyRow = {};
+      gridColumns.forEach(c => emptyRow[c.id] = '');
+      gridRows.push(emptyRow);
+    }
+    // Eğer sayfa sonu aşıldıysa sonraki sayfaya geç
+    const targetPage = Math.floor(nextRow / GRID_PAGE_SIZE) + 1;
+    if (targetPage !== gridCurrentPage) {
+      gridCurrentPage = targetPage;
+      renderExcelGrid();
+    }
+    focusCell(nextRow, colIndex);
+  } else if (e.key === 'ArrowUp' && rowIdx > 0) {
+    e.preventDefault();
+    const prevRow = rowIdx - 1;
+    const targetPage = Math.floor(prevRow / GRID_PAGE_SIZE) + 1;
+    if (targetPage !== gridCurrentPage) {
+      gridCurrentPage = targetPage;
+      renderExcelGrid();
+    }
+    focusCell(prevRow, colIndex);
+  } else if (e.key === 'Tab' && !e.shiftKey && colIndex === gridColumns.length - 1) {
+    // Son sütundayken Tab'a basarsa bir sonraki satırın ilk sütununa geç
+    e.preventDefault();
+    const nextRow = rowIdx + 1;
+    if (nextRow >= gridRows.length) {
+      const emptyRow = {};
+      gridColumns.forEach(c => emptyRow[c.id] = '');
+      gridRows.push(emptyRow);
+    }
+    const targetPage = Math.floor(nextRow / GRID_PAGE_SIZE) + 1;
+    if (targetPage !== gridCurrentPage) {
+      gridCurrentPage = targetPage;
+      renderExcelGrid();
+    }
+    focusCell(nextRow, 0);
+  }
+}
+
+function focusCell(rowIdx, colIdx) {
+  setTimeout(() => {
+    const col = gridColumns[colIdx];
+    if (!col) return;
+    const input = document.querySelector(`input[data-row="${rowIdx}"][data-col="${col.id}"]`);
+    if (input) {
+      input.focus();
+      input.select();
+    }
+  }, 10);
+}
+
+function updateGridStatsOnly() {
+  const badge = document.getElementById('clipboardCountBadge');
+  const filledCount = gridRows.filter(row => Object.values(row).some(v => v && String(v).trim())).length;
+  if (badge) {
+    badge.textContent = `${filledCount.toLocaleString('tr-TR')} Dolu Ürün (${gridColumns.length} Sütun)`;
+  }
+  saveSyncPortalStorage();
 }
 
 function updateGridStats() {
   saveSyncPortalStorage();
   const statsEl = document.getElementById('clipboardStatsText');
   const badge = document.getElementById('clipboardCountBadge');
-  const count = gridRows.length;
+  const filledCount = gridRows.filter(row => Object.values(row).some(v => v && String(v).trim())).length;
   const colCount = gridColumns.length;
 
   if (badge) {
-    badge.textContent = `${count} Satır (${colCount} Sütun)`;
+    badge.textContent = `${filledCount.toLocaleString('tr-TR')} Dolu Ürün (${colCount} Sütun)`;
   }
   if (statsEl) {
-    if (count === 0) {
-      statsEl.innerHTML = '<span>ℹ️</span> Tablo boş. <strong>"Satır Ekle"</strong> butonuna basabilir veya doğrudan klavyeden <strong>Ctrl + V</strong> ile Excel verinizi yapıştırabilirsiniz.';
+    if (filledCount === 0) {
+      statsEl.innerHTML = '<span>ℹ️</span> Excel tablonuzu kopyalayıp <strong>Ctrl + V</strong> ile yapıştırabilir veya doğrudan hücrelere yazabilirsiniz.';
     } else {
-      statsEl.innerHTML = `<span style="color: #38bdf8; font-weight: 700;">✓ ${count} adet ürün hazır.</span> Sağ üstteki <strong>"Veri Gönder & Karşılaştır"</strong> butonuna tıklayarak ana bilgisayara aktarabilirsiniz.`;
+      statsEl.innerHTML = `<span style="color: #38bdf8; font-weight: 700;">✓ ${filledCount.toLocaleString('tr-TR')} adet ürün hazır.</span> Sağ üstteki <strong>"Veri Gönder & Karşılaştır"</strong> butonuna tıklayarak ana bilgisayara aktarabilirsiniz.`;
     }
   }
 }
 
-// YENİ SATIR EKLE
-function gridAddRow() {
-  const newBarcode = '8690000' + Math.floor(100000 + Math.random() * 900000);
-  const newRow = {};
-  gridColumns.forEach(c => {
-    if (c.id === 'barcode') newRow[c.id] = newBarcode;
-    else if (c.id === 'title') newRow[c.id] = 'YENİ ÜRÜN';
-    else if (c.id === 'price') newRow[c.id] = '50,00 TL';
-    else if (c.id === 'stock_code') newRow[c.id] = 'STK' + Math.floor(100 + Math.random() * 900);
-    else newRow[c.id] = '-';
-  });
-  gridRows.push(newRow);
-  renderExcelGrid();
-  showToast('Yeni satır eklendi.', 'info');
-  const container = document.getElementById('excelSheetWrapper');
-  if (container) container.scrollTop = container.scrollHeight;
-}
-
-// YENİ SÜTUN EKLE
-function gridAddColumn() {
-  const colTitle = prompt('Eklemek istediğiniz yeni sütun adını girin (Örn: MARKA, KDV, KATEGORİ, ALIŞ FİYATI):', 'MARKA');
-  if (!colTitle || !colTitle.trim()) return;
-
-  const newId = 'col_' + Date.now();
-  gridColumns.push({
-    id: newId,
-    title: colTitle.trim().toUpperCase(),
-    width: '140px',
-    type: colTitle.toLowerCase().includes('fiyat') ? 'price' : 'text'
-  });
-
-  gridRows.forEach(row => {
-    row[newId] = '-';
-  });
-
-  renderExcelGrid();
-  showToast(`'${colTitle.trim().toUpperCase()}' sütunu eklendi.`, 'success');
-}
-
-// SATIR SİL
-function gridDeleteRow(idx) {
-  if (idx >= 0 && idx < gridRows.length) {
-    gridRows.splice(idx, 1);
-    renderExcelGrid();
-  }
-}
-
-// SÜTUN SİL
-function gridDeleteColumn(colIdx) {
-  if (gridColumns.length <= 2) {
-    showToast('En az 2 sütun kalmalıdır.', 'error');
-    return;
-  }
-  const col = gridColumns[colIdx];
-  if (confirm(`'${col.title}' sütununu silmek istediğinizden emin misiniz?`)) {
-    const delId = col.id;
-    gridColumns.splice(colIdx, 1);
-    gridRows.forEach(r => { delete r[delId]; });
-    renderExcelGrid();
-    showToast(`'${col.title}' sütunu silindi.`, 'info');
-  }
-}
-
-// ÖRNEK VERİLERİ YÜKLE
-function gridInsertSample() {
-  gridColumns = [
-    { id: 'barcode', title: 'BARKOD', width: '170px', type: 'barcode' },
-    { id: 'title', title: 'ÜRÜN ADI (MALINCINSI)', width: 'auto', type: 'title' },
-    { id: 'price', title: 'SATIŞ FİYATI', width: '140px', type: 'price' },
-    { id: 'stock_code', title: 'STOK KODU', width: '130px', type: 'text' }
-  ];
-  gridRows = [
-    { barcode: '8690577018120', title: 'SOKE UN 1 KG GELENEKSEL', price: '48,50 TL', stock_code: 'UN001' },
-    { barcode: '8691375640100', title: 'BIZIM CORBA EZOGELIN 80 GR', price: '32,00 TL', stock_code: 'CRB002' },
-    { barcode: '8690504034016', title: 'ULKER COKOKREM 400 GR', price: '75,00 TL', stock_code: 'KRM003' },
-    { barcode: '8690637012345', title: 'DOGUS CAY FILIZ 1000 GR', price: '165,00 TL', stock_code: 'CY004' },
-    { barcode: '8690555112233', title: 'PINAR SUT 1 LT TAM YAGLI', price: '42,50 TL', stock_code: 'ST005' },
-    { barcode: '8690777889900', title: 'YUDUM AYCICEK YAGI 1 LT', price: '95,00 TL', stock_code: 'YG006' }
-  ];
-  renderExcelGrid();
-  showToast('Örnek ürün tablosu yüklendi.', 'success');
-}
-
 // TÜMÜNÜ TEMİZLE
 function gridClearAll() {
+  gridColumns = [...DEFAULT_COLUMNS];
   gridRows = [];
+  gridCurrentPage = 1;
+  ensureExcelGridRows();
   renderExcelGrid();
   saveSyncPortalStorage();
-  showToast('Tablo temizlendi.', 'info');
+  showToast('Excel tablosu temizlendi.', 'info');
 }
 
 // PANODAN OTOMATİK OKU VE YAPIŞTIR
@@ -407,7 +469,7 @@ async function parseAndPopulateGridFromText(rawText) {
   });
 
   const parsedRows = [];
-  const CHUNK_SIZE = 500;
+  const CHUNK_SIZE = 1500;
   for (let i = 0; i < dataRows.length; i += CHUNK_SIZE) {
     const end = Math.min(i + CHUNK_SIZE, dataRows.length);
     for (let idx = i; idx < end; idx++) {
@@ -418,28 +480,32 @@ async function parseAndPopulateGridFromText(rawText) {
       });
       parsedRows.push(rowObj);
     }
-    updateSyncProgress(end, dataRows.length, `${end} / ${dataRows.length} ürün işlendi...`);
-    await new Promise(r => setTimeout(r, 10));
+    if (dataRows.length > 2000) {
+      updateSyncProgress(end, dataRows.length, `${end.toLocaleString('tr-TR')} / ${dataRows.length.toLocaleString('tr-TR')} ürün işlendi...`);
+      await new Promise(r => setTimeout(r, 0));
+    }
   }
 
   gridRows = parsedRows;
+  gridCurrentPage = 1;
   updateSyncProgress(dataRows.length, dataRows.length, 'Tablo render ediliyor...');
-  await new Promise(r => setTimeout(r, 20));
+  await new Promise(r => setTimeout(r, 10));
 
   renderExcelGrid();
   hideSyncProgress();
-  showToast(`Excel'den ${gridRows.length} satır ve ${gridColumns.length} sütun başarıyla yapıştırıldı!`, 'success');
+  showToast(`Excel'den ${gridRows.length.toLocaleString('tr-TR')} satır ve ${gridColumns.length} sütun başarıyla yapıştırıldı!`, 'success');
 }
 
 // TABLODAKİ VERİLERİ GÖNDER & KARŞILAŞTIR
 async function processClipboardData() {
-  if (gridRows.length === 0) {
-    showToast('Tabloda gönderilecek ürün verisi bulunmuyor. Lütfen satır ekleyin veya Ctrl+V ile yapıştırın.', 'error');
+  const filledRows = gridRows.filter(row => Object.values(row).some(v => v && String(v).trim()));
+  if (filledRows.length === 0) {
+    showToast('Tabloda gönderilecek ürün verisi bulunmuyor. Lütfen Excel verinizi Ctrl+V ile yapıştırın veya hücrelere girin.', 'error');
     return;
   }
 
   const headerLine = gridColumns.map(c => c.title).join('\t');
-  const dataLines = gridRows.map(row => {
+  const dataLines = filledRows.map(row => {
     return gridColumns.map(col => row[col.id] || '').join('\t');
   });
   const rawTsv = [headerLine, ...dataLines].join('\n');
@@ -453,8 +519,8 @@ async function processClipboardData() {
     btn.innerHTML = '<span>⏳</span> Çözümleniyor...';
   }
 
-  showSyncProgress('Ürünler Gönderiliyor & Karşılaştırılıyor...', `${gridRows.length} ürün ana bilgisayara iletiliyor...`, '🚀');
-  updateSyncProgress(0, gridRows.length, 'Sunucuya gönderiliyor...');
+  showSyncProgress('Ürünler Gönderiliyor & Karşılaştırılıyor...', `${filledRows.length} ürün ana bilgisayara iletiliyor...`, '🚀');
+  updateSyncProgress(0, filledRows.length, 'Sunucuya gönderiliyor...');
 
   try {
     const formData = new FormData();
@@ -506,14 +572,30 @@ function renderComparisonView() {
   document.getElementById('previewSourceLabel').textContent = `${comparisonData.source_filename || 'Kopyalanan Tablo'} (${comparisonData.device_name || 'Bu PC'})`;
 
   document.getElementById('statTotalPreview').textContent = comparisonData.total_incoming || 0;
-  document.getElementById('statPriceChangePreview').textContent = comparisonData.price_changes || comparisonData.price_change_count || 0;
+  if (document.getElementById('statPriceIncreasePreview')) {
+    document.getElementById('statPriceIncreasePreview').textContent = comparisonData.price_increases || comparisonData.price_increase_count || 0;
+  }
+  if (document.getElementById('statPriceDecreasePreview')) {
+    document.getElementById('statPriceDecreasePreview').textContent = comparisonData.price_decreases || comparisonData.price_decrease_count || 0;
+  }
   document.getElementById('statNewProductPreview').textContent = comparisonData.new_products || comparisonData.new_product_count || 0;
   document.getElementById('statIdenticalPreview').textContent = comparisonData.identical || comparisonData.identical_count || 0;
+  if (document.getElementById('statBlacklistedPreview')) {
+    document.getElementById('statBlacklistedPreview').textContent = comparisonData.blacklisted_count || (comparisonData.blacklisted_items ? comparisonData.blacklisted_items.length : 0);
+  }
 
   document.getElementById('chipCountAll').textContent = `(${comparisonData.total_incoming || 0})`;
-  document.getElementById('chipCountChanges').textContent = `(${comparisonData.price_changes || comparisonData.price_change_count || 0})`;
+  if (document.getElementById('chipCountIncrease')) {
+    document.getElementById('chipCountIncrease').textContent = `(${comparisonData.price_increases || comparisonData.price_increase_count || 0})`;
+  }
+  if (document.getElementById('chipCountDecrease')) {
+    document.getElementById('chipCountDecrease').textContent = `(${comparisonData.price_decreases || comparisonData.price_decrease_count || 0})`;
+  }
   document.getElementById('chipCountNew').textContent = `(${comparisonData.new_products || comparisonData.new_product_count || 0})`;
   document.getElementById('chipCountIdentical').textContent = `(${comparisonData.identical || comparisonData.identical_count || 0})`;
+  if (document.getElementById('chipCountBlacklisted')) {
+    document.getElementById('chipCountBlacklisted').textContent = `(${comparisonData.blacklisted_count || (comparisonData.blacklisted_items ? comparisonData.blacklisted_items.length : 0)})`;
+  }
 
   renderTableRows();
 }
@@ -540,18 +622,41 @@ let comparisonCurrentPage = 1;
 const COMPARISON_PAGE_SIZE = 100;
 
 function renderTableRows() {
-  if (!comparisonData || !comparisonData.items) return;
+  if (!comparisonData) return;
   const tbody = document.getElementById('diffTableBody');
-  const items = comparisonData.items;
+  
+  let sourceItems = [];
+  if (currentFilter === 'blacklisted') {
+    sourceItems = (comparisonData.blacklisted_items || []).map(bItem => ({
+      barcode: bItem.barcode,
+      main_title: '<span style="color:#ca8a04;">(Aktarımdan Elendi)</span>',
+      incoming_title: bItem.title,
+      main_price: null,
+      incoming_price: bItem.price,
+      diff_amount: 0,
+      diff_percent: 0,
+      status: 'blacklisted',
+      reason: bItem.reason || 'Kara Liste'
+    }));
+  } else {
+    sourceItems = comparisonData.items || [];
+  }
 
-  let filtered = items.filter(item => {
-    if (currentFilter !== 'all' && item.status !== currentFilter) return false;
+  let filtered = sourceItems.filter(item => {
+    if (currentFilter !== 'all' && currentFilter !== 'blacklisted') {
+      if (currentFilter === 'price_change') {
+        if (item.status !== 'price_change' && item.status !== 'price_increase' && item.status !== 'price_decrease') return false;
+      } else if (item.status !== currentFilter) {
+        return false;
+      }
+    }
     if (searchQuery) {
       const b = (item.barcode || '').toLowerCase();
       const mt = (item.main_title || '').toLowerCase();
       const it = (item.incoming_title || '').toLowerCase();
       const sc = (item.stock_code || '').toLowerCase();
-      if (!b.includes(searchQuery) && !mt.includes(searchQuery) && !it.includes(searchQuery) && !sc.includes(searchQuery)) {
+      const r = (item.reason || '').toLowerCase();
+      if (!b.includes(searchQuery) && !mt.includes(searchQuery) && !it.includes(searchQuery) && !sc.includes(searchQuery) && !r.includes(searchQuery)) {
         return false;
       }
     }
@@ -566,7 +671,7 @@ function renderTableRows() {
   const pageItems = filtered.slice(startIndex, startIndex + COMPARISON_PAGE_SIZE);
 
   document.getElementById('tableShowingText').innerHTML = `
-    Görüntülenen: <strong>${Math.min(startIndex + 1, totalFiltered)} - ${Math.min(startIndex + pageItems.length, totalFiltered)}</strong> / <strong>${totalFiltered}</strong> ürün (Toplam: ${items.length})
+    Görüntülenen: <strong>${Math.min(startIndex + 1, totalFiltered)} - ${Math.min(startIndex + pageItems.length, totalFiltered)}</strong> / <strong>${totalFiltered}</strong> ürün (Toplam: ${sourceItems.length})
     ${totalPages > 1 ? `
       <span style="margin-left: 12px; display: inline-flex; gap: 4px; align-items: center;">
         <button class="btn btn-secondary btn-sm" onclick="changeComparisonPage(1)" ${comparisonCurrentPage === 1 ? 'disabled' : ''} style="padding: 2px 6px; font-size: 11px;">⏮</button>
@@ -596,11 +701,15 @@ function renderTableRows() {
     let mainPriceStr = item.main_price !== null ? formatPrice(item.main_price) : '<span style="color:#64748b;">(Yok)</span>';
     let incomingPriceStr = formatPrice(item.incoming_price);
 
-    if (item.status === 'price_change') {
-      badgeHtml = `<span class="badge-pill badge-price-change">⚡ Fiyat Değişti</span>`;
-      const sign = item.diff_amount > 0 ? '+' : '';
-      const diffClass = item.diff_amount > 0 ? 'price-diff-up' : 'price-diff-down';
-      diffHtml = `<span class="${diffClass}">${sign}${item.diff_amount.toFixed(2)} TL (%${item.diff_percent > 0 ? '+' : ''}${item.diff_percent})</span>`;
+    if (item.status === 'blacklisted') {
+      badgeHtml = `<span class="badge-pill" style="background: rgba(234, 179, 8, 0.18); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4);">🛡️ Kara Liste</span>`;
+      diffHtml = `<span style="color: #facc15; font-size: 11.5px; font-weight: 700;">${escapeHtml(item.reason)}</span>`;
+    } else if (item.status === 'price_increase' || (item.status === 'price_change' && item.diff_amount > 0)) {
+      badgeHtml = `<span class="badge-pill" style="background: rgba(239, 68, 68, 0.18); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35);">📈 Fiyat Arttı</span>`;
+      diffHtml = `<span class="price-diff-up">+${item.diff_amount.toFixed(2)} TL (%+${item.diff_percent})</span>`;
+    } else if (item.status === 'price_decrease' || (item.status === 'price_change' && item.diff_amount < 0)) {
+      badgeHtml = `<span class="badge-pill" style="background: rgba(56, 189, 248, 0.18); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35);">📉 Fiyat Düştü</span>`;
+      diffHtml = `<span class="price-diff-down">${item.diff_amount.toFixed(2)} TL (%${item.diff_percent})</span>`;
     } else if (item.status === 'new_product') {
       badgeHtml = `<span class="badge-pill badge-new-product">✨ Yeni Ürün</span>`;
       diffHtml = `<span class="price-diff-up">+${incomingPriceStr}</span>`;

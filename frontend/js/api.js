@@ -34,6 +34,16 @@ const API = {
     return await res.json();
   },
 
+  async getPrinterStatus() {
+    const res = await fetch('/api/printer/status');
+    return await res.json();
+  },
+
+  async getPrintHistory(limit = 50) {
+    const res = await fetch(`/api/printer/history?limit=${limit}`);
+    return await res.json();
+  },
+
   async savePrinterSettings(settings) {
     const res = await fetch('/api/printer/settings', {
       method: 'POST',
@@ -106,30 +116,52 @@ const API = {
     return await res.json();
   },
 
+  async toggleBlacklist(barcode) {
+    const res = await fetch(`/api/products/${encodeURIComponent(barcode)}/toggle-blacklist`, { method: 'POST' });
+    return await res.json();
+  },
+
   // 4. Baskı İşlemleri
-  async printSingle(productData, copies = 1) {
+  getSelectedPrinter() {
+    const sel = document.getElementById('topbarPrinterSelect');
+    if (sel && sel.value) return sel.value;
+    const settingsSel = document.getElementById('printerSelect');
+    if (settingsSel && settingsSel.value) return settingsSel.value;
+    return localStorage.getItem('selected_printer') || null;
+  },
+
+  async printSingle(productData, copies = 1, targetPrinter = null) {
+    const printer = targetPrinter || this.getSelectedPrinter();
+    const payload = { ...productData, copies };
+    if (printer) payload.printer = printer;
     const res = await fetch('/api/print/single', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...productData, copies })
+      body: JSON.stringify(payload)
     });
     return await res.json();
   },
 
-  async printBatch(products, copies = 1) {
+  async printBatch(products, copies = 1, targetPrinter = null) {
+    const printer = targetPrinter || this.getSelectedPrinter();
+    const payload = { products, copies };
+    if (printer) payload.printer = printer;
     const res = await fetch('/api/print/batch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ products, copies })
+      body: JSON.stringify(payload)
     });
     return await res.json();
   },
 
-  async mobileScan(barcode, autoPrint = true, copies = 1) {
+  async mobileScan(barcode, autoPrint = true, copies = 1, targetPrinter = null) {
+    const printer = targetPrinter || this.getSelectedPrinter();
+    const payload = { barcode, auto_print: autoPrint, copies };
+    if (printer) payload.printer = printer;
     const res = await fetch('/api/print/mobile_scan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ barcode, auto_print: autoPrint, copies })
+      body: JSON.stringify(payload)
     });
     return await res.json();
   },

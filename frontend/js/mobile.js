@@ -663,6 +663,68 @@ async function lookupBarcode(barcode) {
   }
 }
 
+function getSelectedMobilePrinter() {
+  const sel = document.getElementById('mobilePrinterSelect');
+  if (sel && sel.value) return sel.value;
+  return localStorage.getItem('selected_printer') || null;
+}
+
+async function loadMobilePrinters() {
+  try {
+    const res = await fetch('/api/printers');
+    const json = await res.json();
+    const data = json.data || {};
+    const printers = data.printers || [];
+    const printerDetails = data.printer_details || [];
+    const activeFromBackend = data.active_printer || (printers[0] || 'Termal Etiket Yazici');
+    
+    let chosen = localStorage.getItem('selected_printer') || activeFromBackend;
+    const sel = document.getElementById('mobilePrinterSelect');
+    const dot = document.getElementById('mobile-printer-dot');
+
+    if (sel && printers.length > 0) {
+      sel.innerHTML = '';
+      printers.forEach(p => {
+        const d = printerDetails.find(item => item.name === p);
+        const isConn = d ? d.connected : false;
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = `${isConn ? '🟢' : '🔴'} ${p}`;
+        opt.style.background = '#0f172a';
+        opt.style.color = '#f8fafc';
+        if (p === chosen) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      // Eğer seçili olan liste dışındaysa ilkini seç
+      if (!printers.includes(chosen)) {
+        chosen = printers[0];
+        sel.value = chosen;
+      }
+    }
+
+    // Seçili yazıcının bağlantı durumunu al
+    const stRes = await fetch(`/api/printer/status?printer=${encodeURIComponent(chosen)}`);
+    const stJson = await stRes.json();
+    const stData = stJson.data || {};
+    const isConnected = !!stData.connected;
+
+    if (dot) {
+      dot.style.background = isConnected ? '#10b981' : '#ef4444';
+      dot.style.boxShadow = isConnected ? '0 0 6px #10b981' : '0 0 6px #ef4444';
+    }
+  } catch(e) {
+    const dot = document.getElementById('mobile-printer-dot');
+    if (dot) dot.style.background = '#ef4444';
+  }
+}
+
+function handleMobilePrinterChange(newPrinter) {
+  if (!newPrinter) return;
+  localStorage.setItem('selected_printer', newPrinter);
+  loadMobilePrinters();
+  showToast(`Yazıcı seçildi: "${newPrinter}"`, 'info');
+}
+
 /**
  * 🖨️ Hemen Etiket Yazdır
  */
@@ -670,17 +732,21 @@ async function printCurrentProductNow() {
   if (!currentBarcode) return;
   const title = (document.getElementById('inp-title')?.value || '').trim();
   const price = parseFloat(document.getElementById('inp-price')?.value) || 0;
+  const chosenPrinter = getSelectedMobilePrinter();
 
   try {
+    const payload = {
+      barcode: currentBarcode,
+      title: title,
+      price: price,
+      copies: 1
+    };
+    if (chosenPrinter) payload.printer = chosenPrinter;
+
     const res = await fetch('/api/print/single', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        barcode: currentBarcode,
-        title: title,
-        price: price,
-        copies: 1
-      })
+      body: JSON.stringify(payload)
     });
     const data = await res.json();
 
@@ -692,11 +758,14 @@ async function printCurrentProductNow() {
         badge.className = "product-status-pill found";
         badge.innerText = "✓ Etiket Güncel";
       }
+      loadMobilePrinters();
     } else {
-      showToast('Yazdırma hatası: ' + data.message, 'error');
+      showToast('⚠️ Yazdırma Hatası: ' + data.message, 'error');
+      loadMobilePrinters();
     }
   } catch(e) {
-    showToast('Yazıcı hatası: ' + e.message, 'error');
+    showToast('⚠️ Yazıcıya ulaşılamadı: ' + e.message, 'error');
+    loadMobilePrinters();
   }
 }
 
@@ -872,6 +941,7 @@ async function submitQueueBatchPrint() {
   showToast("Toplu etiketler yazıcıya gönderiliyor...", "info");
 
   try {
+    const chosenPrinter = getSelectedMobilePrinter();
     const payload = {
       products: mobileQueue.map(item => ({
         barcode: item.barcode,
@@ -880,6 +950,7 @@ async function submitQueueBatchPrint() {
       })),
       copies: 1
     };
+    if (chosenPrinter) payload.printer = chosenPrinter;
 
     const res = await fetch('/api/print/batch', {
       method: 'POST',
@@ -895,10 +966,10 @@ async function submitQueueBatchPrint() {
       renderQueueList();
       setTimeout(() => switchMobileTab('scan'), 1000);
     } else {
-      showToast("Yazdırma hatası: " + data.message, "error");
+      showToast("⚠️ Yazdırma hatası: " + data.message, "error");
     }
   } catch(e) {
-    showToast("Hata: " + e.message, "error");
+    showToast("⚠️ Hata: " + e.message, "error");
   }
 }
 
@@ -906,4 +977,6 @@ async function submitQueueBatchPrint() {
 document.addEventListener('DOMContentLoaded', () => {
   loadQueueFromStorage();
   updateQueueUI();
+  loadMobilePrinters();
+  setInterval(loadMobilePrinters, 8000);
 });
