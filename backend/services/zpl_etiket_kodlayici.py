@@ -92,10 +92,10 @@ def generate_market_shelf_zpl(data, orientation="POR", x_offset=0, y_offset=0, w
 
     from backend.services.printer_service import load_settings
     settings = load_settings()
-    default_market_brand = str(settings.get("market_name", "YARENLER")).strip().upper()
+    configured_brand = str(settings.get("market_name") or data.get("brand") or "MARKET").strip().upper()
 
-    # Barkodun üstündeki mağaza/market adı her zaman sabit olarak YARENLER olmalı
-    brand = default_market_brand
+    # Barkodun üstündeki mağaza/market adı (Kullanıcı ayarlarından dinamik)
+    brand = configured_brand
     origin = clean_tr(data.get('origin', 'TURKIYE')).strip().upper()
     
     # Tarih belirleme (Yalnızca gün/ay/yıl tarihi - saat kaldırıldı)

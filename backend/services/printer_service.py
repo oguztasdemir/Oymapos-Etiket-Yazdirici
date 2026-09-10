@@ -255,7 +255,7 @@ def generate_tspl_command(data: dict, width_mm=None, height_mm=None, darkness=No
         title1 = " ".join(t1_words) if t1_words else full_title[:max_char_per_line]
         title2 = " ".join(t2_words) if t2_words else full_title[max_char_per_line:]
 
-    default_market = clean_turkish(str(settings.get("market_name", "YARENLER")).strip().upper())
+    default_market = clean_turkish(str(settings.get("market_name") or data.get("brand") or "MARKET").strip().upper())
     brand = default_market
     origin = clean_turkish((data.get('origin') or 'TURKIYE').strip().upper())
     raw_d = str(data.get('date') or datetime.datetime.now().strftime("%d.%m.%Y")).strip()
@@ -437,13 +437,13 @@ def print_single_label(product: dict, copies=1, template_data=None, target_print
     settings = load_settings()
     printer_name = target_printer or settings.get("printer", "Termal Etiket Yazici")
     
-    # Yazıcı bağlantı / çevrimdışı kontrolü
+    # Yazıcı bağlantı / çevrimdışı kontrolü (Yumuşak kontrol: Sahte çevrimdışı sürücü bayraklarında baskıyı engellemez)
     conn_info = check_printer_connection(printer_name)
     if not conn_info.get("connected", False):
-        status_desc = conn_info.get("status_text") or "Bağlı Değil / Çevrimdışı"
-        return False, f"'{printer_name}' yazıcısına ulaşılamıyor: {status_desc}. Lütfen yazıcının açık ve bağlı olduğunu kontrol edin."
-    
-    # OYMAPOS Barkod Sistemi Standardı: Önce ZPL motoru, ardından TSPL desteği
+        status_desc = conn_info.get("status_text") or "Bağlantı Belirsiz"
+        # Sadece yazıcı sistemde kesinlikle yoksa veya açılamıyorsa durdur
+        if "Bağlı Değil" in status_desc and ("error" in status_desc.lower() or "bulunamadı" in status_desc.lower()):
+            return False, f"'{printer_name}' yazıcısına ulaşılamıyor: {status_desc}. Lütfen yazıcının açık ve bağlı olduğunu kontrol edin."
     from backend.services.template_service import get_default_template
     tpl = template_data or get_default_template() or {}
     w_mm = float(tpl.get("width_mm", settings.get("width_mm", 76)))
