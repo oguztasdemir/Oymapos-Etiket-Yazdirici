@@ -36,10 +36,10 @@ Sistem, dükkan ve kasa bilgisayarlarında çalışan **VegaWin & FasterPOS** ve
 - **Canlı Baskı Geçmişi:** Yapılan tüm baskı işlemlerinin anlık loglanması ve arayüzdeki "Baskı Geçmişi" sekmesinden izlenebilmesi.
 
 ### 🔄 VegaWin / FasterPOS Akıllı Senkronizasyon & Karşılaştırma Masası
-- **Otomatik Dizin & Dosya Keşfi:** Bilgisayardaki VegaWin klasör yolunu (`C:\vegawin`, `C:\vegawin\Bin` vb.) otomatik tarama.
-- **Çok Formatlı Aktarım:** Güncel satış hareketleri (`*SonSatisHareket.txt`), SQLite (`market_sistemi.db`), Excel (`.xlsx`), CSV veya panodan yapıştırma (`Ctrl+V`) desteği.
-- **2 Aşamalı Güvenli Aktarım Masası:** Aktarım öncesinde fiyat farkları, zam/indirim değişimleri ve yeni ürünler önizleme tablosunda onaylatılır.
-- **Geri Alma (Rollback / Undo):** Hatalı aktarımlarda tek tıkla eski fiyatlara geri dönebilme güvencesi.
+- **Panodan Doğrudan Yapıştırma (Ctrl + V):** VegaWin veya Excel'den kopyalanan ürün ve fiyat listesini ekrana yapıştırarak saniyeler içinde içeri alma.
+- **Esnek Dosya Yükleme:** Satış hareketleri (`*SonSatisHareket.txt`), Excel (`.xlsx`), CSV veya SQLite yedeklerini sürükle-bırak yöntemiyle içe aktarma.
+- **2 Aşamalı Güvenli Aktarım Masası:** Aktarım öncesinde sistemdeki mevcut fiyatlar ile yeni fiyatlar karşılaştırılır; zam, indirim ve yeni eklenen ürünler listelenerek kullanıcı onayına sunulur.
+- **Tek Tıkla Geri Alma (Rollback / Undo):** Hatalı veya istenmeyen aktarımlarda tek tıkla eski fiyatlara anında geri dönebilme güvencesi.
 
 ### 📱 Mobil Barkod Terminali (Reyon Asistanı)
 - Herhangi bir uygulama yüklemeden, aynı Wi-Fi ağına bağlı akıllı telefon kamerasından barkod okutma.
@@ -90,7 +90,7 @@ Tarayıcınızda arayüz otomatik olarak `http://localhost:8000` adresinde açı
 | Modül | Yerel Adres | Açıklama |
 |---|---|---|
 | 🖥️ **Ana Yönetim & Etiket Masası** | `http://localhost:8000/` | Stok arama, tekli/toplu etiket basımı, baskı geçmişi. |
-| 💻 **Dükkan Veri Aktarım Portalı** | `http://[IP_ADRESI]:8000/sync` | Dükkan bilgisayarından VegaWin klasörünü tarayıp verileri gönderme masası. |
+| 💻 **Dükkan Veri Aktarım Portalı** | `http://[IP_ADRESI]:8000/sync` | Dükkan bilgisayarından panodan yapıştırma (Ctrl+V) veya dosya yükleme ile veri aktarım masası. |
 | 📱 **Reyon Mobil Terminali** | `http://[IP_ADRESI]:8000/mobile` | Telefon kamerası ile kablosuz reyon etiket denetimi. |
 
 ---
